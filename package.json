@@ -22,25 +22,25 @@
     "format": "prettier --write **/*.{js,ts,tsx,json}",
     "test": "ava",
     "watch": "ava --watch",
-    "coverage": "nyc ava"
+    "coverage": "nyc ava",
+    "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates"
   },
   "files": [
-    "tsconfig.json",
     "LICENSE",
     "README.md",
     "bin",
-    "src"
+    "dist"
   ],
   "license": "MIT",
   "dependencies": {
-    "typescript": "^2.5.3",
+    "gluegun": "next",
     "ts-node": "^3.3.0",
-    "gluegun": "next"
+    "typescript": "^2.5.3"
   },
   "devDependencies": {
     "@types/node": "^8.0.47",
-    "prettier": "^1.7.4",
     "ava": "^0.22.0",
-    "nyc": "^11.2.1"
+    "nyc": "^11.2.1",
+    "prettier": "^1.7.4"
   }
 }
