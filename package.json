@@ -1,0 +1,46 @@
+{
+  "name": "anoa-cli",
+  "version": "0.0.1",
+  "description": "React Native Typescript Boilerplate & Scaffolder CLI",
+  "private": true,
+  "author": "Budi Adiono <budiadiono@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anoaland/anoa-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "react-native",
+    "typescript",
+    "boilerplate",
+    "scaffolder"
+  ],
+  "bin": {
+    "anoa": "bin/anoa"
+  },
+  "scripts": {
+    "format": "prettier --write **/*.{js,ts,tsx,json}",
+    "test": "ava",
+    "watch": "ava --watch",
+    "coverage": "nyc ava"
+  },
+  "files": [
+    "tsconfig.json",
+    "LICENSE",
+    "README.md",
+    "bin",
+    "src"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "typescript": "^2.5.3",
+    "ts-node": "^3.3.0",
+    "gluegun": "next"
+  },
+  "devDependencies": {
+    "@types/node": "^8.0.47",
+    "prettier": "^1.7.4",
+    "ava": "^0.22.0",
+    "nyc": "^11.2.1"
+  }
+}
