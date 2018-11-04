@@ -36,13 +36,15 @@ module.exports = {
       },
     ])
 
+    const withStore = await prompt.confirm('Use store?')
+
     switch (boilerplate) {
       case expo:
-        await context.boilerplateExpo(projectName)
+        await context.boilerplateExpo(projectName, withStore)
         break
       case rni:
       default:
-        await context.boilerplateReactNativeInit(projectName)
+        await context.boilerplateReactNativeInit(projectName, withStore)
         break
     }
   },

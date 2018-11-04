@@ -1,5 +1,5 @@
 module.exports = context => {
-  context.boilerplateExpo = async projectName => {
+  context.boilerplateExpo = async (projectName, withStore) => {
     const {
       system,
       print,
@@ -8,6 +8,7 @@ module.exports = context => {
       generateFiles,
       patching,
       strings,
+      storeCreateReducer,
     } = context
 
     let hasExpo
@@ -46,6 +47,10 @@ module.exports = context => {
       'tslint-react',
     ])
 
+    if (withStore) {
+      await storeCreateReducer('app', ['foo', 'bar'])
+    }
+
     await patching.update('app.json', app => {
       const { expo } = app
       expo.packagerOpts = {
@@ -65,13 +70,14 @@ module.exports = context => {
       return pkg
     })
 
-    await generateFiles('shared', [
-      'src/App.tsx',
-      'tslint.json',
-      'tsconfig.json',
-      '.jshintrc',
-      '.prettierrc',
-    ])
+    await generateFiles('shared', ['tslint.json', 'tsconfig.json', '.jshintrc', '.prettierrc'])
+
+    if (withStore) {
+      await generateFiles('expo/withStore/src/', ['App.tsx'], 'src/')
+    } else {
+      await generateFiles('basic', ['src/App.tsx'])
+    }
+
     await generateFiles('expo', ['App.js'])
 
     spinner.succeed(`Yay! The ${print.colors.green(projectName)} project is ready!`)

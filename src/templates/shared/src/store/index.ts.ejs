@@ -1,0 +1,4 @@
+import { ReduxStore } from 'anoa'
+import { AppRootActions, AppRootState, reducers } from './reducers'
+
+export const AppStore = new ReduxStore<AppRootState, AppRootActions>(reducers)

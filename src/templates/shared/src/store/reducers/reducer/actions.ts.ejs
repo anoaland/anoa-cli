@@ -1,0 +1,7 @@
+type <%= props.name %>Actions = <% props.states.forEach(function(s) { %>
+  | {
+      type: '<%= props.upperCase(props.name) %>/<%= props.upperCase(s) %>'
+      payload: any
+    }<% }) %>
+
+export default <%= props.name %>Actions

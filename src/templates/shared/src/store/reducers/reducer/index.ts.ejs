@@ -1,0 +1,20 @@
+import { Reducer } from 'redux'
+import <%= props.name %>Actions from './actions'
+import <%= props.name %>State from './state'
+
+const <%= props.name %>Reducer: Reducer<<%= props.name %>State, <%= props.name %>Actions> = (
+  state = {<% props.states.forEach(function(s) { %>
+    <%= props.camelCase(s) %>: 1,<% }) %>
+  },
+  action
+) => {
+  switch (action.type) {<% props.states.forEach(function(s) { %>
+    case '<%= props.upperCase(props.name) %>/<%= props.upperCase(s) %>':
+      return { ...state, <%= props.camelCase(s) %>: action.payload }
+    <% }) %>  
+    default:
+      return state
+  }
+}
+
+export default <%= props.name %>Reducer

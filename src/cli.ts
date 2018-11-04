@@ -19,7 +19,18 @@ async function run(argv) {
 
   const args: string[] = argv.slice(2)
 
-  const validCommands = ['-h', '--help', '-v', 'v', '--version', 'i', 'init', 'yo']
+  const validCommands = [
+    '-h',
+    '--help',
+    '-v',
+    'v',
+    '--version',
+    'i',
+    'init',
+    'r',
+    'store',
+    's',
+  ]
   const showHelp =
     !args.length ||
     args.indexOf('-h') === 0 ||
