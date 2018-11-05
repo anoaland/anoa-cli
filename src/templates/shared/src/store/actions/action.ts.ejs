@@ -1,0 +1,7 @@
+import { AppThunkAction } from '..';
+
+export function <%= props.camelCase(props.name) %>Action(payload: any): AppThunkAction {
+  return dispatch => {
+    dispatch({ type: '<%= props.type %>', payload })
+  }
+}

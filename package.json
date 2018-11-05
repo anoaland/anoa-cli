@@ -35,6 +35,7 @@
   "dependencies": {
     "gluegun": "next",
     "ramda": "^0.25.0",
+    "ts-emitter": "^0.4.0",
     "ts-node": "^3.3.0",
     "typescript": "^2.5.3"
   },

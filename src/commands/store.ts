@@ -6,9 +6,11 @@ module.exports = {
     const {
       storeCreateReducer,
       storeUpdateReducers,
+      storeCreateAction,
+      storeActionList,
       prompt,
       print,
-      strings: { isBlank },
+      strings: { kebabCase },
     } = context
 
     const taskCreateReducer = 'Create new reducer'
@@ -25,33 +27,77 @@ module.exports = {
     ])
 
     if (task !== taskUpdate) {
-      const { name } = await prompt.ask([
-        {
-          type: 'input',
-          name: 'name',
-          message: `Name of ${task === taskCreateReducer ? 'reducer' : 'action'}?`,
-        },
-      ])
+      if (task === taskCreateReducer) {
+        const { name } = await prompt.ask([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Reducer name',
+          },
+        ])
 
-      if (!name || isBlank(name)) {
-        print.error('Name is required')
-        process.exit(0)
+        const { states } = await prompt.ask([
+          {
+            type: 'input',
+            name: 'states',
+            message: `Specify state you'd like to have (separated with space), or leave it blank thus we will generate example for you`,
+          },
+        ])
+
+        await storeCreateReducer(name, (states || 'foo,bar').split(' ').map(s => s.trim()))
+        print.success(
+          'New reducer was successfully created on ' +
+            print.colors.yellow(`src/store/reducers/${name.toLowerCase()}`) +
+            '.',
+        )
+      } else {
+        let { name, type } = await prompt.ask([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Action name',
+          },
+          {
+            type: 'input',
+            name: 'type',
+            message: `Action type (Leave blank -- we'll let you to pick it)`,
+          },
+        ])
+
+        if (!type) {
+          const actions = await storeActionList()
+          const actionKeys = Object.keys(actions)
+
+          const { actionKey } = await prompt.ask([
+            {
+              name: 'actionKey',
+              message: 'Select action from',
+              type: 'list',
+              choices: actionKeys,
+            },
+          ])
+
+          const selectedAction = actions[actionKey]
+
+          const { actionType } = await prompt.ask([
+            {
+              name: 'actionType',
+              message: 'Select type',
+              type: 'list',
+              choices: selectedAction.map(a => a.type),
+            },
+          ])
+
+          type = actionType
+        }
+
+        await storeCreateAction(name, type)
+        print.success(
+          'New action was successfully created on ' +
+            print.colors.yellow(`src/store/actions/${kebabCase(name)}-action.ts`) +
+            '.',
+        )
       }
-
-      const { states } = await prompt.ask([
-        {
-          type: 'input',
-          name: 'states',
-          message: `Specify state you'd like to have (separated with space), or leave it blank thus we will generate example for you`,
-        },
-      ])
-
-      await storeCreateReducer(name, (states || 'foo,bar').split(' ').map(s => s.trim()))
-      print.success(
-        'New reducer was successfully created on ' +
-          print.colors.yellow(`src/store/reducers/${name.toLowerCase()}`) +
-          '.',
-      )
     } else {
       await storeUpdateReducers()
     }

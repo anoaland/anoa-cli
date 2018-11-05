@@ -37,7 +37,7 @@ module.exports = context => {
     return await context.filesystem.read('package.json', 'json')
   }
 
-  context.generateFiles = async (template, files, dest, props) => {
+  context.generateFiles = async (template, files, dest, props, destFile) => {
     const {
       template: { generate },
     } = context
@@ -45,7 +45,7 @@ module.exports = context => {
     for (const file of files) {
       await generate({
         template: `${template}/${file}.ejs`,
-        target: (dest || '') + file,
+        target: (dest || '') + (destFile || file),
         props,
       })
     }
