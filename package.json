@@ -34,6 +34,7 @@
   "license": "MIT",
   "dependencies": {
     "gluegun": "next",
+    "prettier": "^1.14.3",
     "ramda": "^0.25.0",
     "ts-emitter": "^0.4.0",
     "ts-node": "^3.3.0",
@@ -41,9 +42,9 @@
   },
   "devDependencies": {
     "@types/node": "^8.0.47",
+    "@types/prettier": "^1.13.2",
     "@types/ramda": "types/npm-ramda#dist",
     "ava": "^0.22.0",
-    "nyc": "^11.2.1",
-    "prettier": "^1.7.4"
+    "nyc": "^11.2.1"
   }
 }

@@ -1,4 +1,7 @@
-module.exports = context => {
+import { format, resolveConfig } from 'prettier'
+import { GluegunRunContext } from 'gluegun'
+
+module.exports = (context: GluegunRunContext) => {
   context.npm = async (dev, args) => {
     const cmd = context.yarn ? `yarn add${dev ? ' -D' : ''}` : `npm install ${dev ? '-D' : '-S'}`
     await context.system.run(cmd + ' ' + args)
@@ -39,15 +42,24 @@ module.exports = context => {
 
   context.generateFiles = async (template, files, dest, props, destFile) => {
     const {
+      filesystem: { read, write },
       template: { generate },
     } = context
 
     for (const file of files) {
+      const target: string = (dest || '') + (destFile || file)
+
       await generate({
         template: `${template}/${file}.ejs`,
-        target: (dest || '') + (destFile || file),
+        target,
         props,
       })
+
+      if (target.endsWith('ts') || target.endsWith('tsx')) {
+        const contents = await read(target)
+        const options = await resolveConfig('.prettierrc')
+        await write(target, format(contents, { ...options, parser: 'typescript' }))
+      }
     }
   }
 }
