@@ -4,6 +4,7 @@ module.exports = {
   description: 'Redux store generator',
   run: async context => {
     const {
+      parameters: { first },
       storeCreateReducer,
       storeUpdateReducers,
       storeCreateAction,
@@ -17,14 +18,31 @@ module.exports = {
     const taskCreateAction = 'Create new action'
     const taskUpdate = 'Update application root state'
 
-    const { task } = await prompt.ask([
-      {
-        name: 'task',
-        message: 'What would you like to do with store?',
-        type: 'list',
-        choices: [taskCreateReducer, taskCreateAction, taskUpdate],
-      },
-    ])
+    let task = undefined
+
+    switch (first) {
+      case 'r':
+        task = taskCreateReducer
+        break
+      case 'a':
+        task = taskCreateAction
+        break
+      case 'u':
+        task = taskUpdate
+        break
+    }
+
+    if (!task) {
+      const { pickTask } = await prompt.ask([
+        {
+          name: 'pickTask',
+          message: 'What would you like to do with store?',
+          type: 'list',
+          choices: [taskCreateReducer, taskCreateAction, taskUpdate],
+        },
+      ])
+      task = pickTask
+    }
 
     if (task !== taskUpdate) {
       if (task === taskCreateReducer) {
