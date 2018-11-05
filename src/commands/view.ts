@@ -11,8 +11,11 @@ module.exports = {
       createClassComponent,
       createStatelessComponent,
       storeStateList,
+      storeAppActionList,
       strings: { pascalCase, camelCase },
     } = context
+
+    await storeAppActionList()
 
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'
@@ -64,16 +67,21 @@ module.exports = {
           const withState = await prompt.confirm('Do you want to have state in your component?')
           let stateProps = undefined
           let stateMap = undefined
+          let actionProps = undefined
+          let actionMap = undefined
+          let actionImports = undefined
 
           const storeStates = await storeStateList()
           if (storeStates) {
-            const choices = {}
-            for (const k of Object.keys(storeStates)) {
-              choices[pascalCase(k) + 'State'] = Object.keys(storeStates[k]).map(o => k + '.' + o)
-            }
-
-            const withStoreState = await prompt.confirm('Do you want to map the reducer state?')
+            const withStoreState = await prompt.confirm(
+              'Do you want to map application state into props?',
+            )
             if (withStoreState) {
+              const choices = {}
+              for (const k of Object.keys(storeStates)) {
+                choices[pascalCase(k) + 'State'] = Object.keys(storeStates[k]).map(o => k + '.' + o)
+              }
+
               const { statesToMap } = await prompt.ask([
                 {
                   name: 'statesToMap',
@@ -97,11 +105,72 @@ module.exports = {
             }
           }
 
+          const storeAppActions = await storeAppActionList()
+          const importStatements = []
+
+          if (storeAppActions) {
+            const withStoreAction = await prompt.confirm(
+              'Do you want to map application action into props?',
+            )
+
+            if (withStoreAction) {
+              const choices = []
+              for (const k of Object.keys(storeAppActions)) {
+                choices.push(
+                  `${k}(${JSON.stringify(storeAppActions[k].params).replace(/\"/g, '')})`,
+                )
+              }
+
+              const { actionsToMap } = await prompt.ask([
+                {
+                  name: 'actionsToMap',
+                  type: 'checkbox',
+                  message: 'Select state(s) you want to map',
+                  radio: true,
+                  choices,
+                },
+              ])
+
+              actionProps = []
+              actionMap = []
+              actionImports = {}
+
+              for (const st of actionsToMap as string[]) {
+                const a = st.split('(')[0].trim()
+                const act = storeAppActions[a]
+                const prop = a.substr(0, a.length - 6)
+                actionProps.push(
+                  `${prop}: (${Object.keys(act.params)
+                    .map(k => `${k}: ${act.params[k]}`)
+                    .join(',')}) => void`,
+                )
+                actionMap.push(
+                  `${prop}: (${Object.keys(act.params).join(', ')}) => dispatch(${a}(${Object.keys(
+                    act.params,
+                  ).join(', ')}))`,
+                )
+
+                actionImports[act.file] = [...(actionImports[act.file] || []), a]
+              }
+
+              for (const impor of Object.keys(actionImports)) {
+                importStatements.push(
+                  `import { ${actionImports[impor].join(
+                    ',',
+                  )} } from '../../store/actions/${impor.substr(0, impor.length - 3)}'`,
+                )
+              }
+            }
+          }
+
           await createClassComponent(name, {
             withState,
             stateProps,
             stateMap,
-            withStore: !!stateProps,
+            actionProps,
+            actionMap,
+            importStatements,
+            withStore: !!stateProps || !!actionProps,
           })
           break
 

@@ -1,8 +1,9 @@
 import { uniq } from 'ramda'
 import { fromPath } from 'ts-emitter'
 import { SyntaxKind, Node } from 'typescript'
+import { GluegunRunContext } from 'gluegun'
 
-module.exports = context => {
+module.exports = (context: GluegunRunContext) => {
   context.storeInit = async () => {
     const {
       init,
@@ -115,6 +116,7 @@ module.exports = context => {
       return []
     }
 
+    // @ts-ignore
     return tree.children.filter(r => r.type === 'dir')
   }
 
@@ -245,6 +247,99 @@ module.exports = context => {
       })
 
       results[name] = stateProps
+    }
+
+    return results
+  }
+
+  context.storeStateList = async () => {
+    const {
+      storeReducerObjectList,
+      strings: { camelCase },
+    } = context
+
+    // collect reducer's state files
+    const stateFiles = (await storeReducerObjectList())
+      .filter(r => r.children && r.children.length)
+      .map(r => {
+        if (r.children.find(c => c.name === 'state.ts')) {
+          return { name: camelCase(r.name), path: `src/store/reducers/${r.name}/state.ts` }
+        }
+        return undefined
+      })
+      .filter(s => s !== undefined)
+
+    if (!stateFiles) {
+      return undefined
+    }
+
+    let results = {}
+
+    for (const { path, name } of stateFiles) {
+      const ast = fromPath(path)
+
+      // let stateName = ''
+      let stateProps = {}
+
+      ast.forEachChild(c => {
+        if (c.kind === SyntaxKind.InterfaceDeclaration) {
+          c.forEachChild(c1 => {
+            // if (c1.kind === SyntaxKind.Identifier) {
+            //   stateName = c1.getText()
+            // } else
+            if (c1.kind === SyntaxKind.PropertySignature) {
+              // stateProps.push({ [c1.getChildAt(0).getText()]: c1.getChildAt(2).getText() })
+              stateProps[c1.getChildAt(0).getText()] = c1.getChildAt(2).getText()
+            }
+          })
+        }
+      })
+
+      results[name] = stateProps
+    }
+
+    return results
+  }
+
+  context.storeAppActionList = async () => {
+    const {
+      filesystem: { inspectTree },
+    } = context
+
+    const tree = await inspectTree('src/store/actions')
+    if (!tree || !tree.children || !tree.children.length) {
+      return undefined
+    }
+
+    const files = tree.children
+      // @ts-ignore
+      .filter(r => r.type === 'file')
+      // @ts-ignore
+      .map(r => ({ name: r.name, path: 'src/store/actions/' + r.name }))
+
+    let results = {}
+    for (const file of files) {
+      const ast = fromPath(file.path)
+
+      ast.forEachChild(c => {
+        if (c.kind === SyntaxKind.FunctionDeclaration) {
+          let params = {}
+          let fnName = ''
+
+          c.forEachChild(c1 => {
+            if (c1.kind === SyntaxKind.Parameter) {
+              params[c1.getChildAt(0).getText()] = c1.getChildAt(2).getText()
+            } else if (c1.kind === SyntaxKind.Identifier) {
+              fnName = c1.getText()
+            }
+          })
+
+          results[fnName] = {
+            file: file.name,
+            params,
+          }
+        }
+      })
     }
 
     return results
