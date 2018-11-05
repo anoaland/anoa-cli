@@ -118,6 +118,7 @@ module.exports = {
       }
     } else {
       await storeUpdateReducers()
+      print.success('Store was successfully updated.')
     }
   },
 }
