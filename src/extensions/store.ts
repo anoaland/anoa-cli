@@ -1,6 +1,6 @@
 import { uniq } from 'ramda'
 import { fromPath } from 'ts-emitter'
-import { SyntaxKind } from 'typescript'
+import { SyntaxKind, Node } from 'typescript'
 
 module.exports = context => {
   context.storeInit = async () => {
@@ -150,6 +150,23 @@ module.exports = context => {
 
     let results = {}
 
+    const parseTypeLiteral = (obj: Node) => {
+      let actType = {}
+      obj.forEachChild(o => {
+        if (o.kind === SyntaxKind.PropertySignature) {
+          const key = o.getText() as string
+          const val = o.getChildAt(2).getText()
+          if (key.startsWith('type')) {
+            actType[o.getChildAt(0).getText()] = val.slice(1, val.length - 1)
+          } else if (key.startsWith('payload')) {
+            actType[o.getChildAt(0).getText()] = val
+          }
+        }
+      })
+
+      return actType
+    }
+
     for (const f of actionFiles) {
       const ast = fromPath(f)
 
@@ -164,30 +181,17 @@ module.exports = context => {
 
         // query the action types
         if (c.kind === SyntaxKind.TypeAliasDeclaration) {
-          if (c.getChildCount() >= 5) {
-            const ch = c.getChildAt(4).getChildAt(0)
-            if (ch) {
-              for (let i = 0; i < ch.getChildCount(); i++) {
-                const obj = ch.getChildAt(i)
-                if (obj && obj.kind === SyntaxKind.TypeLiteral) {
-                  let actType = {}
-                  obj.forEachChild(o => {
-                    if (o.kind === SyntaxKind.PropertySignature) {
-                      const key = o.getText() as string
-                      const val = o.getChildAt(2).getText()
-                      if (key.startsWith('type')) {
-                        actType[o.getChildAt(0).getText()] = val.slice(1, val.length - 1)
-                      } else if (key.startsWith('payload')) {
-                        actType[o.getChildAt(0).getText()] = val
-                      }
-                    }
-                  })
-
-                  actionTypes.push(actType)
+          c.forEachChild(c1 => {
+            if (c1.kind === SyntaxKind.TypeLiteral) {
+              actionTypes.push(parseTypeLiteral(c1))
+            } else if (c1.kind === SyntaxKind.UnionType) {
+              c1.forEachChild(c2 => {
+                if (c2.kind === SyntaxKind.TypeLiteral) {
+                  actionTypes.push(parseTypeLiteral(c2))
                 }
-              }
+              })
             }
-          }
+          })
         }
       })
 
