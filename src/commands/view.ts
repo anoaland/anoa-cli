@@ -6,13 +6,14 @@ module.exports = {
   description: 'View generator',
   run: async (context: GluegunRunContext) => {
     const {
-      parameters: { first },
+      parameters: { first, second },
       prompt,
       createClassComponent,
       createStatelessComponent,
       storeStateList,
       storeAppActionList,
       strings: { pascalCase, camelCase },
+      print,
     } = context
 
     await storeAppActionList()
@@ -48,12 +49,24 @@ module.exports = {
       const componentStateless = 'Stateless component'
       const componentStatelessFunctional = 'Stateless functional component'
 
-      const { name, type } = await prompt.ask([
-        {
-          type: 'input',
-          name: 'name',
-          message: 'Component name',
-        },
+      let name = second
+      if (!name) {
+        name = (await prompt.ask([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Component name',
+          },
+        ])).name
+      }
+
+      if (!name) {
+        print.error('Name is required')
+        process.exit(0)
+        return
+      }
+
+      const { type } = await prompt.ask([
         {
           name: 'type',
           message: 'Select component type',
@@ -61,6 +74,11 @@ module.exports = {
           choices: [componentClass, componentStateless, componentStatelessFunctional],
         },
       ])
+      if (!type) {
+        print.error('Component type is required')
+        process.exit(0)
+        return
+      }
 
       switch (type) {
         case componentClass:
