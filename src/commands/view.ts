@@ -10,6 +10,8 @@ module.exports = {
       prompt,
       createClassComponent,
       createStatelessComponent,
+      storeStateList,
+      strings: { pascalCase, camelCase },
     } = context
 
     const taskCreateComponent = 'Create new component'
@@ -60,7 +62,47 @@ module.exports = {
       switch (type) {
         case componentClass:
           const withState = await prompt.confirm('Do you want to have state in your component?')
-          await createClassComponent(name, withState)
+          let stateProps = undefined
+          let stateMap = undefined
+
+          const storeStates = await storeStateList()
+          if (storeStates) {
+            const choices = {}
+            for (const k of Object.keys(storeStates)) {
+              choices[pascalCase(k) + 'State'] = Object.keys(storeStates[k]).map(o => k + '.' + o)
+            }
+
+            const withStoreState = await prompt.confirm('Do you want to map the reducer state?')
+            if (withStoreState) {
+              const { statesToMap } = await prompt.ask([
+                {
+                  name: 'statesToMap',
+                  type: 'checkbox',
+                  message: 'Select state(s) you want to map',
+                  radio: true,
+                  choices,
+                },
+              ])
+
+              stateProps = []
+              stateMap = []
+              for (const st of statesToMap) {
+                const s = st.split('.')
+                const stateType = storeStates[s[0]][s[1]]
+                const prop = camelCase(s[0] + '-' + s[1])
+
+                stateProps.push(`${prop}: ${stateType}`)
+                stateMap.push(`${prop}: state.${st}`)
+              }
+            }
+          }
+
+          await createClassComponent(name, {
+            withState,
+            stateProps,
+            stateMap,
+            withStore: !!stateProps,
+          })
           break
 
         case componentStateless:

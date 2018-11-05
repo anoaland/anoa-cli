@@ -1,7 +1,7 @@
 import { GluegunRunContext } from 'gluegun'
 
 module.exports = (context: GluegunRunContext) => {
-  context.createClassComponent = async (name, withState) => {
+  context.createClassComponent = async (name, props) => {
     const {
       print,
       strings: { isBlank, pascalCase, kebabCase },
@@ -14,16 +14,14 @@ module.exports = (context: GluegunRunContext) => {
       return
     }
 
-    const props = {
-      name: pascalCase(name),
-      withState,
-    }
-
     await generateFiles(
       'shared/src/views/components/',
       ['class-component.tsx'],
       `src/views/components/`,
-      props,
+      {
+        name: pascalCase(name),
+        ...props,
+      },
       `${kebabCase(name)}.tsx`,
     )
   }

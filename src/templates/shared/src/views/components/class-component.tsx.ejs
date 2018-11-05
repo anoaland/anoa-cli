@@ -1,10 +1,23 @@
 import React from 'react'
 import { Text, View } from 'react-native'
+<% if (props.withStore) { %>import { AppStore } from '../../store'<% } %>  
 
-export interface <%= props.name %>Props {}
+<% if (props.stateProps) { %>
+interface StateProps {
+  <%= props.stateProps %>
+}<% } %>  
+
+export interface <%= props.name %>Props <% if (props.stateProps) { %> extends Partial<StateProps> <% } %> {}
 <% if (props.withState) { %>
 export interface <%= props.name %>State {}
 <% } %>
+
+<% if (props.stateMap) { %>
+@AppStore.withStoreClass<StateProps>(
+  state => ({
+    <%= props.stateMap %>
+  })
+)<% } %>
 export class <%= props.name %> extends React.Component<<%= props.name %>Props<% if (props.withState) { %>, <%= props.name %>State<% } %>> {
   constructor(props: <%= props.name %>Props) {
     super(props)<% if (props.withState) { %>
