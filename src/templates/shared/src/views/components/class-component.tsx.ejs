@@ -1,0 +1,21 @@
+import React from 'react'
+import { Text, View } from 'react-native'
+
+export interface <%= props.name %>Props {}
+<% if (props.withState) { %>
+export interface <%= props.name %>State {}
+<% } %>
+export class <%= props.name %> extends React.Component<<%= props.name %>Props<% if (props.withState) { %>, <%= props.name %>State<% } %>> {
+  constructor(props: <%= props.name %>Props) {
+    super(props)<% if (props.withState) { %>
+    this.state = {}<% } %>
+  }
+
+  public render() {
+    return (
+      <View>
+        <Text><%= props.name %></Text>
+      </View>
+    )
+  }
+}

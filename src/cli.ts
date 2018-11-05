@@ -27,9 +27,10 @@ async function run(argv) {
     '--version',
     'i',
     'init',
-    'r',
     'store',
     's',
+    'view',
+    'v'
   ]
   const showHelp =
     !args.length ||
