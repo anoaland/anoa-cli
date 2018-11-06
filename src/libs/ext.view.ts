@@ -1,9 +1,9 @@
 import { RootContext } from '.'
 
 export function createClassView(context: RootContext) {
-  return async (kind: 'component' | 'screen', name: string, props: any) => {
+  return async (kind: 'component' | 'screen', name: string, props: any, location: string) => {
     const {
-      strings: { pascalCase },
+      strings: { pascalCase, kebabCase },
       generateFiles,
     } = context
 
@@ -17,7 +17,7 @@ export function createClassView(context: RootContext) {
     await generateFiles(
       'shared/src/views/class/',
       fileList,
-      `src/views/${targetPathBase}/${name}/`,
+      `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
       {
         name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
         ...props,
@@ -27,9 +27,14 @@ export function createClassView(context: RootContext) {
 }
 
 export function createStatelessView(context: RootContext) {
-  return async (kind: 'component' | 'screen', name: string, functional: boolean) => {
+  return async (
+    kind: 'component' | 'screen',
+    name: string,
+    functional: boolean,
+    location: string,
+  ) => {
     const {
-      strings: { pascalCase },
+      strings: { pascalCase, kebabCase },
       generateFiles,
     } = context
 
@@ -38,7 +43,7 @@ export function createStatelessView(context: RootContext) {
     await generateFiles(
       functional ? 'shared/src/views/stateless-functional/' : 'shared/src/views/stateless/',
       ['index.tsx', 'props.tsx'],
-      `src/views/${targetPathBase}/${name}/`,
+      `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
       {
         name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
       },

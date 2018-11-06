@@ -1,6 +1,7 @@
 import { format, resolveConfig } from 'prettier'
 import * as path from 'path'
 import { RootContext } from '.'
+import { GluegunFileSystemInspectTreeResult } from 'gluegun-fix'
 
 export function npm(context: RootContext) {
   return async (dev: boolean, args: string) => {
@@ -92,5 +93,33 @@ export function relative(context: RootContext) {
       result = `.` + path.sep + result
     }
     return result.replace(/\\/g, '/')
+  }
+}
+
+export function dirList(context: RootContext) {
+  return async (root: string) => {
+    const {
+      filesystem: { inspectTree },
+    } = context
+
+    const tree = ((await inspectTree(root)) as any) as GluegunFileSystemInspectTreeResult
+    if (!tree || !tree.children || !tree.children.length) {
+      return []
+    }
+
+    return tree.children.filter(r => r.type === 'dir')
+  }
+}
+
+export function dirNames(context: RootContext) {
+  return async (root: string) => {
+    const { dirList } = context
+
+    const dirs = (await dirList(root)).map(d => '/' + d.name)
+    if (dirs.length) {
+      dirs.splice(0, 0, '/')
+    }
+
+    return dirs
   }
 }

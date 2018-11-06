@@ -22,6 +22,8 @@ export default {
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'
 
+    // Task query
+
     let task = undefined
 
     switch (first) {
@@ -47,9 +49,7 @@ export default {
 
     const strToCreate = task === taskCreateComponent ? 'component' : 'screen'
 
-    const viewClass = `Class based ${strToCreate}`
-    const viewStateless = `Stateless ${strToCreate}`
-    const viewStatelessFunctional = `Stateless functional ${strToCreate}`
+    // Screen or component name query
 
     let name = second
     if (!name) {
@@ -68,6 +68,11 @@ export default {
       return
     }
 
+    // Screen or component type
+
+    const viewClass = `Class based ${strToCreate}`
+    const viewStateless = `Stateless ${strToCreate}`
+    const viewStatelessFunctional = `Stateless functional ${strToCreate}`
     const { type } = await prompt.ask([
       {
         name: 'type',
@@ -82,8 +87,26 @@ export default {
       return
     }
 
-    const baseName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
+    // Select location
 
+    let location = '/'
+    const locations = await context.dirNames(`src/views/${strToCreate}s`)
+    if (locations.length) {
+      location = (await prompt.ask([
+        {
+          name: 'location',
+          message: 'Location',
+          type: 'list',
+          choices: locations,
+        },
+      ])).location
+    }
+
+    if (location.length > 1) {
+      location += '/'
+    }
+
+    const baseName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
     const importLocalProps = [`${baseName}Props`]
     const importLocalState = []
 
@@ -141,8 +164,8 @@ export default {
         const importStatements = []
         const storePath =
           strToCreate === 'screen'
-            ? relative('store', 'views/screens/foo')
-            : relative('store', 'views/components/foo')
+            ? relative('store', `views/screens${location}foo`)
+            : relative('store', `views/components${location}foo`)
 
         if (storeAppActions) {
           const withStoreAction = await prompt.confirm(
@@ -223,16 +246,15 @@ export default {
           withStore,
         }
 
-        await createClassView(strToCreate, name, props)
-
+        await createClassView(strToCreate, name, props, location)
         break
 
       case viewStateless:
-        await createStatelessView(strToCreate, name, false)
+        await createStatelessView(strToCreate, name, false, location)
         break
 
       case viewStatelessFunctional:
-        await createStatelessView(strToCreate, name, true)
+        await createStatelessView(strToCreate, name, true, location)
         break
     }
   },
