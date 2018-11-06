@@ -1,7 +1,7 @@
 import { GluegunRunContext } from 'gluegun'
 
 module.exports = (context: GluegunRunContext) => {
-  context.createClassComponent = async (name, props) => {
+  context.createClassView = async (kind: 'component' | 'screen', name, props) => {
     const {
       print,
       strings: { isBlank, pascalCase, kebabCase },
@@ -17,16 +17,16 @@ module.exports = (context: GluegunRunContext) => {
     await generateFiles(
       'shared/src/views/components/',
       ['class-component.tsx'],
-      `src/views/components/`,
+      kind === 'component' ? `src/views/components/` : `src/views/screens/`,
       {
-        name: pascalCase(name),
+        name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
         ...props,
       },
       `${kebabCase(name)}.tsx`,
     )
   }
 
-  context.createStatelessComponent = async (name, functional) => {
+  context.createStatelessView = async (kind: 'component' | 'screen', name, functional) => {
     const {
       print,
       strings: { isBlank, pascalCase, kebabCase },
@@ -40,13 +40,13 @@ module.exports = (context: GluegunRunContext) => {
     }
 
     const props = {
-      name: pascalCase(name),
+      name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
     }
 
     await generateFiles(
       'shared/src/views/components/',
       [functional ? 'stateless-functional-component.tsx' : 'stateless-component.tsx'],
-      `src/views/components/`,
+      kind === 'component' ? `src/views/components/` : `src/views/screens/`,
       props,
       `${kebabCase(name)}.tsx`,
     )

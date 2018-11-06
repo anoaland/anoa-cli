@@ -8,8 +8,8 @@ module.exports = {
     const {
       parameters: { first, second },
       prompt,
-      createClassComponent,
-      createStatelessComponent,
+      createClassView,
+      createStatelessView,
       storeStateList,
       storeAppActionList,
       strings: { pascalCase, camelCase },
@@ -44,162 +44,160 @@ module.exports = {
       task = pickTask
     }
 
-    if (task === taskCreateComponent) {
-      const componentClass = 'Class based component'
-      const componentStateless = 'Stateless component'
-      const componentStatelessFunctional = 'Stateless functional component'
+    const strToCreate = task === taskCreateComponent ? 'component' : 'screen'
 
-      let name = second
-      if (!name) {
-        name = (await prompt.ask([
-          {
-            type: 'input',
-            name: 'name',
-            message: 'Component name',
-          },
-        ])).name
-      }
+    const viewClass = `Class based ${strToCreate}`
+    const viewStateless = `Stateless ${strToCreate}`
+    const viewStatelessFunctional = `Stateless functional ${strToCreate}`
 
-      if (!name) {
-        print.error('Name is required')
-        process.exit(0)
-        return
-      }
-
-      const { type } = await prompt.ask([
+    let name = second
+    if (!name) {
+      name = (await prompt.ask([
         {
-          name: 'type',
-          message: 'Select component type',
-          type: 'list',
-          choices: [componentClass, componentStateless, componentStatelessFunctional],
+          type: 'input',
+          name: 'name',
+          message: `${pascalCase(strToCreate)} name`,
         },
-      ])
-      if (!type) {
-        print.error('Component type is required')
-        process.exit(0)
-        return
-      }
+      ])).name
+    }
 
-      switch (type) {
-        case componentClass:
-          const withState = await prompt.confirm('Do you want to have state in your component?')
-          let stateProps = undefined
-          let stateMap = undefined
-          let actionProps = undefined
-          let actionMap = undefined
-          let actionImports = undefined
+    if (!name) {
+      print.error('Name is required')
+      process.exit(0)
+      return
+    }
 
-          const storeStates = await storeStateList()
-          if (storeStates) {
-            const withStoreState = await prompt.confirm(
-              'Do you want to map application state into props?',
-            )
-            if (withStoreState) {
-              const choices = {}
-              for (const k of Object.keys(storeStates)) {
-                choices[pascalCase(k) + 'State'] = Object.keys(storeStates[k]).map(o => k + '.' + o)
-              }
+    const { type } = await prompt.ask([
+      {
+        name: 'type',
+        message: `Select ${strToCreate} type`,
+        type: 'list',
+        choices: [viewClass, viewStateless, viewStatelessFunctional],
+      },
+    ])
+    if (!type) {
+      print.error(`${pascalCase(strToCreate)} type is required`)
+      process.exit(0)
+      return
+    }
 
-              const { statesToMap } = await prompt.ask([
-                {
-                  name: 'statesToMap',
-                  type: 'checkbox',
-                  message: 'Select state(s) you want to map',
-                  radio: true,
-                  choices,
-                },
-              ])
+    switch (type) {
+      case viewClass:
+        const withState = await prompt.confirm(`Do you want to have state in your ${strToCreate}?`)
+        let stateProps = undefined
+        let stateMap = undefined
+        let actionProps = undefined
+        let actionMap = undefined
+        let actionImports = undefined
 
-              stateProps = []
-              stateMap = []
-              for (const st of statesToMap) {
-                const s = st.split('.')
-                const stateType = storeStates[s[0]][s[1]]
-                const prop = camelCase(s[0] + '-' + s[1])
+        const storeStates = await storeStateList()
+        if (storeStates) {
+          const withStoreState = await prompt.confirm(
+            `Do you want to map application state into props?`,
+          )
+          if (withStoreState) {
+            const choices = {}
+            for (const k of Object.keys(storeStates)) {
+              choices[pascalCase(k) + 'State'] = Object.keys(storeStates[k]).map(o => k + '.' + o)
+            }
 
-                stateProps.push(`${prop}: ${stateType}`)
-                stateMap.push(`${prop}: state.${st}`)
-              }
+            const { statesToMap } = await prompt.ask([
+              {
+                name: 'statesToMap',
+                type: 'checkbox',
+                message: 'Select state(s) you want to map',
+                radio: true,
+                choices,
+              },
+            ])
+
+            stateProps = []
+            stateMap = []
+            for (const st of statesToMap) {
+              const s = st.split('.')
+              const stateType = storeStates[s[0]][s[1]]
+              const prop = camelCase(s[0] + '-' + s[1])
+
+              stateProps.push(`${prop}: ${stateType}`)
+              stateMap.push(`${prop}: state.${st}`)
             }
           }
+        }
 
-          const storeAppActions = await storeAppActionList()
-          const importStatements = []
+        const storeAppActions = await storeAppActionList()
+        const importStatements = []
 
-          if (storeAppActions) {
-            const withStoreAction = await prompt.confirm(
-              'Do you want to map application action into props?',
-            )
+        if (storeAppActions) {
+          const withStoreAction = await prompt.confirm(
+            'Do you want to map application action into props?',
+          )
 
-            if (withStoreAction) {
-              const choices = []
-              for (const k of Object.keys(storeAppActions)) {
-                choices.push(
-                  `${k}(${JSON.stringify(storeAppActions[k].params).replace(/\"/g, '')})`,
-                )
-              }
+          if (withStoreAction) {
+            const choices = []
+            for (const k of Object.keys(storeAppActions)) {
+              choices.push(`${k}(${JSON.stringify(storeAppActions[k].params).replace(/\"/g, '')})`)
+            }
 
-              const { actionsToMap } = await prompt.ask([
-                {
-                  name: 'actionsToMap',
-                  type: 'checkbox',
-                  message: 'Select state(s) you want to map',
-                  radio: true,
-                  choices,
-                },
-              ])
+            const { actionsToMap } = await prompt.ask([
+              {
+                name: 'actionsToMap',
+                type: 'checkbox',
+                message: 'Select state(s) you want to map',
+                radio: true,
+                choices,
+              },
+            ])
 
-              actionProps = []
-              actionMap = []
-              actionImports = {}
+            actionProps = []
+            actionMap = []
+            actionImports = {}
 
-              for (const st of actionsToMap as string[]) {
-                const a = st.split('(')[0].trim()
-                const act = storeAppActions[a]
-                const prop = a.substr(0, a.length - 6)
-                actionProps.push(
-                  `${prop}: (${Object.keys(act.params)
-                    .map(k => `${k}: ${act.params[k]}`)
-                    .join(',')}) => void`,
-                )
-                actionMap.push(
-                  `${prop}: (${Object.keys(act.params).join(', ')}) => dispatch(${a}(${Object.keys(
-                    act.params,
-                  ).join(', ')}))`,
-                )
+            for (const st of actionsToMap as string[]) {
+              const a = st.split('(')[0].trim()
+              const act = storeAppActions[a]
+              const prop = a.substr(0, a.length - 6)
+              actionProps.push(
+                `${prop}: (${Object.keys(act.params)
+                  .map(k => `${k}: ${act.params[k]}`)
+                  .join(',')}) => void`,
+              )
+              actionMap.push(
+                `${prop}: (${Object.keys(act.params).join(', ')}) => dispatch(${a}(${Object.keys(
+                  act.params,
+                ).join(', ')}))`,
+              )
 
-                actionImports[act.file] = [...(actionImports[act.file] || []), a]
-              }
+              actionImports[act.file] = [...(actionImports[act.file] || []), a]
+            }
 
-              for (const impor of Object.keys(actionImports)) {
-                importStatements.push(
-                  `import { ${actionImports[impor].join(
-                    ',',
-                  )} } from '../../store/actions/${impor.substr(0, impor.length - 3)}'`,
-                )
-              }
+            for (const impor of Object.keys(actionImports)) {
+              importStatements.push(
+                `import { ${actionImports[impor].join(
+                  ',',
+                )} } from '../../store/actions/${impor.substr(0, impor.length - 3)}'`,
+              )
             }
           }
+        }
 
-          await createClassComponent(name, {
-            withState,
-            stateProps,
-            stateMap,
-            actionProps,
-            actionMap,
-            importStatements,
-            withStore: !!stateProps || !!actionProps,
-          })
-          break
+        await createClassView(strToCreate, name, {
+          withState,
+          stateProps,
+          stateMap,
+          actionProps,
+          actionMap,
+          importStatements,
+          withStore: !!stateProps || !!actionProps,
+        })
+        break
 
-        case componentStateless:
-          await createStatelessComponent(name)
-          break
+      case viewStateless:
+        await createStatelessView(strToCreate, name)
+        break
 
-        case componentStatelessFunctional:
-          await createStatelessComponent(name, true)
-          break
-      }
+      case viewStatelessFunctional:
+        await createStatelessView(strToCreate, name, true)
+        break
     }
   },
 }
