@@ -1,9 +1,8 @@
 import React from 'react'
 import { Text, View } from 'react-native'
+import { <%= props.name %>Props } from './props'
 
-export interface <%= props.name %>Props {}
-
-export function <%= props.name %>(props: <%= props.name %>Props) {
+export const <%= props.name %>: React.SFC<<%= props.name %>Props> = (props) => {
   return (
     <View>
       <Text><%= props.name %></Text>

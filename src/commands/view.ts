@@ -14,6 +14,7 @@ module.exports = {
       storeAppActionList,
       strings: { pascalCase, camelCase },
       print,
+      relative,
     } = context
 
     await storeAppActionList()
@@ -81,9 +82,19 @@ module.exports = {
       return
     }
 
+    const baseName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
+
+    const importLocalProps = [`${baseName}Props`]
+    const importLocalState = []
+
     switch (type) {
       case viewClass:
         const withState = await prompt.confirm(`Do you want to have state in your ${strToCreate}?`)
+
+        if (withState) {
+          importLocalState.push(`${baseName}State`)
+        }
+
         let stateProps = undefined
         let stateMap = undefined
         let actionProps = undefined
@@ -121,11 +132,17 @@ module.exports = {
               stateProps.push(`${prop}: ${stateType}`)
               stateMap.push(`${prop}: state.${st}`)
             }
+
+            importLocalProps.push(`${baseName}StateProps`)
           }
         }
 
         const storeAppActions = await storeAppActionList()
         const importStatements = []
+        const storePath =
+          strToCreate === 'screen'
+            ? relative('store', 'views/screens/foo')
+            : relative('store', 'views/components/foo')
 
         if (storeAppActions) {
           const withStoreAction = await prompt.confirm(
@@ -174,21 +191,40 @@ module.exports = {
               importStatements.push(
                 `import { ${actionImports[impor].join(
                   ',',
-                )} } from '../../store/actions/${impor.substr(0, impor.length - 3)}'`,
+                )} } from '${storePath}/actions/${impor.substr(0, impor.length - 3)}'`,
               )
             }
+
+            importLocalProps.push(`${baseName}ActionProps`)
           }
         }
 
-        await createClassView(strToCreate, name, {
+        const withStore = !!stateProps || !!actionProps
+
+        if (withStore) {
+          importStatements.splice(0, 0, `import { AppStore } from '${storePath}'`)
+        }
+
+        if (importLocalProps.length) {
+          importStatements.push(`import { ${importLocalProps.sort().join(',')} } from './props'`)
+        }
+
+        if (importLocalState.length) {
+          importStatements.push(`import { ${importLocalState.sort().join(',')} } from './state'`)
+        }
+
+        const props = {
           withState,
           stateProps,
           stateMap,
           actionProps,
           actionMap,
           importStatements,
-          withStore: !!stateProps || !!actionProps,
-        })
+          withStore,
+        }
+
+        await createClassView(strToCreate, name, props)
+
         break
 
       case viewStateless:

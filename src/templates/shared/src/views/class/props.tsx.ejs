@@ -1,0 +1,11 @@
+<% if (props.withStore) { %> <% if (props.stateProps) { %>
+export interface <%- props.name %>StateProps {
+  <%- props.stateProps.join('\r\n') %>
+}<% } %>  
+
+<% if (props.actionProps) { %>
+export interface <%- props.name %>ActionProps {
+    <%- props.actionProps.join('\r\n') %>
+}<% } %><% } %> 
+  
+export interface <%- props.name %>Props <% if (props.withStore) { %> extends Partial<<% if (props.stateProps) { %><%- props.name %>StateProps<% } %><% if (props.actionProps) { %> <% if (props.stateProps) { %> & <% } %> <%- props.name %>ActionProps <% } %>> <% } %> {}

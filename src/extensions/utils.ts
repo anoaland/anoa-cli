@@ -1,5 +1,6 @@
 import { format, resolveConfig } from 'prettier'
 import { GluegunRunContext } from 'gluegun'
+import * as path from 'path'
 
 module.exports = (context: GluegunRunContext) => {
   context.npm = async (dev, args) => {
@@ -61,5 +62,18 @@ module.exports = (context: GluegunRunContext) => {
         await write(target, format(contents, { ...options, parser: 'typescript' }))
       }
     }
+  }
+
+  context.relative = (source, target) => {
+
+    let result = path.relative(
+      context.filesystem.cwd(path.join('src', target)).cwd(),
+      context.filesystem.cwd(path.join('src', source)).cwd(),
+    )
+    const info = path.parse(result)
+    if (info.dir.indexOf(`..`) < 0) {
+      result = `.` + path.sep + result
+    }
+    return result.replace(/\\/g, '/')
   }
 }
