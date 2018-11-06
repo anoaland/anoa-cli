@@ -1,4 +1,4 @@
-import { build, print } from 'gluegun'
+import { build, GluegunRunContext } from 'gluegun'
 
 async function run(argv) {
   // create a CLI runtime
@@ -8,54 +8,41 @@ async function run(argv) {
     .plugins('./node_modules', { matching: 'anoa-*', hidden: true })
     .help({
       name: 'help',
-      alias: ['h'],
+      alias: ['-h'],
       description: 'Show list of commands',
+      dashed: true,
+      run: (ctx: GluegunRunContext) => {
+        ctx.print.printCommands(ctx)
+      },
     }) // provides default for help, h, --help, -h
-    .version() // provides default for version, v, --version, -v
+    .version({
+      name: 'version',
+      alias: ['-v'],
+      description: 'Show version',
+      dashed: true,
+      run: (ctx: GluegunRunContext) => {
+        ctx.print.info('Hola!')
+      },
+    })
+    .defaultCommand({
+      run: (ctx: GluegunRunContext) => {
+        ctx.runtime.run('anoa')
+      },
+    })
     .create()
 
-  // show header
-  header()
-
   const args: string[] = argv.slice(2)
+  if (args[0] === '-v') {
+    cli.run('version')
+    return
+  }
 
-  const validCommands = [
-    '-h',
-    '--help',
-    '-v',
-    'v',
-    '--version',
-    'i',
-    'init',
-    'store',
-    's',
-    'view',
-    'v'
-  ]
-  const showHelp =
-    !args.length ||
-    args.indexOf('-h') === 0 ||
-    args.indexOf('--help') === 0 ||
-    validCommands.indexOf(args[0]) < 0
-
-  // show help as default
-  if (showHelp) {
-    print.printCommands(await cli.run('help'))
+  if (args[0] === '-h') {
+    cli.run('help')
     return
   }
 
   await cli.run(argv)
-}
-
-function header() {
-  print.newline()
-  print.success('          .d8888b. 88d888b. .d8888b. .d8888b. ')
-  print.success("          88'  `88 88'  `88 88'  `88 88'  `88 ")
-  print.success('          88.  .88 88    88 88.  .88 88.  .88 ')
-  print.success("           88888P8 dP    dP `88888P' `88888P8 ")
-  print.info('=========================================================')
-  print.info('  React Native Typescript Boilerplate & Scaffolder CLI')
-  print.newline()
 }
 
 module.exports = { run }
