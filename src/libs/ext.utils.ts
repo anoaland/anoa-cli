@@ -1,22 +1,28 @@
 import { format, resolveConfig } from 'prettier'
-import { GluegunRunContext } from 'gluegun'
 import * as path from 'path'
+import { RootContext } from '.'
 
-module.exports = (context: GluegunRunContext) => {
-  context.npm = async (dev, args) => {
+export function npm(context: RootContext) {
+  return async (dev: boolean, args: string) => {
     const cmd = context.yarn ? `yarn add${dev ? ' -D' : ''}` : `npm install ${dev ? '-D' : '-S'}`
     await context.system.run(cmd + ' ' + args)
   }
+}
 
-  context.npmAddPackages = async (pacakges: string[]) => {
+export function npmAddPackages(context: RootContext) {
+  return async (pacakges: string[]) => {
     await context.npm(false, pacakges.join(' '))
   }
+}
 
-  context.npmAddDevPackages = async (pacakges: string[]) => {
+export function npmAddDevPackages(context: RootContext) {
+  return async (pacakges: string[]) => {
     await context.npm(true, pacakges.join(' '))
   }
+}
 
-  context.npmEnsure = async (dev: boolean, deps: string[]) => {
+export function npmEnsure(context: RootContext) {
+  return async (dev: boolean, deps: string[]) => {
     const { packageJson, npmAddPackages, npmAddDevPackages } = context
     const { dependencies, devDependencies } = await packageJson()
     const pkgDeps = Object.keys(dev ? devDependencies : dependencies)
@@ -36,12 +42,22 @@ module.exports = (context: GluegunRunContext) => {
       }
     }
   }
+}
 
-  context.packageJson = async () => {
+export function packageJson(context: RootContext) {
+  return async () => {
     return await context.filesystem.read('package.json', 'json')
   }
+}
 
-  context.generateFiles = async (template, files, dest, props, destFile) => {
+export function generateFiles(context: RootContext) {
+  return async (
+    template: string,
+    files: string[],
+    dest?: string,
+    props?: any,
+    destFile?: string,
+  ) => {
     const {
       filesystem: { read, write },
       template: { generate },
@@ -63,9 +79,10 @@ module.exports = (context: GluegunRunContext) => {
       }
     }
   }
+}
 
-  context.relative = (source, target) => {
-
+export function relative(context: RootContext) {
+  return (source: string, target: string) => {
     let result = path.relative(
       context.filesystem.cwd(path.join('src', target)).cwd(),
       context.filesystem.cwd(path.join('src', source)).cwd(),

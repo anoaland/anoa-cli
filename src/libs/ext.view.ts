@@ -1,7 +1,7 @@
-import { GluegunRunContext } from 'gluegun'
+import { RootContext } from '.'
 
-module.exports = (context: GluegunRunContext) => {
-  context.createClassView = async (kind: 'component' | 'screen', name, props) => {
+export function createClassView(context: RootContext) {
+  return async (kind: 'component' | 'screen', name: string, props: any) => {
     const {
       strings: { pascalCase },
       generateFiles,
@@ -24,8 +24,10 @@ module.exports = (context: GluegunRunContext) => {
       },
     )
   }
+}
 
-  context.createStatelessView = async (kind: 'component' | 'screen', name, functional) => {
+export function createStatelessView(context: RootContext) {
+  return async (kind: 'component' | 'screen', name: string, functional: boolean) => {
     const {
       strings: { pascalCase },
       generateFiles,

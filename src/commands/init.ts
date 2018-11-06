@@ -1,8 +1,10 @@
-module.exports = {
+import { RootContext } from '../libs'
+
+export default {
   name: 'init',
   alias: ['i'],
   description: 'Generate new react native boilerplate',
-  run: async context => {
+  run: async (context: RootContext) => {
     const {
       init,
       parameters: { first },

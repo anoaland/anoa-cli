@@ -1,5 +1,7 @@
-module.exports = context => {
-  context.boilerplateExpo = async (projectName, withStore) => {
+import { RootContext } from '.'
+
+export function boilerplateExpo(context: RootContext) {
+  return async (projectName: string, withStore: boolean) => {
     const {
       system,
       print,

@@ -1,8 +1,10 @@
-module.exports = {
+import { RootContext } from '../libs'
+
+export default {
   name: 'store',
   alias: ['s'],
   description: 'Redux store generator',
-  run: async context => {
+  run: async (context: RootContext) => {
     const {
       parameters: { first },
       storeCreateReducer,

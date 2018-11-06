@@ -1,5 +1,7 @@
-module.exports = context => {
-  context.boilerplateReactNativeInit = async (projectName, withStore) => {
+import { RootContext } from '.'
+
+export function boilerplateReactNativeInit(context: RootContext) {
+  return async (projectName: string, withStore: boolean) => {
     const {
       system,
       print,

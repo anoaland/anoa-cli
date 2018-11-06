@@ -1,10 +1,10 @@
-import { GluegunRunContext } from 'gluegun'
+import { RootContext } from '../libs'
 
-module.exports = {
+export default {
   name: 'view',
   alias: ['v'],
   description: 'View generator',
-  run: async (context: GluegunRunContext) => {
+  run: async (context: RootContext) => {
     const {
       parameters: { first, second },
       prompt,
@@ -228,7 +228,7 @@ module.exports = {
         break
 
       case viewStateless:
-        await createStatelessView(strToCreate, name)
+        await createStatelessView(strToCreate, name, false)
         break
 
       case viewStatelessFunctional:

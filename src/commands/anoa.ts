@@ -1,9 +1,9 @@
-import { GluegunRunContext } from 'gluegun'
+import { RootContext } from '../libs'
 
-module.exports = {
+export default {
   name: 'anoa',
   hidden: 'true',
-  run: async (context: GluegunRunContext) => {
+  run: async (context: RootContext) => {
     const { print } = context
 
     print.success('          .d8888b. 88d888b. .d8888b. .d8888b. ')
