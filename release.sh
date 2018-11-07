@@ -1,8 +1,9 @@
 #!/bin/bash
 
 version=$1
-echo
+tag=$2
 
+echo
 echo "Releasing anoa-cli version $version..."
 echo
 
@@ -11,6 +12,9 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	echo
   echo "Releasing $version now..."
+
+	# build source code
+	npm run build
 
 	# stage all changes and commit
 	git commit -am "v$version"
@@ -22,8 +26,15 @@ then
 	# push to repo
 	git push origin master --tags
 	echo
+
 	echo "Publishing to npm..."
-	npm publish
+
+	if [ -z "$tag" ] then
+		npm publish
+	else
+		npm publish --tag $tag
+	fi
+
 	echo
 	echo "Done! -- published to https://www.npmjs.com/package/anoa-cli"
 fi
