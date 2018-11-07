@@ -2,6 +2,29 @@ import { format, resolveConfig } from 'prettier'
 import * as path from 'path'
 import { RootContext } from '.'
 import { GluegunFileSystemInspectTreeResult } from 'gluegun-fix'
+import { sortWith, ascend, prop } from 'ramda'
+
+export function sortImport() {
+  return (imports: string[]) => {
+    const mapImports = imports.map(a => {
+      var ss = a.split(' from ')
+      let order = 1
+      if (ss[1][1] !== '.') {
+        order = 0
+      }
+
+      return {
+        order,
+        impor: ss[0],
+        from: ss[1],
+        res: a,
+      }
+    })
+
+    const doSort = sortWith([ascend(prop('order')), ascend(prop('from')), ascend(prop('impor'))])
+    return doSort(mapImports).map((a: any) => a.res)
+  }
+}
 
 export function npm(context: RootContext) {
   return async (dev: boolean, args: string) => {
@@ -76,7 +99,13 @@ export function generateFiles(context: RootContext) {
       if (target.endsWith('ts') || target.endsWith('tsx')) {
         const contents = await read(target)
         const options = await resolveConfig('.prettierrc')
-        await write(target, format(contents, { ...options, parser: 'typescript' }))
+        await write(
+          target,
+          format(contents, {
+            ...options,
+            parser: 'typescript',
+          }),
+        )
       }
     }
   }
@@ -111,6 +140,21 @@ export function dirList(context: RootContext) {
   }
 }
 
+export function fileList(context: RootContext) {
+  return async (root: string) => {
+    const {
+      filesystem: { inspectTree },
+    } = context
+
+    const tree = ((await inspectTree(root)) as any) as GluegunFileSystemInspectTreeResult
+    if (!tree || !tree.children || !tree.children.length) {
+      return []
+    }
+
+    return tree.children.filter(r => r.type === 'file')
+  }
+}
+
 export function dirNames(context: RootContext) {
   return async (root: string) => {
     const { dirList } = context
@@ -121,5 +165,50 @@ export function dirNames(context: RootContext) {
     }
 
     return dirs
+  }
+}
+
+export function dirNamesDeep(context: RootContext) {
+  const { dirList } = context
+
+  const res = []
+  let id = 0
+
+  let parent = '/'
+  let level = 0
+
+  function iterate(parentId: number, trees: GluegunFileSystemInspectTreeResult[]) {
+    trees.forEach(t => {
+      const pId = id++
+
+      let prnId = parentId
+      if (parentId > -1) {
+        let found = false
+        while (!found) {
+          const prn = res.find(p => p.id === prnId)
+          if (!prn) {
+            found = true
+          } else {
+            level++
+            prnId = prn.parentId
+            parent = '/' + prn.name + parent
+          }
+        }
+      }
+
+      res.push({ id: pId, name: t.name, parent, parentId, level })
+      parent = '/'
+      level = 0
+
+      if (t.children && t.children.length) {
+        iterate(pId, t.children.filter(c => c.type === 'dir'))
+      }
+    })
+  }
+
+  return async root => {
+    const tree = await dirList(root)
+    iterate(-1, tree)
+    return res.map(p => p.parent + p.name)
   }
 }

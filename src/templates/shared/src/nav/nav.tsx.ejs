@@ -1,0 +1,5 @@
+<%- props.imports.join('\r\n') %>
+
+export const <%- props.name %> = create<%- props.kind %>({
+  <%- props.routeConfigMap.join(', ') %>
+})

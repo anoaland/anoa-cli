@@ -1,4 +1,4 @@
-import * as extensions from './types'
+import * as extensions from './extensions'
 import { GluegunRunContext } from 'gluegun'
 type TExt = typeof extensions
 
