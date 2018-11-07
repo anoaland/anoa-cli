@@ -1,4 +1,5 @@
-import { build, GluegunRunContext } from 'gluegun'
+import { build } from 'gluegun'
+import { RootContext } from './libs'
 
 async function run(argv) {
   // create a CLI runtime
@@ -11,8 +12,12 @@ async function run(argv) {
       alias: ['-h'],
       description: 'Show list of commands',
       dashed: true,
-      run: (ctx: GluegunRunContext) => {
-        ctx.print.printCommands(ctx)
+      run: ({ meta, print, strings: { padEnd } }: RootContext) => {
+        print.newline()
+        const commands = meta.commandInfo()
+        commands.filter(c => c[0].trim() !== 'anoa').forEach(c => {
+          print.info(padEnd(c[0], 25) + c[1])
+        })
       },
     }) // provides default for help, h, --help, -h
     .version({
@@ -20,12 +25,12 @@ async function run(argv) {
       alias: ['-v'],
       description: 'Show version',
       dashed: true,
-      run: (ctx: GluegunRunContext) => {
-        ctx.print.info('Hola!')
+      run: (ctx: RootContext) => {
+        ctx.print.info(ctx.meta.version())
       },
     })
     .defaultCommand({
-      run: (ctx: GluegunRunContext) => {
+      run: (ctx: RootContext) => {
         ctx.runtime.run('anoa')
       },
     })
