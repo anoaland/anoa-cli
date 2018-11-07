@@ -16,7 +16,7 @@ export function boilerplateExpo(context: RootContext) {
     let hasExpo
 
     try {
-      hasExpo = !!(await system.run('npm info expo'))
+      hasExpo = !!(await system.run('expo --version'))
     } catch (error) {
       hasExpo = false
     }
