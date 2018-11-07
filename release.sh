@@ -3,11 +3,17 @@
 version=$1
 tag=$2
 
+versionAndTag = "version $version"
+if [ -n "$tag" ] 
+then
+	versionAndTag = "version $version@$tag"
+fi
+
 echo
-echo "Releasing anoa-cli version $version..."
+echo "Releasing anoa-cli $versionAndTag..."
 echo
 
-read -p "Are you sure want to release version $version? (y/n)" -n 1 -r
+read -p "Are you sure want to release $versionAndTag? (y/n)" -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	echo
@@ -29,10 +35,11 @@ then
 
 	echo "Publishing to npm..."
 
-	if [ -z "$tag" ] then
-		npm publish
-	else
+	if [ -n "$tag" ] 
+	then
 		npm publish --tag $tag
+	else
+		npm publish
 	fi
 
 	echo
