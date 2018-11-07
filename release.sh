@@ -1,19 +1,19 @@
 #!/bin/bash
 
 version=$1
-tag=$2
+tag="$2"
+version_and_tag="version $version"
 
-versionAndTag = "version $version"
 if [ -n "$tag" ] 
 then
-	versionAndTag = "version $version@$tag"
+	version_and_tag="version $version@$tag"
 fi
 
 echo
-echo "Releasing anoa-cli $versionAndTag..."
+echo "Releasing anoa-cli $version_and_tag..."
 echo
 
-read -p "Are you sure want to release $versionAndTag? (y/n)" -n 1 -r
+read -p "Are you sure want to release $version_and_tag? (y/n)" -n 1 -r
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
 	echo
@@ -27,7 +27,7 @@ then
 
 	# update npm version 
 	# commit also tagged here
-	npm version $version --message "Release version $version"
+	npm version $version --message "Release $version_and_tag"
 
 	# push to repo
 	git push origin master --tags
