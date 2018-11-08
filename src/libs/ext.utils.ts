@@ -3,6 +3,7 @@ import * as path from 'path'
 import { RootContext } from '.'
 import { GluegunFileSystemInspectTreeResult } from 'gluegun-fix'
 import { sortWith, ascend, prop } from 'ramda'
+import { AnoaProjectInfo } from './types'
 
 export function sortImport() {
   return (imports: string[]) => {
@@ -72,7 +73,20 @@ export function npmEnsure(context: RootContext) {
 
 export function packageJson(context: RootContext) {
   return async () => {
-    return await context.filesystem.read('package.json', 'json')
+    const pkg = await context.filesystem.read('package.json', 'json')
+    if (!pkg) {
+      context.print.error('Invalid project directory.')
+      process.exit(0)
+      return
+    }
+    return pkg
+  }
+}
+
+export function projectInfo(context: RootContext) {
+  return async () => {
+    const pkg = await context.packageJson()
+    return pkg.anoa as AnoaProjectInfo | undefined
   }
 }
 

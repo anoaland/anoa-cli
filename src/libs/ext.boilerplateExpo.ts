@@ -69,6 +69,10 @@ export function boilerplateExpo(context: RootContext) {
     await filesystem.remove('App.js')
     await patching.update('package.json', pkg => {
       pkg.name = strings.kebabCase(projectName)
+      pkg.anoa = {
+        preset: 'expo',
+        withStore
+      }
       return pkg
     })
 

@@ -3,3 +3,11 @@ export interface ScreenInfo {
   path: string
   option: string
 }
+
+/**
+ * Project info stored on package.json
+ */
+export interface AnoaProjectInfo {
+  preset: 'expo' | 'react-native-init',
+  withStore: boolean
+}
