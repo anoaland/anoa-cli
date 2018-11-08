@@ -47,7 +47,7 @@ export function npmAddDevPackages(context: RootContext) {
 
 export function npmEnsure(context: RootContext) {
   return async (dev: boolean, deps: string[]) => {
-    const { packageJson, npmAddPackages, npmAddDevPackages } = context
+    const { packageJson, npmAddPackages, npmAddDevPackages, print } = context
     const { dependencies, devDependencies } = await packageJson()
     const pkgDeps = Object.keys(dev ? devDependencies : dependencies)
 
@@ -59,11 +59,13 @@ export function npmEnsure(context: RootContext) {
     }
 
     if (depsToAdd.length > 0) {
+      const spinner = print.spin('Adding required packages...')
       if (dev) {
         await npmAddDevPackages(depsToAdd)
       } else {
         await npmAddPackages(depsToAdd)
       }
+      spinner.success('Required packages added.')
     }
   }
 }
