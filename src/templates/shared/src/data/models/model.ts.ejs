@@ -1,0 +1,9 @@
+import { Column, Primary } from 'sqlite-ts'
+
+export class <%- props.name %> {
+  @Primary()
+  id?: number = 0
+
+  @Column('NVARCHAR')
+  foo: string = ''
+}
