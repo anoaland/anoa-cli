@@ -65,7 +65,7 @@ export function npmEnsure(context: RootContext) {
       } else {
         await npmAddPackages(depsToAdd)
       }
-      spinner.success('Required packages added.')
+      spinner.succeed('Required packages added.')
     }
   }
 }
