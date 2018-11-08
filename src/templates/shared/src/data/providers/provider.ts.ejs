@@ -1,0 +1,11 @@
+import { Db } from 'sqlite-ts'
+import { Models } from '..'
+
+export class <%- props.name %> {
+  db: Db<Models>
+  constructor(db: Db<Models>) {
+    this.db = db
+  }
+
+  // TODO: add provider functions...
+}

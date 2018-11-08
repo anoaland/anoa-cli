@@ -8,6 +8,7 @@ export interface ScreenInfo {
  * Project info stored on package.json
  */
 export interface AnoaProjectInfo {
+  name: string
   preset: 'expo' | 'react-native-init',
   withStore: boolean
 }

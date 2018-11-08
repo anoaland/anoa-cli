@@ -10,6 +10,7 @@ export default {
       prompt,
       print,
       dataCreateModel,
+      dataCreateProvider,
       strings: { kebabCase, pascalCase },
     } = context
 
@@ -67,10 +68,37 @@ export default {
       await dataCreateModel(name)
 
       print.success(
-        `New model named ${print.colors.magenta(
+        `A new model named ${print.colors.magenta(
           pascalCase(name),
         )} was successfully created on ${print.colors.yellow(
           `src/data/models/${kebabCase(name)}.ts`,
+        )}`,
+      )
+    } else if (task === taskCreateProvider) {
+      let name = second
+      if (!name) {
+        name = (await prompt.ask([
+          {
+            type: 'input',
+            name: 'name',
+            message: 'Provider name',
+          },
+        ])).name
+      }
+
+      if (!name) {
+        print.error('Name is required')
+        process.exit(0)
+        return
+      }
+
+      await dataCreateProvider(name)
+
+      print.success(
+        `A new data provider named ${print.colors.magenta(
+          pascalCase(name),
+        )} was successfully created on ${print.colors.yellow(
+          `src/data/providers/${kebabCase(name)}.ts`,
         )}`,
       )
     }

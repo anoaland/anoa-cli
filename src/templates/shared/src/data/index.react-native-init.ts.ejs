@@ -1,0 +1,31 @@
+import SQLite from 'react-native-sqlite-storage'
+import { Db, ReactNativeSQLiteStorageDriver } from 'sqlite-ts'
+import * as entities from './models'
+import * as providers from './providers'
+
+type TProviders = typeof providers
+export type Models = typeof entities
+export type Providers = { [K in keyof TProviders]: InstanceType<TProviders[K]> }
+
+SQLite.DEBUG(true)
+SQLite.enablePromise(true)
+
+// @ts-ignore
+export const AppData: Providers & { init: () => Promise<void> } = {
+  init: async () => {
+    const sqliteDb = await SQLite.openDatabase({
+      name: '<%- props.name %>',
+      location: 'default'
+    })
+
+    const db = await Db.init({
+      driver: new ReactNativeSQLiteStorageDriver(sqliteDb),
+      entities
+    })
+
+    for (const k of Object.keys(providers)) {
+      // @ts-ignore
+      AppData[k] = new providers[k](db)
+    }
+  }
+}

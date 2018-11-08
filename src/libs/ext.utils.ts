@@ -86,7 +86,7 @@ export function packageJson(context: RootContext) {
 export function projectInfo(context: RootContext) {
   return async () => {
     const pkg = await context.packageJson()
-    return pkg.anoa as AnoaProjectInfo | undefined
+    return { name: pkg.name, ...pkg.anoa } as AnoaProjectInfo
   }
 }
 

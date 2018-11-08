@@ -1,5 +1,15 @@
 import { RootContext } from '..'
 
+export function dataIsModelExists(context: RootContext) {
+  return async () => {
+    const {
+      filesystem: { exists },
+    } = context
+
+    return exists('src/data/models/index.ts') === 'file'
+  }
+}
+
 export function dataCreateModel(context: RootContext) {
   return async (name: string) => {
     const {
