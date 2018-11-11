@@ -15,12 +15,14 @@ export default {
       strings: { pascalCase, camelCase },
       print,
       relative,
+      styleCreateTheme,
     } = context
 
     await storeAppActionList()
 
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'
+    const taskCreateTheme = 'Create new theme'
 
     // Task query
 
@@ -33,6 +35,9 @@ export default {
       case 's':
         task = taskCreateScreen
         break
+      case 't':
+        task = taskCreateTheme
+        break
     }
 
     if (!task) {
@@ -41,10 +46,15 @@ export default {
           name: 'pickTask',
           message: 'What would you like to do with view?',
           type: 'list',
-          choices: [taskCreateComponent, taskCreateScreen],
+          choices: [taskCreateComponent, taskCreateScreen, taskCreateTheme],
         },
       ])
       task = pickTask
+    }
+
+    if (task === taskCreateTheme) {
+      await styleCreateTheme()
+      return
     }
 
     const strToCreate = task === taskCreateComponent ? 'component' : 'screen'
