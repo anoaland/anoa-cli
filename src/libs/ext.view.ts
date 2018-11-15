@@ -94,6 +94,7 @@ class View {
       if (identifier) {
         let type: ViewType = 'class'
         switch (e.getLastChild().getKind()) {
+          case SyntaxKind.CallExpression:
           case SyntaxKind.Block:
             type = 'stateless'
             break

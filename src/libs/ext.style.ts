@@ -234,6 +234,10 @@ class Style {
       case 'class':
         this._connectThemeToViewClass(dir, viewInfo)
         break
+
+      case 'stateless':
+        this._connectThemeToStatelessView(dir, viewInfo)
+        break
     }
   }
 
@@ -243,8 +247,6 @@ class Style {
 
     const viewAst = utils.ast(`${viewDir}/index.tsx`)
     const viewFile = viewAst.sourceFile
-    const propsAst = utils.ast(`${viewDir}/props.tsx`)
-    const propsFile = propsAst.sourceFile
 
     const clazz = viewFile.getClass(viewInfo.name)
 
@@ -261,10 +263,62 @@ class Style {
       viewAst.save()
     }
 
+    this._extendsPropsStyle(viewInfo.name, viewDir)
+
+    print.success(`Theme was successfully connected to ${print.colors.magenta(viewInfo.name)}.`)
+    print.success(
+      `Use ${print.colors.yellow(
+        `const { theme } = this.props as Required<${viewInfo.name}Props>`,
+      )} in the render function to access theme.`,
+    )
+  }
+
+  private _connectThemeToStatelessView(dir: string, { name, path }: ViewInfo) {
+    const { utils, print } = this.context
+    const viewDir = dir + path
+
+    const viewAst = utils.ast(`${viewDir}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+
+    const viewFn = viewFile.getFunction(name)
+    if (!viewFn) {
+      if (viewFile.getText().indexOf(`AppStyle.withTheme`) > -1) {
+        print.warning('Seems this component already connected to theme.')
+      } else {
+        print.warning('Could not connect theme to this component.')
+      }
+      process.exit(0)
+      return
+    }
+
+    viewFn.setIsExported(false)
+    viewFn.rename(`_${name}`)
+
+    viewAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyle'])
+    viewAst.sortImports()
+    viewFile.addStatements(`\r\nexport const ${name} = AppStyle.withTheme(_${name})`)
+
+    viewAst.save()
+
+    this._extendsPropsStyle(name, viewDir)
+
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
+    print.success(
+      `Use ${print.colors.yellow(
+        `const { theme } = props as Required<${name}Props>`,
+      )} in the ${print.colors.magenta(name)} function to access theme.`,
+    )
+  }
+
+  private _extendsPropsStyle(name: string, viewDir: string) {
+    const { utils } = this.context
+    const propsAst = utils.ast(`${viewDir}/props.tsx`)
+    const propsFile = propsAst.sourceFile
+
     propsAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyleProps'])
 
     // extends the props interface
-    const propsInterface = propsFile.getInterface(`${viewInfo.name}Props`)
+    const propsInterface = propsFile.getInterface(`${name}Props`)
     const appStylePropsText = 'Partial<AppStyleProps>'
     if (
       propsInterface
@@ -277,9 +331,6 @@ class Style {
 
     propsAst.sortImports()
     propsAst.save()
-
-    print.success(`Theme was successfully connected to ${print.colors.magenta(viewInfo.name)}.`)
-    print.success(`Use ${print.colors.yellow(`const { theme } = this.props as Required<${viewInfo.name}Props>`)} in the render function to access theme.`)
   }
 }
 
