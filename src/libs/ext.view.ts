@@ -52,18 +52,18 @@ class View {
     )
   }
 
-  async screenList(dir: string = ''): Promise<ViewInfo[]> {
+  async viewInfoList(kind: 'component' | 'screen', dir: string = ''): Promise<ViewInfo[]> {
     const {
       filesystem: { exists },
       utils,
       strings: { padEnd },
     } = this.context
 
-    const dirs = await utils.dirNamesDeep(`src/views/screens${dir}`)
+    const dirs = await utils.dirNamesDeep(`src/views/${kind}s${dir}`)
     const infoList: ViewInfo[] = []
 
     for (const d of dirs) {
-      const file = `src/views/screens${d}/index.tsx`
+      const file = `src/views/${kind}s${d}/index.tsx`
 
       if (exists(file) === 'file') {
         const briefInfo = this.briefViewInfo(file)

@@ -7,7 +7,7 @@ export default {
   run: async (context: RootContext) => {
     const { view, prompt, navigator, print } = context
 
-    const screens = await view.screenList()
+    const screens = await view.viewInfoList('screen')
     const { screen } = await prompt.ask([
       {
         name: 'screen',

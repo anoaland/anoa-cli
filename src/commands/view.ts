@@ -19,6 +19,9 @@ export default {
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'
     const taskCreateTheme = 'Create new theme'
+    const taskConnectTheme = 'Connect theme to view (screen / component)'
+
+    const themes = await style.themes()
 
     // Task query
 
@@ -34,15 +37,24 @@ export default {
       case 't':
         task = taskCreateTheme
         break
+      case 'h':
+        task = taskConnectTheme
+        break
     }
 
     if (!task) {
+      const choices = [taskCreateComponent, taskCreateScreen, taskCreateTheme]
+
+      if (themes) {
+        choices.push(taskConnectTheme)
+      }
+
       const { pickTask } = await prompt.ask([
         {
           name: 'pickTask',
           message: 'What would you like to do with view?',
           type: 'list',
-          choices: [taskCreateComponent, taskCreateScreen, taskCreateTheme],
+          choices,
         },
       ])
       task = pickTask
@@ -50,6 +62,11 @@ export default {
 
     if (task === taskCreateTheme) {
       await style.createTheme()
+      return
+    }
+
+    if (task === taskConnectTheme) {
+      await style.connectTheme()
       return
     }
 

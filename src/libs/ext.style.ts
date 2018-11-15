@@ -1,5 +1,6 @@
 import { RootContext } from '.'
 import { SyntaxKind } from 'ts-simple-ast'
+import { ViewInfo } from './types'
 
 export interface ThemeInfo {
   name: string
@@ -199,6 +200,86 @@ class Style {
       appTsx.wrapJsxTag('App', 'renderMain', 'AppStyle.Provider')
       appTsx.save()
     }
+  }
+
+  async connectTheme() {
+    const { prompt, print, view } = this.context
+
+    const { kind } = await prompt.ask({
+      name: 'kind',
+      message: 'What kind of view would you like to connect to theme?',
+      type: 'list',
+      choices: ['Component', 'Screen'],
+    })
+
+    const dir = `src/views/${kind.toLowerCase()}s`
+    const viewInfoList = await view.viewInfoList(kind.toLowerCase())
+
+    if (!viewInfoList.length) {
+      print.error(`We could not find any ${kind} in this project.`)
+      process.exit(0)
+      return
+    }
+
+    const { target } = await prompt.ask({
+      name: 'target',
+      message: `Select the ${kind} you want to connect to`,
+      type: 'list',
+      choices: viewInfoList.map(v => v.option),
+    })
+
+    const viewInfo = viewInfoList.find(v => v.option === target)
+
+    switch (viewInfo.type) {
+      case 'class':
+        this._connectThemeToViewClass(dir, viewInfo)
+        break
+    }
+  }
+
+  private _connectThemeToViewClass(dir: string, viewInfo: ViewInfo) {
+    const { utils, print } = this.context
+    const viewDir = dir + viewInfo.path
+
+    const viewAst = utils.ast(`${viewDir}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+    const propsAst = utils.ast(`${viewDir}/props.tsx`)
+    const propsFile = propsAst.sourceFile
+
+    const clazz = viewFile.getClass(viewInfo.name)
+
+    viewAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyle'])
+
+    // decorate the class
+    const decoratorName = 'AppStyle.withThemeClass'
+    if (!clazz.getDecorator(d => d.getFullName() === decoratorName)) {
+      clazz.addDecorator({
+        name: decoratorName,
+        arguments: [],
+      })
+      viewAst.sortImports()
+      viewAst.save()
+    }
+
+    propsAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyleProps'])
+
+    // extends the props interface
+    const propsInterface = propsFile.getInterface(`${viewInfo.name}Props`)
+    const appStylePropsText = 'Partial<AppStyleProps>'
+    if (
+      propsInterface
+        .getExtends()
+        .map(e => e.getText())
+        .indexOf(appStylePropsText) < 0
+    ) {
+      propsInterface.addExtends(appStylePropsText)
+    }
+
+    propsAst.sortImports()
+    propsAst.save()
+
+    print.success(`Theme was successfully connected to ${print.colors.magenta(viewInfo.name)}.`)
+    print.success(`Use ${print.colors.yellow(`const { theme } = this.props as Required<${viewInfo.name}Props>`)} in the render function to access theme.`)
   }
 }
 
