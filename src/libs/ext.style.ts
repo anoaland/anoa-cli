@@ -1,6 +1,6 @@
 import { RootContext } from '.'
 import { SyntaxKind } from 'ts-simple-ast'
-import { ViewInfo } from './types'
+import { ExportedNamePath } from './types'
 
 export interface ThemeInfo {
   name: string
@@ -232,27 +232,27 @@ class Style {
 
     switch (viewInfo.type) {
       case 'class':
-        this._connectThemeToViewClass(dir, viewInfo)
+        this.connectThemeToViewClass(dir, viewInfo)
         break
 
       case 'stateless':
-        this._connectThemeToStatelessView(dir, viewInfo)
+        this.connectThemeToStatelessView(dir, viewInfo)
         break
 
       case 'functional':
-        this._connectThemeToStatelessFunctionalView(dir, viewInfo)
+        this.connectThemeToStatelessFunctionalView(dir, viewInfo)
         break
     }
   }
 
-  private _connectThemeToViewClass(dir: string, viewInfo: ViewInfo) {
+  connectThemeToViewClass(dir: string, { name, path }: ExportedNamePath) {
     const { utils, print } = this.context
-    const viewDir = dir + viewInfo.path
+    const viewDir = dir + path
 
     const viewAst = utils.ast(`${viewDir}/index.tsx`)
     const viewFile = viewAst.sourceFile
 
-    const clazz = viewFile.getClass(viewInfo.name)
+    const clazz = viewFile.getClass(name)
 
     viewAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyle'])
 
@@ -267,17 +267,17 @@ class Style {
       viewAst.save()
     }
 
-    this._extendsPropsStyle(viewInfo.name, viewDir)
+    this._extendsPropsStyle(name, viewDir)
 
-    print.success(`Theme was successfully connected to ${print.colors.magenta(viewInfo.name)}.`)
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
     print.success(
       `Use ${print.colors.yellow(
-        `const { theme } = this.props as Required<${viewInfo.name}Props>`,
+        `const { theme } = this.props as Required<${name}Props>`,
       )} in the render function to access theme.`,
     )
   }
 
-  private _connectThemeToStatelessView(dir: string, { name, path }: ViewInfo) {
+  connectThemeToStatelessView(dir: string, { name, path }: ExportedNamePath) {
     const { utils, print } = this.context
     const viewDir = dir + path
 
@@ -314,7 +314,7 @@ class Style {
     )
   }
 
-  private _connectThemeToStatelessFunctionalView(dir: string, { name, path }: ViewInfo) {
+  connectThemeToStatelessFunctionalView(dir: string, { name, path }: ExportedNamePath) {
     const { utils, print } = this.context
     const viewDir = dir + path
 

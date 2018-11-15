@@ -1,5 +1,10 @@
 export type ViewType = 'class' | 'stateless' | 'functional'
 
+export interface ExportedNamePath {
+  name: string
+  path: string
+}
+
 export interface BriefViewInfo {
   name: string
   type: ViewType

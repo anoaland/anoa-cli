@@ -282,12 +282,31 @@ export default {
         break
     }
 
+    const dir = `src/views/${strToCreate.toLowerCase()}s`
+    const viewPath = location + kebabCase(baseName)
+    const viewName = strToCreate === 'screen' ? baseName + 'Screen' : baseName
+    const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
+
+    if (connectToTheme) {
+      utils.refreshAst()
+
+      switch (type) {
+        case viewClass:
+          await style.connectThemeToViewClass(dir, { name: viewName, path: viewPath })
+          break
+        case viewStateless:
+          await style.connectThemeToStatelessView(dir, { name: viewName, path: viewPath })
+          break
+        case viewStatelessFunctional:
+          await style.connectThemeToStatelessFunctionalView(dir, { name: viewName, path: viewPath })
+          break
+      }
+    }
+
     print.success(
       `New ${strToCreate} named ${print.colors.magenta(
-        baseName,
-      )} was successfully created on ${print.colors.yellow(
-        `src/views/${strToCreate}s${location}${kebabCase(baseName)}/index.tsx`,
-      )}`,
+        viewName,
+      )} was successfully created on ${print.colors.yellow(`${dir}${viewPath}/index.tsx`)}`,
     )
   },
 }
