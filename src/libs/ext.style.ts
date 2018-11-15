@@ -238,6 +238,10 @@ class Style {
       case 'stateless':
         this._connectThemeToStatelessView(dir, viewInfo)
         break
+
+      case 'functional':
+        this._connectThemeToStatelessFunctionalView(dir, viewInfo)
+        break
     }
   }
 
@@ -307,6 +311,52 @@ class Style {
       `Use ${print.colors.yellow(
         `const { theme } = props as Required<${name}Props>`,
       )} in the ${print.colors.magenta(name)} function to access theme.`,
+    )
+  }
+
+  private _connectThemeToStatelessFunctionalView(dir: string, { name, path }: ViewInfo) {
+    const { utils, print } = this.context
+    const viewDir = dir + path
+
+    const viewAst = utils.ast(`${viewDir}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+
+    const exported = viewFile
+      .getExportedDeclarations()
+      .find(e => e.getFirstChildByKind(SyntaxKind.Identifier).getText() === name)
+
+    let param = undefined
+    let block = undefined
+    const arrowFn = exported.getFirstChildByKind(SyntaxKind.ArrowFunction)
+
+    arrowFn.forEachChild(c => {
+      if (c.getKind() === SyntaxKind.Parameter && !param) {
+        param = c.getText()
+      }
+
+      if (c.getKind() === SyntaxKind.Block && !block) {
+        block = c.getText()
+      }
+    })
+
+    if (!param || !block) {
+      print.error('Could not connect theme to this component')
+      process.exit(0)
+      return
+    }
+
+    const stmt = `${name} = AppStyle.withTheme<${name}Props>((${param}) => ${block})`
+
+    viewAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyle'])
+    viewAst.sortImports()
+    exported.replaceWithText(stmt)
+    viewAst.save()
+
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
+    print.success(
+      `The parameter ${print.colors.yellow(param)} in the ${print.colors.magenta(
+        name,
+      )} function should now contains theme props.`,
     )
   }
 
