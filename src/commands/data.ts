@@ -9,8 +9,7 @@ export default {
       parameters: { first, second },
       prompt,
       print,
-      dataCreateModel,
-      dataCreateProvider,
+      data,
       strings: { kebabCase, pascalCase },
     } = context
 
@@ -65,7 +64,7 @@ export default {
         return
       }
 
-      await dataCreateModel(name)
+      const rnsqlitestorageInstalled = await data.createModel(name)
 
       print.success(
         `A new model named ${print.colors.magenta(
@@ -74,6 +73,18 @@ export default {
           `src/data/models/${kebabCase(name)}.ts`,
         )}`,
       )
+
+      if (rnsqlitestorageInstalled) {
+        print.success(
+          print.colors.white(
+            `A ${print.colors.magenta(
+              'react-native-sqlite-storage',
+            )} was just installed please refer to ${print.colors.yellow(
+              'https://github.com/andpor/react-native-sqlite-storage',
+            )} to link this module into android or ios module.`,
+          ),
+        )
+      }
     } else if (task === taskCreateProvider) {
       let name = second
       if (!name) {
@@ -92,7 +103,7 @@ export default {
         return
       }
 
-      await dataCreateProvider(name)
+      await data.createProvider(name)
 
       print.success(
         `A new data provider named ${print.colors.magenta(

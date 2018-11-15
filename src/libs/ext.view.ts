@@ -1,12 +1,20 @@
 import { RootContext } from '.'
-import { ScreenInfo } from './types'
+import { ViewInfo, BriefViewInfo, ViewType } from './types'
+import { SyntaxKind } from 'ts-simple-ast'
 
-export function createClassView(context: RootContext) {
-  return async (kind: 'component' | 'screen', name: string, props: any, location: string) => {
+type ViewKind = 'component' | 'screen'
+
+class View {
+  context: RootContext
+  constructor(context: RootContext) {
+    this.context = context
+  }
+
+  async createClassView(kind: ViewKind, name: string, props: any, location: string) {
     const {
       strings: { pascalCase, kebabCase },
-      generateFiles,
-    } = context
+      utils,
+    } = this.context
 
     const fileList = ['index.tsx', 'props.tsx']
     if (props.withState) {
@@ -15,70 +23,100 @@ export function createClassView(context: RootContext) {
 
     const targetPathBase = kind === 'screen' ? 'screens' : 'components'
 
-    await generateFiles(
+    await utils.generate(
       'shared/src/views/class/',
-      fileList,
       `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
+      fileList,
       {
         name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
         ...props,
       },
     )
   }
-}
 
-export function createStatelessView(context: RootContext) {
-  return async (
-    kind: 'component' | 'screen',
-    name: string,
-    functional: boolean,
-    location: string,
-  ) => {
+  async createStatelessView(kind: ViewKind, name: string, functional: boolean, location: string) {
     const {
       strings: { pascalCase, kebabCase },
-      generateFiles,
-    } = context
+      utils,
+    } = this.context
 
     const targetPathBase = kind === 'screen' ? 'screens' : 'components'
 
-    await generateFiles(
+    await utils.generate(
       functional ? 'shared/src/views/stateless-functional/' : 'shared/src/views/stateless/',
-      ['index.tsx', 'props.tsx'],
       `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
+      ['index.tsx', 'props.tsx'],
       {
         name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
       },
     )
   }
-}
 
-export function screenList(context: RootContext) {
-  const {
-    filesystem: { exists },
-    dirNamesDeep,
-    astIsScreenFile,
-    strings: { padEnd },
-  } = context
+  async screenList(dir: string = ''): Promise<ViewInfo[]> {
+    const {
+      filesystem: { exists },
+      utils,
+      strings: { padEnd },
+    } = this.context
 
-  return async (dir: string = '') => {
-    const dirs = await dirNamesDeep(`src/views/screens${dir}`)
-    const files: ScreenInfo[] = []
+    const dirs = await utils.dirNamesDeep(`src/views/screens${dir}`)
+    const infoList: ViewInfo[] = []
 
     for (const d of dirs) {
       const file = `src/views/screens${d}/index.tsx`
 
       if (exists(file) === 'file') {
-        const screen = await astIsScreenFile(file)
-        if (screen) {
-          files.push(<ScreenInfo>{
-            name: screen,
+        const briefInfo = this.briefViewInfo(file)
+        if (briefInfo) {
+          infoList.push(<ViewInfo>{
             path: d,
-            option: padEnd(screen + ' ', 20, '─') + ' ' + d,
+            option: padEnd(briefInfo.name + ' ', 20, '─') + ' ' + d,
+            ...briefInfo,
           })
         }
       }
     }
 
-    return files
+    return infoList
   }
+
+  briefViewInfo(file: string): BriefViewInfo | undefined {
+    const { utils } = this.context
+    const { sourceFile } = utils.ast(file)
+    if (!sourceFile) {
+      return undefined
+    }
+
+    let info: BriefViewInfo
+
+    sourceFile.getExportedDeclarations().forEach(e => {
+      const identifier = e.getFirstChildByKind(SyntaxKind.Identifier)
+      if (identifier) {
+        let type: ViewType = 'class'
+        switch (e.getLastChild().getKind()) {
+          case SyntaxKind.Block:
+            type = 'stateless'
+            break
+          case SyntaxKind.ArrowFunction:
+            type = 'functional'
+            break
+        }
+
+        info = {
+          name: identifier.getText(),
+          type,
+        }
+      }
+
+      if (info) {
+        e.forget()
+      }
+    })
+
+    return info
+  }
+}
+
+export function view(context: RootContext) {
+  return new View(context)
 }

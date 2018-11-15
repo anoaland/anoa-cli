@@ -1,5 +1,11 @@
-export interface ScreenInfo {
+export type ViewType = 'class' | 'stateless' | 'functional'
+
+export interface BriefViewInfo {
   name: string
+  type: ViewType
+}
+
+export interface ViewInfo extends BriefViewInfo {
   path: string
   option: string
 }
@@ -9,6 +15,5 @@ export interface ScreenInfo {
  */
 export interface AnoaProjectInfo {
   name: string
-  preset: 'expo' | 'react-native-init',
-  withStore: boolean
+  preset: 'expo' | 'react-native-init'
 }

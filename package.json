@@ -23,7 +23,7 @@
     "test": "ava",
     "watch": "ava --watch",
     "coverage": "nyc ava",
-    "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates"
+    "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
   },
   "files": [
     "LICENSE",
@@ -34,9 +34,10 @@
   "license": "MIT",
   "dependencies": {
     "gluegun": "next",
+    "jsx-ast-utils": "^2.0.1",
     "prettier": "^1.14.3",
     "ramda": "^0.25.0",
-    "ts-emitter": "^0.4.0",
+    "ts-simple-ast": "^18.1.0",
     "typescript": "^2.5.3"
   },
   "devDependencies": {

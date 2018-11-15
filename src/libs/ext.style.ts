@@ -1,6 +1,5 @@
-import { fromPath } from 'ts-emitter'
 import { RootContext } from '.'
-import { SyntaxKind } from 'typescript'
+import { SyntaxKind } from 'ts-simple-ast'
 
 export interface ThemeInfo {
   name: string
@@ -8,78 +7,67 @@ export interface ThemeInfo {
   isDefault: boolean
 }
 
-export function styleThemes({ fileList }: RootContext) {
-  const basePath = `src/views/styles/themes`
+type Themes = Record<string, ThemeInfo>
 
-  function themeInfo(file: string): ThemeInfo | undefined {
-    if (file === 'index.ts') {
+class Style {
+  context: RootContext
+  constructor(context: RootContext) {
+    this.context = context
+  }
+
+  async init() {
+    const { npm, init } = this.context
+    await init()
+    await npm.ensurePackages(['anoa-react-native-theme'], false)
+  }
+
+  /**
+   * Get all named themes
+   */
+  async themes(except?: string): Promise<Themes | undefined> {
+    const { utils } = this.context
+    const basePath = `src/views/styles/themes`
+
+    const files = await utils.fileList(basePath)
+    if (!files || !files.length) {
       return undefined
     }
 
-    let name = ''
-    let isDefault = false
-    const ast = fromPath(basePath + '/' + file)
-    ast.forEachChild(c => {
-      if (c.kind === SyntaxKind.VariableStatement) {
-        const c0 = c.getChildAt(0)
-        const c1 = c.getChildAt(1)
+    // should refresh ast, since new theme probably added
+    utils.refreshAst()
 
-        if (
-          c0.kind === SyntaxKind.SyntaxList &&
-          c0.getText() === 'export' &&
-          c1.kind === SyntaxKind.VariableDeclarationList
-        ) {
-          if (c1.getChildAt(0).kind === SyntaxKind.ConstKeyword) {
-            const str = c1.getChildAt(1).getText()
-            if (str.length) {
-              name = str.split('=')[0].trim()
-              isDefault = str.indexOf(' = createTheme(') > 0
+    let themes: Themes = {}
+    files.forEach(f => {
+      if (f.name !== 'index.ts' && f.name !== (except || '').toLowerCase() + '.ts') {
+        const { sourceFile } = utils.ast(basePath + '/' + f.name)
+        sourceFile.getExportedDeclarations().forEach(e => {
+          const identifier = e.getFirstChildByKind(SyntaxKind.Identifier).getText()
+          const expression = e.getFirstChildByKind(SyntaxKind.CallExpression).getText()
+
+          const path = f.name.substr(0, f.name.length - 3)
+
+          if (identifier.endsWith('Theme')) {
+            themes[path] = {
+              name: identifier,
+              path,
+              isDefault: expression.startsWith('createTheme'),
             }
           }
-        }
+        })
       }
     })
 
-    if (!name) {
-      return undefined
-    }
-
-    return {
-      name,
-      isDefault,
-      path: file.substr(0, file.length - 3),
-    }
+    return themes
   }
 
-  return async () => {
-    const files = await fileList(basePath)
-    if (!files || !files.length) {
-      return false
-    }
+  async createTheme() {
+    const {
+      prompt,
+      print,
+      strings: { isBlank },
+      parameters: { second },
+    } = this.context
 
-    let themes = {}
-    files.forEach(f => {
-      const info = themeInfo(f.name)
-      if (info) {
-        themes[info.name] = info
-      }
-    })
-
-    return themes as Record<string, ThemeInfo>
-  }
-}
-
-export function styleCreateTheme({
-  styleThemes,
-  prompt,
-  print,
-  strings: { isBlank, pascalCase, kebabCase },
-  parameters: { second },
-  generateFiles,
-  styleUpdateThemeExports,
-  styleInit,
-}: RootContext) {
-  return async () => {
     let name = second
 
     if (!name) {
@@ -98,9 +86,9 @@ export function styleCreateTheme({
       return
     }
 
-    const themes = await styleThemes()
+    const themes = await this.themes(name)
     if (!themes) {
-      await createTheme(name)
+      await this._createTheme(name)
     } else {
       let baseTheme = ''
       const choices = Object.keys(themes)
@@ -123,38 +111,43 @@ export function styleCreateTheme({
         return
       }
 
-      await createTheme(name, themes[baseTheme])
+      await this._createTheme(name, themes[baseTheme])
     }
   }
 
-  async function createTheme(name: string, base?: ThemeInfo) {
+  private async _createTheme(name: string, base?: ThemeInfo) {
+    const {
+      strings: { kebabCase, pascalCase },
+      print,
+      utils,
+    } = this.context
+
+    await this.init()
     const fileName = `${kebabCase(name)}.ts`
 
     if (base) {
-      await generateFiles(
+      await utils.generate(
         'shared/src/views/styles/themes/',
-        ['child.ts'],
         'src/views/styles/themes/',
+        [{ source: 'child.ts', dest: fileName }],
         {
           name: pascalCase(name),
           from: base.name,
           fromPath: base.path,
         },
-        fileName,
       )
     } else {
-      await generateFiles(
+      await utils.generate(
         'shared/src/views/styles/themes/',
-        ['base.ts'],
         'src/views/styles/themes/',
+        [{ source: 'base.ts', dest: fileName }],
         {
           name: pascalCase(name),
         },
-        fileName,
       )
     }
 
-    await styleUpdateThemeExports()
+    await this.updateThemeExports()
 
     print.success(
       `New theme was successfully created on '${print.colors.yellow(
@@ -162,19 +155,15 @@ export function styleCreateTheme({
       )}'`,
     )
   }
-}
 
-export function styleUpdateThemeExports({
-  npmEnsure,
-  styleThemes,
-  generateFiles,
-  strings: { camelCase },
-}: RootContext) {
-  return async () => {
-    const themes = await styleThemes()
+  async updateThemeExports() {
+    const {
+      utils,
+      strings: { camelCase },
+    } = this.context
+
+    const themes = await this.themes()
     let defaultTheme: ThemeInfo
-
-    await npmEnsure(false, ['anoa-react-native-theme'])
 
     if (themes) {
       const exports = []
@@ -185,25 +174,34 @@ export function styleUpdateThemeExports({
           defaultTheme = ti
         }
         arrThemes.push(ti)
-        exports.push(`export {${t}} from './${ti.path}'`)
+        exports.push(`export {${ti.name}} from './${ti.path}'`)
       })
 
-      await generateFiles(
+      await utils.generate(
         'shared/src/views/styles/themes/',
-        ['index.ts'],
         'src/views/styles/themes/',
+        ['index.ts'],
         {
           exports,
         },
       )
 
-      await generateFiles('shared/src/views/styles/', ['index.ts'], 'src/views/styles/', {
+      await utils.generate('shared/src/views/styles/', 'src/views/styles/', ['index.ts'], {
         defaultTheme: defaultTheme.name,
         themeNames: arrThemes.map(t => t.name),
         childThemes: arrThemes
           .filter(s => s.name !== defaultTheme.name)
           .map(t => `${camelCase(t.path)}: ${t.name}`),
       })
+
+      const appTsx = utils.ast('src/App.tsx')
+      appTsx.addNamedImports('./views/styles', ['AppStyle'])
+      appTsx.wrapJsxTag('App', 'renderMain', 'AppStyle.Provider')
+      appTsx.save()
     }
   }
+}
+
+export function style(context: RootContext) {
+  return new Style(context)
 }

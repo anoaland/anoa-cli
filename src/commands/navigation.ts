@@ -5,9 +5,9 @@ export default {
   alias: ['n', 'nav'],
   description: 'Navigator generator',
   run: async (context: RootContext) => {
-    const { screenList, prompt, navigationCreate, print } = context
+    const { view, prompt, navigator, print } = context
 
-    const screens = await screenList()
+    const screens = await view.screenList()
     const { screen } = await prompt.ask([
       {
         name: 'screen',
@@ -53,7 +53,7 @@ export default {
 
     const targetScreen = screens.find(s => s.option === screen)
 
-    await navigationCreate(
+    await navigator.create(
       kind.replace(/\s/g, ''),
       targetScreen,
       screens.filter(s => routes.indexOf(s.option) > -1),
@@ -61,7 +61,7 @@ export default {
 
     print.success(
       `New ${print.colors.magenta(kind)} was successfully created on ${print.colors.yellow(
-        `'src/views/screens/${targetScreen.path}/nav.tsx'`,
+        `'src/views/screens${targetScreen.path}/nav.tsx'`,
       )}.`,
     )
   },

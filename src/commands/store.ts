@@ -7,14 +7,14 @@ export default {
   run: async (context: RootContext) => {
     const {
       parameters: { first },
-      storeCreateReducer,
-      storeUpdateReducers,
-      storeCreateAction,
-      storeActionList,
+      reduxStore,
+      // storeActionList,
       prompt,
       print,
-      strings: { kebabCase },
+      strings: { kebabCase, isBlank },
     } = context
+
+    await reduxStore.reducerActions()
 
     const taskCreateReducer = 'Create new reducer'
     const taskCreateAction = 'Create new action'
@@ -48,6 +48,7 @@ export default {
 
     if (task !== taskUpdate) {
       if (task === taskCreateReducer) {
+        // create reducer
         const { name } = await prompt.ask([
           {
             type: 'input',
@@ -64,19 +65,30 @@ export default {
           },
         ])
 
-        await storeCreateReducer(name, (states || 'foo,bar').split(' ').map(s => s.trim()))
+        await reduxStore.createReducer(name, (states || 'foo bar').split(' ').map(s => s.trim()))
         print.success(
           'New reducer was successfully created on ' +
-            print.colors.yellow(`src/store/reducers/${name.toLowerCase()}`) +
+            print.colors.yellow(`src/store/reducers/${name.toLowerCase()}/index.ts`) +
             '.',
         )
       } else {
-        let { name, type } = await prompt.ask([
+        // create action
+        let payloadType = 'any'
+        let { name } = await prompt.ask([
           {
             type: 'input',
             name: 'name',
-            message: 'Action name',
+            message: `Action name`,
           },
+        ])
+
+        if (isBlank(name)) {
+          print.error('Action name is required.')
+          process.exit(0)
+          return
+        }
+
+        let { type } = await prompt.ask([
           {
             type: 'input',
             name: 'type',
@@ -85,7 +97,7 @@ export default {
         ])
 
         if (!type) {
-          const actions = await storeActionList()
+          const actions = await reduxStore.reducerActions()
           const actionKeys = Object.keys(actions)
 
           const { actionKey } = await prompt.ask([
@@ -98,20 +110,24 @@ export default {
           ])
 
           const selectedAction = actions[actionKey]
+          const selectedTypes = selectedAction.map(a => a.type)
 
           const { actionType } = await prompt.ask([
             {
               name: 'actionType',
               message: 'Select type',
               type: 'list',
-              choices: selectedAction.map(a => a.type),
+              choices: selectedTypes,
             },
           ])
 
           type = actionType
+
+          const tp = selectedAction.find(f => f.type === actionType)
+          payloadType = tp.payload
         }
 
-        await storeCreateAction(name, type)
+        await reduxStore.createActionThunk(name, type, payloadType)
         print.success(
           'New action was successfully created on ' +
             print.colors.yellow(`src/store/actions/${kebabCase(name)}-action.ts`) +
@@ -119,7 +135,7 @@ export default {
         )
       }
     } else {
-      await storeUpdateReducers()
+      await reduxStore.updateReducers()
       print.success('Store was successfully updated.')
     }
   },

@@ -8,17 +8,13 @@ export default {
     const {
       parameters: { first, second },
       prompt,
-      createClassView,
-      createStatelessView,
-      storeStateList,
-      storeAppActionList,
+      view,
       strings: { pascalCase, camelCase },
       print,
-      relative,
-      styleCreateTheme,
+      utils,
+      style,
+      reduxStore,
     } = context
-
-    await storeAppActionList()
 
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'
@@ -53,7 +49,7 @@ export default {
     }
 
     if (task === taskCreateTheme) {
-      await styleCreateTheme()
+      await style.createTheme()
       return
     }
 
@@ -100,7 +96,7 @@ export default {
     // Select location
 
     let location = '/'
-    const locations = await context.dirNames(`src/views/${strToCreate}s`)
+    const locations = await utils.dirNames(`src/views/${strToCreate}s`)
     if (locations.length) {
       location = (await prompt.ask([
         {
@@ -134,7 +130,7 @@ export default {
         let actionMap = undefined
         let actionImports = undefined
 
-        const storeStates = await storeStateList()
+        const storeStates = await reduxStore.reducerStates()
         if (storeStates) {
           const withStoreState = await prompt.confirm(
             `Do you want to map application state into props?`,
@@ -170,12 +166,12 @@ export default {
           }
         }
 
-        const storeAppActions = await storeAppActionList()
+        const storeAppActions = await reduxStore.thunkActions()
         const importStatements = []
         const storePath =
           strToCreate === 'screen'
-            ? relative('store', `views/screens${location}foo`)
-            : relative('store', `views/components${location}foo`)
+            ? utils.relative('store', `views/screens${location}foo`)
+            : utils.relative('store', `views/components${location}foo`)
 
         if (storeAppActions) {
           const withStoreAction = await prompt.confirm(
@@ -256,15 +252,15 @@ export default {
           withStore,
         }
 
-        await createClassView(strToCreate, name, props, location)
+        await view.createClassView(strToCreate, name, props, location)
         break
 
       case viewStateless:
-        await createStatelessView(strToCreate, name, false, location)
+        await view.createStatelessView(strToCreate, name, false, location)
         break
 
       case viewStatelessFunctional:
-        await createStatelessView(strToCreate, name, true, location)
+        await view.createStatelessView(strToCreate, name, true, location)
         break
     }
   },
