@@ -190,7 +190,7 @@ class ReduxStore {
       })
       .filter(s => s !== undefined)
 
-    if (!stateFiles) {
+    if (!stateFiles || !stateFiles.length) {
       return undefined
     }
 

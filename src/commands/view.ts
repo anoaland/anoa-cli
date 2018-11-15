@@ -9,7 +9,7 @@ export default {
       parameters: { first, second },
       prompt,
       view,
-      strings: { pascalCase, camelCase },
+      strings: { pascalCase, camelCase, kebabCase },
       print,
       utils,
       style,
@@ -131,6 +131,7 @@ export default {
         let actionImports = undefined
 
         const storeStates = await reduxStore.reducerStates()
+
         if (storeStates) {
           const withStoreState = await prompt.confirm(
             `Do you want to map application state into props?`,
@@ -263,5 +264,13 @@ export default {
         await view.createStatelessView(strToCreate, name, true, location)
         break
     }
+
+    print.success(
+      `New ${strToCreate} named ${print.colors.magenta(
+        baseName,
+      )} was successfully created on ${print.colors.yellow(
+        `src/views/${strToCreate}s${location}${kebabCase(baseName)}/index.tsx`,
+      )}`,
+    )
   },
 }
