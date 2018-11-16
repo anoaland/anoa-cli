@@ -129,8 +129,8 @@ export default {
       location += '/'
     }
 
-    const baseName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
-    const importLocalProps = [`${baseName}Props`]
+    const viewName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
+    const importLocalProps = [`${viewName}Props`]
     const importLocalState = []
 
     switch (type) {
@@ -138,7 +138,7 @@ export default {
         const withState = await prompt.confirm(`Do you want to have state in your ${strToCreate}?`)
 
         if (withState) {
-          importLocalState.push(`${baseName}State`)
+          importLocalState.push(`${viewName}State`)
         }
 
         let stateProps = undefined
@@ -180,7 +180,7 @@ export default {
               stateMap.push(`${prop}: state.${st}`)
             }
 
-            importLocalProps.push(`${baseName}StateProps`)
+            importLocalProps.push(`${viewName}StateProps`)
           }
         }
 
@@ -242,7 +242,7 @@ export default {
               )
             }
 
-            importLocalProps.push(`${baseName}ActionProps`)
+            importLocalProps.push(`${viewName}ActionProps`)
           }
         }
 
@@ -283,8 +283,7 @@ export default {
     }
 
     const dir = `src/views/${strToCreate.toLowerCase()}s`
-    const viewPath = location + kebabCase(baseName)
-    const viewName = strToCreate === 'screen' ? baseName + 'Screen' : baseName
+    const viewPath = location + kebabCase(name)
     const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
 
     if (connectToTheme) {
