@@ -315,16 +315,17 @@ class ReduxStore {
     await npm.ensurePackages(['anoa', 'react-redux', 'redux', 'redux-thunk'], false)
     await npm.ensurePackages(['@types/react-redux'], true)
 
-    const ast = utils.ast('src/App.tsx')
+    const appAst = utils.ast('src/App.tsx')
 
     if (!(await exists('src/store/index.ts'))) {
       await utils.generate('shared/src/store/', 'src/store/', ['index.ts'])
     }
 
-    ast.wrapJsxTag('App', 'renderMain', 'AppStore.Provider')
-    ast.addNamedImports('./store', ['AppStore'])
-    ast.sortImports()
-    ast.save()
+    appAst.wrapJsxTag('App', 'renderMain', 'AppStore.Provider')
+    appAst.addNamedImports('./store', ['AppStore'])
+    appAst.sortImports()
+    appAst.addSyntaxToMethod('App', 'prepare', 'await AppStore.init()')
+    appAst.save()
   }
 
   /**
