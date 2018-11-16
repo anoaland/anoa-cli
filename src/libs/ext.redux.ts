@@ -445,16 +445,22 @@ class ReduxStore {
     const { utils } = this.context
 
     const astProps = await utils.ast(`${dir}${path}/props.tsx`)
+    const extendedProps = []
 
     if (query.state.props.length) {
-      astProps.createOrUpdateInterface(name + 'StateProps', query.state.props)
+      const interfaceName = name + 'StateProps'
+      astProps.createOrUpdateInterface(interfaceName, query.state.props)
+      extendedProps.push(interfaceName)
     }
 
     if (query.thunk.props.length) {
-      astProps.createOrUpdateInterface(name + 'ActionProps', query.thunk.props)
+      const interfaceName = name + 'ActionProps'
+      astProps.createOrUpdateInterface(interfaceName, query.thunk.props)
     }
 
-    astProps.extendsInterface(`${name}Props`, [name + 'StateProps', name + 'ActionProps'], true)
+    if (extendedProps.length > 0) {
+      astProps.extendsInterface(`${name}Props`, extendedProps, true)
+    }
 
     astProps.save()
   }

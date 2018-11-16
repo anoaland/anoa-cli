@@ -23,7 +23,7 @@ export default {
 
     let task = undefined
     const stateAndThunks = await reduxStore.getStateAndThunks()
-    const hasStore = !(!!stateAndThunks.states && !!stateAndThunks.thunks)
+    const hasStore = !!stateAndThunks.states || !!stateAndThunks.thunks
 
     switch (first) {
       case 'r':
