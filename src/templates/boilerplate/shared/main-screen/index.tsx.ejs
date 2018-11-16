@@ -20,7 +20,8 @@ export class MainScreen extends React.Component<MainScreenProps> {
         <Text style={styles.welcome}>Hello World!</Text>
         <Image
           source={require('../../../../assets/logo.png')}
-          style={{ marginVertical: 20 }}
+          style={{ marginVertical: 20, width: 185, height: 185 }} 
+          resizeMethod="scale"
         />
         <Text style={styles.instructions}>To get started, edit:</Text>
         <Text style={styles.instructions}>
