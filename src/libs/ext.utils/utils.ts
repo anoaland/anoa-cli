@@ -20,10 +20,14 @@ export class Utils {
     this.context = context
   }
 
+  refreshAst() {
+    // none
+  }
+
   /**
    * Reload ast project
    */
-  refreshAst() {
+  loadAstProject() {
     const {
       filesystem: { cwd, exists },
     } = this.context
@@ -35,6 +39,7 @@ export class Utils {
     const tsfonfig = cwd('tsconfig.json').cwd()
     this.project = new Project({
       tsConfigFilePath: `${tsfonfig}`,
+      addFilesFromTsConfig: false,
     })
   }
 
@@ -44,8 +49,10 @@ export class Utils {
    */
   ast(filepath: string) {
     if (!this.project) {
-      this.refreshAst()
+      this.loadAstProject()
     }
+
+    this.project.addExistingSourceFile(filepath)
     return new Ast(this.context, this.project, filepath)
   }
 
