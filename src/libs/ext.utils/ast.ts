@@ -143,6 +143,28 @@ export class Ast {
     return this
   }
 
+  extendsInterface(name: string, extendsTo: string[], isPartial: boolean, fromModule?: string) {
+    if (fromModule) {
+      this.addNamedImports(fromModule, extendsTo)
+      this.sortImports()
+    }
+
+    const intf = this.sourceFile.getInterface(name)
+    extendsTo.forEach(e => {
+      const eStr = isPartial ? `Partial<${e}>` : e
+      if (
+        intf
+          .getExtends()
+          .map(e => e.getText())
+          .indexOf(eStr) < 0
+      ) {
+        intf.addExtends(eStr)
+      }
+    })
+
+    return this
+  }
+
   save() {
     const { utils } = this.context
     utils.prettify(this.sourceFile.getFilePath(), this.sourceFile.getText())

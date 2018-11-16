@@ -363,24 +363,14 @@ class Style {
   private _extendsPropsStyle(name: string, viewDir: string) {
     const { utils } = this.context
     const propsAst = utils.ast(`${viewDir}/props.tsx`)
-    const propsFile = propsAst.sourceFile
-
-    propsAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyleProps'])
-
-    // extends the props interface
-    const propsInterface = propsFile.getInterface(`${name}Props`)
-    const appStylePropsText = 'Partial<AppStyleProps>'
-    if (
-      propsInterface
-        .getExtends()
-        .map(e => e.getText())
-        .indexOf(appStylePropsText) < 0
-    ) {
-      propsInterface.addExtends(appStylePropsText)
-    }
-
-    propsAst.sortImports()
-    propsAst.save()
+    propsAst
+      .extendsInterface(
+        `${name}Props`,
+        ['AppStyleProps'],
+        true,
+        utils.relative('src/views/styles', `${viewDir}`),
+      )
+      .save()
   }
 }
 

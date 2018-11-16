@@ -454,6 +454,8 @@ class ReduxStore {
       astProps.createOrUpdateInterface(name + 'ActionProps', query.thunk.props)
     }
 
+    astProps.extendsInterface(`${name}Props`, [name + 'StateProps', name + 'ActionProps'], true)
+
     astProps.save()
   }
 
