@@ -1,17 +1,19 @@
 import { RootContext } from '..'
-import { Project, SourceFile, SyntaxKind } from 'ts-simple-ast'
+import { Project, SourceFile, SyntaxKind, PropertySignatureStructure } from 'ts-simple-ast'
 import * as R from 'ramda'
 
 export class Ast {
   context: RootContext
   project: Project
   sourceFile: SourceFile
+  filepath: string
 
   constructor(context: RootContext, project: Project, filepath: string) {
     const {
       filesystem: { cwd },
     } = context
 
+    this.filepath = filepath
     this.context = context
     this.project = project
     this.sourceFile = project.getSourceFile(cwd(filepath).cwd())
@@ -109,6 +111,36 @@ export class Ast {
     const orderedImports = doSort(imports)
 
     sourceFile.addImportDeclarations(orderedImports.map(i => i.value))
+  }
+
+  createOrUpdateInterface(
+    name: string,
+    properties: PropertySignatureStructure[],
+    isExported: boolean = true,
+  ) {
+    let { sourceFile } = this
+    if (!sourceFile) {
+      sourceFile = this.project.createSourceFile(this.filepath)
+    } else {
+      let propsInterface = sourceFile.getInterface(name)
+      if (!propsInterface) {
+        propsInterface = sourceFile.addInterface({
+          name,
+          properties,
+        })
+      } else {
+        properties.forEach(p => {
+          if (!propsInterface.getProperty(p.name)) {
+            propsInterface.addProperty(p)
+          }
+        })
+      }
+      propsInterface.setIsExported(isExported)
+    }
+
+    this.sourceFile = sourceFile
+
+    return this
   }
 
   save() {

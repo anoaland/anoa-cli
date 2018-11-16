@@ -1,6 +1,12 @@
 import { uniq } from 'ramda'
 import { RootContext } from '.'
-import { SyntaxKind, UnionTypeNode, TypeLiteralNode } from 'ts-simple-ast'
+import {
+  SyntaxKind,
+  UnionTypeNode,
+  TypeLiteralNode,
+  PropertySignatureStructure,
+} from 'ts-simple-ast'
+import { ExportedNamePath, ViewInfo } from './types'
 
 interface ReducerActionInfo {
   type: string
@@ -17,6 +23,45 @@ type NamedReducerActions = Record<string, ReducerActionInfo[]>
 type NamedReducerTypes = Record<string, Record<string, string>>
 
 type NamedThunkActions = Record<string, ThunkActionInfo>
+
+interface StateAndThunks {
+  states: NamedReducerTypes
+  thunks: NamedThunkActions
+}
+
+interface KeyValue {
+  key: string
+  value: string
+}
+
+interface DecoratorArgument {
+  state: KeyValue[]
+  dispatch: KeyValue[]
+  stateIndex?: number
+  dispatchIndex?: number
+}
+
+interface QueryState {
+  props: PropertySignatureStructure[]
+  map: string[]
+}
+
+interface QueryThunk {
+  props: PropertySignatureStructure[]
+  map: string[]
+  imports: Record<string, string[]>
+}
+
+interface QueryResult {
+  imports: Imports[]
+  state: QueryState
+  thunk: QueryThunk
+}
+
+interface Imports {
+  module: string
+  namedImports: string[]
+}
 
 class ReduxStore {
   context: RootContext
@@ -314,6 +359,327 @@ class ReduxStore {
   async reducerObjectList() {
     return await this.context.utils.dirList('src/store/reducers')
   }
+
+  async getStateAndThunks(): Promise<StateAndThunks> {
+    const states = await this.reducerStates()
+    const thunks = await this.thunkActions()
+    return {
+      states,
+      thunks,
+    }
+  }
+
+  /**
+   * Connect store to view.
+   */
+  async connectStore(
+    { states, thunks }: StateAndThunks,
+    viewInfo?: ViewInfo,
+    kind?: 'component' | 'screen',
+  ) {
+    const { prompt, print, view } = this.context
+
+    let dir = ''
+    if (!viewInfo) {
+      if (!states && !thunks) {
+        print.warning('Aborted. There is no state or thunk function in this project.')
+        process.exit(0)
+        return
+      }
+
+      const { kind } = await prompt.ask({
+        name: 'kind',
+        message: 'What kind of view would you like to connect to theme?',
+        type: 'list',
+        choices: ['Component', 'Screen'],
+      })
+
+      dir = `src/views/${kind.toLowerCase()}s`
+      const viewInfoList = await view.viewInfoList(kind.toLowerCase())
+
+      if (!viewInfoList.length) {
+        print.error(`We could not find any ${kind} in this project.`)
+        process.exit(0)
+        return
+      }
+
+      const { target } = await prompt.ask({
+        name: 'target',
+        message: `Select the ${kind} you want to connect to`,
+        type: 'list',
+        choices: viewInfoList.map(v => v.option),
+      })
+
+      viewInfo = viewInfoList.find(v => v.option === target)
+    } else {
+      dir = `src/views/${kind.toLowerCase()}s`
+    }
+
+    // ask user for state and thunk which want to be mapped
+    const query = await this._queryStateAndThunkToMap(dir, viewInfo, { states, thunks })
+
+    // generate required props interfaces
+    await this._generatePropInterfaces(dir, viewInfo, query)
+
+    // connect to view
+    switch (viewInfo.type) {
+      case 'class':
+        this.connectStoreToViewClass(dir, viewInfo, query)
+        break
+
+      case 'stateless':
+        this.connectStoreToStatelessView(dir, viewInfo, query)
+        break
+
+      case 'functional':
+        this.connectStoreToStatelessFunctionalView(dir, viewInfo, query)
+        break
+    }
+  }
+
+  private async _generatePropInterfaces(
+    dir: string,
+    { name, path }: ExportedNamePath,
+    query: QueryResult,
+  ) {
+    const { utils } = this.context
+
+    const astProps = await utils.ast(`${dir}${path}/props.tsx`)
+
+    if (query.state.props.length) {
+      astProps.createOrUpdateInterface(name + 'StateProps', query.state.props)
+    }
+
+    if (query.thunk.props.length) {
+      astProps.createOrUpdateInterface(name + 'ActionProps', query.thunk.props)
+    }
+
+    astProps.save()
+  }
+
+  private async _queryStateAndThunkToMap(
+    dir: string,
+    { name, path }: ExportedNamePath,
+    { states, thunks }: StateAndThunks,
+  ): Promise<QueryResult> {
+    const {
+      strings: { pascalCase, camelCase },
+      prompt,
+      utils,
+    } = this.context
+
+    const viewDir = dir + path
+    const imports: Imports[] = []
+    const stateProps: PropertySignatureStructure[] = []
+    const stateMap = []
+
+    const actionProps: PropertySignatureStructure[] = []
+    const actionMap = []
+    const actionImports = {}
+
+    if (states) {
+      const choices = {}
+      for (const k of Object.keys(states)) {
+        choices[pascalCase(k) + 'State'] = Object.keys(states[k]).map(o => k + '.' + o)
+      }
+
+      const { statesToMap } = await prompt.ask([
+        {
+          name: 'statesToMap',
+          type: 'checkbox',
+          message: 'Select state(s) you want to map',
+          radio: true,
+          choices,
+        },
+      ])
+
+      for (const st of statesToMap) {
+        const s = st.split('.')
+        const stateType = states[s[0]][s[1]]
+        const prop = camelCase(s[0] + '-' + s[1])
+
+        stateProps.push({
+          name: prop,
+          type: stateType,
+        })
+        stateMap.push(`${prop}: state.${st}`)
+      }
+
+      if (stateProps.length > 0) {
+        imports.push({ module: './props', namedImports: [`${name}StateProps`] })
+      }
+    }
+
+    if (thunks) {
+      const choices = []
+      for (const k of Object.keys(thunks)) {
+        choices.push(`${k}(${JSON.stringify(thunks[k].params).replace(/\"/g, '')})`)
+      }
+
+      const { actionsToMap } = await prompt.ask([
+        {
+          name: 'actionsToMap',
+          type: 'checkbox',
+          message: 'Select state(s) you want to map',
+          radio: true,
+          choices,
+        },
+      ])
+
+      for (const st of actionsToMap as string[]) {
+        const a = st.split('(')[0].trim()
+        const act = thunks[a]
+        const prop = a.substr(0, a.length - 6)
+        actionProps.push({
+          name: prop,
+          type: `(${Object.keys(act.params)
+            .map(k => `${k}: ${act.params[k]}`)
+            .join(',')}) => void`,
+        })
+        actionMap.push(
+          `${prop}: (${Object.keys(act.params).join(', ')}) => dispatch(${a}(${Object.keys(
+            act.params,
+          ).join(', ')}))`,
+        )
+
+        actionImports[act.file] = [...(actionImports[act.file] || []), a]
+      }
+
+      for (const impor of Object.keys(actionImports)) {
+        imports.push({
+          module: `${utils.relative('src/store', viewDir)}/actions/${impor.substr(
+            0,
+            impor.length - 3,
+          )}`,
+          namedImports: actionImports[impor],
+        })
+      }
+
+      if (actionProps.length > 0) {
+        imports.push({ module: './props', namedImports: [`${name}ActionProps`] })
+      }
+    }
+
+    imports.push({
+      module: utils.relative('src/store', `${viewDir}`),
+      namedImports: ['AppStore'],
+    })
+
+    return {
+      imports,
+      state: {
+        props: stateProps,
+        map: stateMap,
+      },
+      thunk: {
+        props: actionProps,
+        map: actionMap,
+        imports: actionImports,
+      },
+    }
+  }
+
+  connectStoreToViewClass(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {
+    const { utils } = this.context
+    const viewAst = utils.ast(`${dir + path}/index.tsx`)
+
+    query.imports.forEach(i => {
+      viewAst.addNamedImports(i.module, i.namedImports)
+    })
+
+    const viewFile = viewAst.sourceFile
+    const clazz = viewFile.getClass(name)
+
+    const decoratorFullName = 'AppStore.withStoreClass'
+    const generics = []
+    const args = []
+    let stateArgs = []
+    let dispatchArgs = []
+
+    let decorator = clazz.getDecorator(d => d.getFullName() === decoratorFullName)
+
+    if (!decorator) {
+      stateArgs = query.state.map
+      dispatchArgs = query.thunk.map
+    } else {
+      const existingArgs: DecoratorArgument = {
+        state: [],
+        dispatch: [],
+      }
+      decorator.getArguments().forEach(a => {
+        if (a.getKind() === SyntaxKind.ArrowFunction) {
+          let identifier = undefined
+
+          a.forEachChild(c => {
+            if (c.getKind() === SyntaxKind.Parameter) {
+              identifier = c.getText()
+            } else if (identifier && c.getKind() === SyntaxKind.ParenthesizedExpression) {
+              const c1 = c.getFirstChildByKind(SyntaxKind.ObjectLiteralExpression)
+              c1.forEachChild(c2 => {
+                const c4 = c2.getChildren()
+                existingArgs[identifier].push({
+                  key: c4[0].getText(),
+                  value: c4[2].getText(),
+                })
+              })
+            }
+          })
+        }
+      })
+
+      const stateArgsToAdd = query.state.map.filter(s => {
+        const key = s.split(':')[0]
+        const h = existingArgs.state.find(a => a.key === key)
+        return !!!h
+      })
+
+      const dispatchArgsToAdd = query.thunk.map.filter(s => {
+        const key = s.split(':')[0]
+        const h = existingArgs.dispatch.find(a => a.key === key)
+        return !!!h
+      })
+
+      stateArgs = [...stateArgsToAdd, ...existingArgs.state.map(a => a.key + ': ' + a.value)]
+
+      dispatchArgs = [
+        ...dispatchArgsToAdd,
+        ...existingArgs.dispatch.map(a => a.key + ': ' + a.value),
+      ]
+
+      decorator.remove()
+    }
+
+    if (stateArgs.length > 0) {
+      args.push(`state => ({ ${stateArgs.join(',')} })`)
+      generics.push(`${name}StateProps`)
+    }
+
+    if (dispatchArgs.length > 0) {
+      if (args.length === 0) {
+        args.push('null')
+        generics.push(`any`)
+      }
+
+      generics.push(`${name}ActionProps`)
+      args.push(`dispatch => ({ ${dispatchArgs.join(',')} })`)
+    }
+
+    clazz.addDecorator({
+      name: `${decoratorFullName}<${generics.join(',')}>`,
+      arguments: args,
+    })
+
+    viewAst.sortImports()
+    viewAst.save()
+  }
+
+  connectStoreToStatelessView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {}
+
+  connectStoreToStatelessFunctionalView(
+    dir: string,
+    { name, path }: ExportedNamePath,
+    query: QueryResult,
+  ) {}
 }
 
 export function reduxStore(context: RootContext) {

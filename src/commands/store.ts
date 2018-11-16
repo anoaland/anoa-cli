@@ -19,8 +19,11 @@ export default {
     const taskCreateReducer = 'Create new reducer'
     const taskCreateAction = 'Create new action'
     const taskUpdate = 'Update application root state'
+    const taskConnect = 'Connect store to view'
 
     let task = undefined
+    const stateAndThunks = await reduxStore.getStateAndThunks()
+    const hasStore = !(!!stateAndThunks.states && !!stateAndThunks.thunks)
 
     switch (first) {
       case 'r':
@@ -32,18 +35,30 @@ export default {
       case 'u':
         task = taskUpdate
         break
+      case 'c':
+        task = taskConnect
+        break
     }
 
     if (!task) {
+      const choices = [taskCreateReducer, taskCreateAction, taskUpdate]
+      if (hasStore) {
+        choices.push(taskConnect)
+      }
       const { pickTask } = await prompt.ask([
         {
           name: 'pickTask',
           message: 'What would you like to do with store?',
           type: 'list',
-          choices: [taskCreateReducer, taskCreateAction, taskUpdate],
+          choices,
         },
       ])
       task = pickTask
+    }
+
+    if (task === taskConnect) {
+      await reduxStore.connectStore(stateAndThunks)
+      return
     }
 
     if (task !== taskUpdate) {
@@ -130,8 +145,7 @@ export default {
         await reduxStore.createActionThunk(name, type, payloadType)
         print.success(
           'New action was successfully created on ' +
-            print.colors.yellow(`src/store/actions/${kebabCase(name)}-action.ts`) +
-            '.',
+            print.colors.yellow(`src/store/actions/${kebabCase(name)}-action.ts`),
         )
       }
     } else {
