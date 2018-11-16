@@ -684,13 +684,21 @@ class ReduxStore {
     viewAst.save()
   }
 
-  connectStoreToStatelessView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {}
+  connectStoreToStatelessView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {
+    this.context.print.warning(
+      `Sorry this action is not supported yet. Please wait until next release.`,
+    )
+  }
 
   connectStoreToStatelessFunctionalView(
     dir: string,
     { name, path }: ExportedNamePath,
     query: QueryResult,
-  ) {}
+  ) {
+    this.context.print.warning(
+      `Sorry this action is not supported yet. Please wait until next release.`,
+    )
+  }
 }
 
 export function reduxStore(context: RootContext) {
