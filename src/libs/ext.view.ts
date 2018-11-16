@@ -1,8 +1,6 @@
 import { RootContext } from '.'
-import { ViewInfo, BriefViewInfo, ViewType } from './types'
+import { ViewInfo, BriefViewInfo, ViewType, ViewKind } from './types'
 import { SyntaxKind } from 'ts-simple-ast'
-
-type ViewKind = 'component' | 'screen'
 
 class View {
   context: RootContext

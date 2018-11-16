@@ -22,3 +22,5 @@ export interface AnoaProjectInfo {
   name: string
   preset: 'expo' | 'react-native-init'
 }
+
+export type ViewKind = 'component' | 'screen'

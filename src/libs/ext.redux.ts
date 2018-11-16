@@ -6,7 +6,7 @@ import {
   TypeLiteralNode,
   PropertySignatureStructure,
 } from 'ts-simple-ast'
-import { ExportedNamePath, ViewInfo } from './types'
+import { ExportedNamePath, ViewInfo, ViewKind } from './types'
 
 interface ReducerActionInfo {
   type: string
@@ -373,11 +373,7 @@ class ReduxStore {
   /**
    * Connect store to view.
    */
-  async connectStore(
-    { states, thunks }: StateAndThunks,
-    viewInfo?: ViewInfo,
-    kind?: 'component' | 'screen',
-  ) {
+  async connectStore({ states, thunks }: StateAndThunks, viewInfo?: ViewInfo, kind?: ViewKind) {
     const { prompt, print, view } = this.context
 
     let dir = ''
@@ -388,15 +384,15 @@ class ReduxStore {
         return
       }
 
-      const { kind } = await prompt.ask({
+      kind = (await prompt.ask({
         name: 'kind',
         message: 'What kind of view would you like to connect to theme?',
         type: 'list',
         choices: ['Component', 'Screen'],
-      })
+      })).kind
 
       dir = `src/views/${kind.toLowerCase()}s`
-      const viewInfoList = await view.viewInfoList(kind.toLowerCase())
+      const viewInfoList = await view.viewInfoList(kind.toLowerCase() as ViewKind)
 
       if (!viewInfoList.length) {
         print.error(`We could not find any ${kind} in this project.`)
@@ -436,6 +432,12 @@ class ReduxStore {
         this.connectStoreToStatelessFunctionalView(dir, viewInfo, query)
         break
     }
+
+    print.success(
+      `Store was successfully connected to ${print.colors.magenta(
+        viewInfo.name,
+      )} ${kind.toLowerCase()} on ${print.colors.yellow(`${dir + viewInfo.path}/index.tsx`)}`,
+    )
   }
 
   private async _generatePropInterfaces(
