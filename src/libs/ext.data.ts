@@ -71,9 +71,9 @@ class Data {
    * Export all models.
    */
   async updateModelExports() {
-    const { fileList, utils } = this.context
+    const { utils } = this.context
 
-    const files = await fileList('src/data/models')
+    const files = await utils.fileList('src/data/models')
     const exports = files
       .filter(f => f.name !== 'index.ts')
       .map(f => f.name.slice(0, f.name.length - 3))
@@ -158,9 +158,9 @@ class Data {
   }
 
   async updateProviderExports() {
-    const { fileList, utils } = this.context
+    const { utils } = this.context
 
-    const files = await fileList('src/data/providers')
+    const files = await utils.fileList('src/data/providers')
     const exports = files
       .filter(f => f.name !== 'index.ts')
       .map(f => f.name.slice(0, f.name.length - 3))
