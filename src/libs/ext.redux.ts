@@ -531,7 +531,7 @@ class ReduxStore {
         {
           name: 'actionsToMap',
           type: 'checkbox',
-          message: 'Select state(s) you want to map',
+          message: 'Select action(s) you want to map',
           radio: true,
           choices,
         },
