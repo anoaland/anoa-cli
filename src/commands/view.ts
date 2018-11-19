@@ -171,19 +171,25 @@ export default {
 
     const dir = `src/views/${strToCreate.toLowerCase()}s`
     const viewPath = location + kebabCase(name)
-    const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
 
-    if (connectToTheme) {
-      switch (type) {
-        case viewClass:
-          await style.connectThemeToViewClass(dir, { name: viewName, path: viewPath })
-          break
-        case viewStateless:
-          await style.connectThemeToStatelessView(dir, { name: viewName, path: viewPath })
-          break
-        case viewStatelessFunctional:
-          await style.connectThemeToStatelessFunctionalView(dir, { name: viewName, path: viewPath })
-          break
+    if (themes) {
+      const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
+
+      if (connectToTheme) {
+        switch (type) {
+          case viewClass:
+            await style.connectThemeToViewClass(dir, { name: viewName, path: viewPath })
+            break
+          case viewStateless:
+            await style.connectThemeToStatelessView(dir, { name: viewName, path: viewPath })
+            break
+          case viewStatelessFunctional:
+            await style.connectThemeToStatelessFunctionalView(dir, {
+              name: viewName,
+              path: viewPath,
+            })
+            break
+        }
       }
     }
 
