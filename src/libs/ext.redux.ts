@@ -504,6 +504,7 @@ class ReduxStore {
     if (query.thunk.props.length) {
       const interfaceName = name + 'ActionProps'
       astProps.createOrUpdateInterface(interfaceName, query.thunk.props)
+      extendedProps.push(interfaceName)
     }
 
     if (extendedProps.length > 0) {
