@@ -286,7 +286,14 @@ class ReduxStore {
 
       sourceFile.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach(c => {
         c.getProperties().forEach(c1 => {
-          stateProps[c1.getChildAtIndex(0).getText()] = c1.getChildAtIndex(2).getText()
+          let type = c1.getLastChild().getText()
+
+          if (c1.getChildAtIndex(1).getKind() === SyntaxKind.QuestionToken) {
+            if (type.indexOf('undefined') < 0) {
+              type += ' | undefined'
+            }
+          }
+          stateProps[c1.getFirstChild().getText()] = type
         })
       })
 
