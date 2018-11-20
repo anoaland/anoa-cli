@@ -718,9 +718,63 @@ class ReduxStore {
     { name, path }: ExportedNamePath,
     query: QueryResult,
   ) {
-    this.context.print.warning(
-      `Sorry this action is not supported yet. Please wait until next release.`,
-    )
+    const { utils, print } = this.context
+    const viewAst = utils.ast(`${dir + path}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+
+    // treat as HOC
+    let varStmt = viewFile.getVariableStatement(fn => {
+      return !!fn.getStructure().declarations.find(d => d.name === name)
+    })
+
+    if (!varStmt) {
+      print.warning(`Could not connect store to ${name}.`)
+      return false
+    }
+
+    this.updateStoreHocConnection(varStmt, query)
+
+    // Modify main arrow function
+    const arrowFns = varStmt.getDescendantsOfKind(SyntaxKind.ArrowFunction)
+    if (arrowFns && arrowFns.length > 0) {
+      const arrowFn = arrowFns[arrowFns.length - 1]
+      let param = undefined
+      let block = undefined
+
+      arrowFn.forEachChild(c => {
+        if (c.getKind() === SyntaxKind.Parameter && !param) {
+          param = c.getText()
+        }
+
+        if (c.getKind() === SyntaxKind.Block && !block) {
+          block = c.getText()
+        }
+      })
+
+      if (!param) {
+        param = `props: ${name}Props`
+      }
+
+      if (param.indexOf(':') < 0) {
+        param += `: ${name}Props`
+      }
+
+      if (!block) {
+        print.error('Could not connect theme to this component')
+        process.exit(0)
+        return
+      }
+
+      arrowFn.replaceWithText(`(${param}) => ${block}`)
+    }
+
+    query.imports.forEach(i => {
+      viewAst.addNamedImports(i.module, i.namedImports)
+    })
+
+    viewAst.sortImports()
+    viewAst.save()
+
     return false
   }
 
@@ -756,6 +810,10 @@ class ReduxStore {
     let withStoreCallExp: Node
 
     const name = dec.getName()
+
+    if (dec.getType()) {
+      dec.removeType()
+    }
 
     if (!initializer) {
       initializer = dec.setInitializer(`AppStore.withStore()(_${name})`).getInitializer()
