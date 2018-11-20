@@ -826,7 +826,7 @@ class ReduxStore {
 
     if (!withStoreCallExp) {
       initializer = dec
-        .setInitializer(`AppStore.withStore()(_${initializer.getText()})`)
+        .setInitializer(`AppStore.withStore()(${initializer.getText()})`)
         .getInitializer()
 
       withStoreCallExp = initializer.getFirstDescendant(

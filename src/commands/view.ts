@@ -171,6 +171,7 @@ export default {
 
     const dir = `src/views/${strToCreate.toLowerCase()}s`
     const viewPath = location + kebabCase(name)
+    let connectedToTheme = false
 
     if (themes) {
       const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
@@ -190,6 +191,7 @@ export default {
             })
             break
         }
+        connectedToTheme = true
       }
     }
 
@@ -198,12 +200,16 @@ export default {
       const connectToStore = await prompt.confirm('Do you want to connect to redux store?')
       if (connectToStore) {
         let viewType: ViewType = 'class'
-        switch (type) {
-          case viewStateless:
-            viewType = 'stateless'
-            break
-          case viewStatelessFunctional:
-            viewType = 'functional'
+        if (connectedToTheme && type !== viewClass) {
+          viewType = 'hoc'
+        } else {
+          switch (type) {
+            case viewStateless:
+              viewType = 'stateless'
+              break
+            case viewStatelessFunctional:
+              viewType = 'functional'
+          }
         }
 
         await reduxStore.connectStore(
