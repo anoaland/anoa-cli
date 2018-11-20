@@ -76,15 +76,14 @@ export default {
           {
             type: 'input',
             name: 'states',
-            message: `Specify state you'd like to have (separated with space), or leave it blank thus we will generate example for you`,
+            message: `Specify state you'd like to have (separated with space, eg: foo:string='some value' bar:number=26), or leave it blank thus we will generate example for you:`,
           },
         ])
 
         await reduxStore.createReducer(name, (states || 'foo bar').split(' ').map(s => s.trim()))
         print.success(
           'New reducer was successfully created on ' +
-            print.colors.yellow(`src/store/reducers/${name.toLowerCase()}/index.ts`) +
-            '.',
+            print.colors.yellow(`src/store/reducers/${name.toLowerCase()}/index.ts`),
         )
       } else {
         // create action
@@ -107,7 +106,7 @@ export default {
           {
             type: 'input',
             name: 'type',
-            message: `Action type (Leave blank -- we'll let you to pick it)`,
+            message: `Action type (Leave blank -- we'll let you to pick it):`,
           },
         ])
 

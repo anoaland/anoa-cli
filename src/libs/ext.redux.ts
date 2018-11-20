@@ -86,7 +86,7 @@ class ReduxStore {
       process.exit(0)
     }
 
-    states = uniq(states.filter(s => !isBlank(s)).map(camelCase))
+    states = uniq(states.filter(s => !isBlank(s)))
     if (!states) {
       print.error('Reducer state is required')
       process.exit(0)
@@ -94,9 +94,46 @@ class ReduxStore {
 
     await this.init()
 
+    const reduxStates = states.map(s => {
+      const st = s.split(':')
+      let name = st[0].trim()
+      let type = 'any'
+      let value = `''`
+
+      if (st.length > 1) {
+        const sv = st[1].split('=')
+        if (sv.length > 1) {
+          type = sv[0].trim()
+          value = sv[1].trim()
+        } else {
+          type = st[1].trim()
+          switch (type) {
+            case 'number':
+              value = '0'
+              break
+            case 'boolean':
+              value = 'false'
+              break
+          }
+        }
+      } else {
+        const sv = s.split('=')
+        if (sv.length > 1) {
+          name = sv[0].trim()
+          value = sv[1].trim()
+        }
+      }
+
+      return {
+        name: camelCase(name),
+        type,
+        value,
+      }
+    })
+
     const props = {
       name: pascalCase(name),
-      states,
+      states: reduxStates,
       upperCase: s => {
         return snakeCase(s).toUpperCase()
       },
