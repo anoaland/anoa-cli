@@ -1,5 +1,5 @@
 import { RootContext } from '.'
-import { SyntaxKind } from 'ts-simple-ast'
+import { SyntaxKind, CallExpression } from 'ts-simple-ast'
 import { ExportedNamePath } from './types'
 
 export interface ThemeInfo {
@@ -235,6 +235,10 @@ class Style {
         this.connectThemeToViewClass(dir, viewInfo)
         break
 
+      case 'hoc':
+        this.connectThemeToHocView(dir, viewInfo)
+        break
+
       case 'stateless':
         this.connectThemeToStatelessView(dir, viewInfo)
         break
@@ -243,6 +247,57 @@ class Style {
         this.connectThemeToStatelessFunctionalView(dir, viewInfo)
         break
     }
+  }
+
+  connectThemeToHocView(dir: string, { name, path }: ExportedNamePath) {
+    const { utils, print } = this.context
+    const viewAst = utils.ast(`${dir + path}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+
+    let varStmt = viewFile.getVariableStatement(fn => {
+      return !!fn.getStructure().declarations.find(d => d.name === name)
+    })
+
+    if (!varStmt) {
+      print.warning(`Could not connect store to ${name}.`)
+      return false
+    }
+
+    const dec = varStmt.getDeclarations()[0]
+    let initializer = dec.getInitializer()
+
+    if (initializer.getText().indexOf(`AppStyle.withTheme`) > -1) {
+      print.warning('Seems this component already connected to theme.')
+      process.exit(0)
+      return
+    }
+
+    let success = false
+    if (initializer.getKind() === SyntaxKind.CallExpression) {
+      const callExp = initializer as CallExpression
+      const arg = callExp.getArguments()[0]
+      if (arg) {
+        const newArg = `AppStyle.withTheme<${name}Props>(${arg.getText()})`
+        callExp.removeArgument(arg)
+        callExp.addArgument(newArg)
+
+        const viewDir = dir + path
+        viewAst.addNamedImports(utils.relative('src/views/styles', `${viewDir}`), ['AppStyle'])
+        viewAst.sortImports()
+        viewAst.save()
+
+        this._extendsPropsStyle(name, viewDir)
+        success = true
+      }
+    }
+
+    if (!success) {
+      print.error('Could not connect theme to this view.')
+      process.exit(0)
+      return
+    }
+
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
   }
 
   connectThemeToViewClass(dir: string, { name, path }: ExportedNamePath) {
