@@ -128,6 +128,7 @@ class ReduxStore {
         name: camelCase(name),
         type,
         value,
+        optional: name.endsWith('?'),
       }
     })
 
