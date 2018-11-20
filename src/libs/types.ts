@@ -1,4 +1,4 @@
-export type ViewType = 'class' | 'stateless' | 'functional'
+export type ViewType = 'class' | 'stateless' | 'functional' | 'hoc'
 
 export interface ExportedNamePath {
   name: string

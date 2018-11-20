@@ -91,8 +91,12 @@ class View {
       const identifier = e.getFirstChildByKind(SyntaxKind.Identifier)
       if (identifier) {
         let type: ViewType = 'class'
+
         switch (e.getLastChild().getKind()) {
+          case SyntaxKind.PropertyAccessExpression:
           case SyntaxKind.CallExpression:
+            type = 'hoc'
+            break
           case SyntaxKind.Block:
             type = 'stateless'
             break

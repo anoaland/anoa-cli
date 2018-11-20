@@ -5,6 +5,9 @@ import {
   UnionTypeNode,
   TypeLiteralNode,
   PropertySignatureStructure,
+  VariableDeclarationKind,
+  VariableStatement,
+  Node,
 } from 'ts-simple-ast'
 import { ExportedNamePath, ViewInfo, ViewKind } from './types'
 
@@ -463,26 +466,34 @@ class ReduxStore {
     // generate required props interfaces
     await this._generatePropInterfaces(dir, viewInfo, query)
 
+    let success = false
+
     // connect to view
     switch (viewInfo.type) {
       case 'class':
-        this.connectStoreToViewClass(dir, viewInfo, query)
+        success = this.connectStoreToViewClass(dir, viewInfo, query)
         break
 
       case 'stateless':
-        this.connectStoreToStatelessView(dir, viewInfo, query)
+        success = this.connectStoreToStatelessView(dir, viewInfo, query)
         break
 
       case 'functional':
-        this.connectStoreToStatelessFunctionalView(dir, viewInfo, query)
+        success = this.connectStoreToStatelessFunctionalView(dir, viewInfo, query)
+        break
+
+      case 'hoc':
+        success = this.connectStoreToHocView(dir, viewInfo, query)
         break
     }
 
-    print.success(
-      `Store was successfully connected to ${print.colors.magenta(
-        viewInfo.name,
-      )} ${kind.toLowerCase()} on ${print.colors.yellow(`${dir + viewInfo.path}/index.tsx`)}`,
-    )
+    if (success) {
+      print.success(
+        `Store was successfully connected to ${print.colors.magenta(
+          viewInfo.name,
+        )} ${kind.toLowerCase()} on ${print.colors.yellow(`${dir + viewInfo.path}/index.tsx`)}`,
+      )
+    }
   }
 
   private async _generatePropInterfaces(
@@ -646,16 +657,148 @@ class ReduxStore {
 
     const viewFile = viewAst.sourceFile
     const clazz = viewFile.getClass(name)
-
     const decoratorFullName = 'AppStore.withStoreClass'
-    const generics = []
-    const args = []
+    const decorator = clazz.getDecorator(d => d.getFullName() === decoratorFullName)
+
+    const { args, generics } = this._buildStoreMapArgs(
+      name,
+      decorator ? decorator.getArguments() : [],
+      query,
+    )
+
+    if (decorator) {
+      decorator.remove()
+    }
+
+    clazz.addDecorator({
+      name: `${decoratorFullName}<${generics.join(',')}>`,
+      arguments: args,
+    })
+
+    viewAst.sortImports()
+    viewAst.save()
+
+    return true
+  }
+
+  connectStoreToStatelessView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {
+    const { utils, print } = this.context
+    const viewAst = utils.ast(`${dir + path}/index.tsx`)
+
+    const viewFile = viewAst.sourceFile
+    const func = viewFile.getFunction(name)
+
+    if (!func) {
+      print.warning(`Could not connect store to ${name}.`)
+      return false
+    }
+
+    func.rename('_' + name)
+    func.setIsExported(false)
+
+    const varStmt = viewFile.addVariableStatement({
+      declarations: [{ name }],
+      declarationKind: VariableDeclarationKind.Const,
+      isExported: true,
+    })
+
+    this.updateStoreHocConnection(varStmt, query)
+
+    query.imports.forEach(i => {
+      viewAst.addNamedImports(i.module, i.namedImports)
+    })
+    viewAst.sortImports()
+    viewAst.save()
+
+    return true
+  }
+
+  connectStoreToStatelessFunctionalView(
+    dir: string,
+    { name, path }: ExportedNamePath,
+    query: QueryResult,
+  ) {
+    this.context.print.warning(
+      `Sorry this action is not supported yet. Please wait until next release.`,
+    )
+    return false
+  }
+
+  connectStoreToHocView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {
+    const { utils, print } = this.context
+    const viewAst = utils.ast(`${dir + path}/index.tsx`)
+    const viewFile = viewAst.sourceFile
+
+    let varStmt = viewFile.getVariableStatement(fn => {
+      return !!fn.getStructure().declarations.find(d => d.name === name)
+    })
+
+    if (!varStmt) {
+      print.warning(`Could not connect store to ${name}.`)
+      return false
+    }
+
+    this.updateStoreHocConnection(varStmt, query)
+
+    query.imports.forEach(i => {
+      viewAst.addNamedImports(i.module, i.namedImports)
+    })
+    viewAst.sortImports()
+    viewAst.save()
+
+    return true
+  }
+
+  updateStoreHocConnection(stmt: VariableStatement, query: QueryResult) {
+    const dec = stmt.getDeclarations()[0]
+
+    let initializer = dec.getInitializer()
+    let withStoreCallExp: Node
+
+    const name = dec.getName()
+
+    if (!initializer) {
+      initializer = dec.setInitializer(`AppStore.withStore()(_${name})`).getInitializer()
+    }
+
+    withStoreCallExp = initializer.getFirstDescendant(
+      c =>
+        c.getKind() === SyntaxKind.CallExpression && c.getText().startsWith('AppStore.withStore'),
+    )
+
+    if (!withStoreCallExp) {
+      initializer = dec
+        .setInitializer(`AppStore.withStore()(_${initializer.getText()})`)
+        .getInitializer()
+
+      withStoreCallExp = initializer.getFirstDescendant(
+        c =>
+          c.getKind() === SyntaxKind.CallExpression && c.getText().startsWith('AppStore.withStore'),
+      )
+    }
+
+    if (withStoreCallExp) {
+      const nodes: Node[] = []
+      withStoreCallExp.forEachChild(c => {
+        nodes.push(c)
+      })
+
+      const { args, generics } = this._buildStoreMapArgs(name, nodes, query)
+      withStoreCallExp.replaceWithText(
+        `AppStore.withStore<${generics.join(',')}>(${args.join(',')})`,
+      )
+    } else {
+      throw new Error('Could not create call expression for AppStore.withStore.')
+    }
+  }
+
+  private _buildStoreMapArgs(name: string, nodeArgs: Node[], query: QueryResult) {
+    let generics: string[] = []
+    let args: string[] = []
     let stateArgs = []
     let dispatchArgs = []
 
-    let decorator = clazz.getDecorator(d => d.getFullName() === decoratorFullName)
-
-    if (!decorator) {
+    if (!nodeArgs || nodeArgs.length === 0) {
       stateArgs = query.state.map
       dispatchArgs = query.thunk.map
     } else {
@@ -663,7 +806,7 @@ class ReduxStore {
         state: [],
         dispatch: [],
       }
-      decorator.getArguments().forEach(a => {
+      nodeArgs.forEach(a => {
         if (a.getKind() === SyntaxKind.ArrowFunction) {
           let identifier = undefined
 
@@ -702,8 +845,6 @@ class ReduxStore {
         ...dispatchArgsToAdd,
         ...existingArgs.dispatch.map(a => a.key + ': ' + a.value),
       ]
-
-      decorator.remove()
     }
 
     if (stateArgs.length > 0) {
@@ -721,29 +862,10 @@ class ReduxStore {
       args.push(`dispatch => ({ ${dispatchArgs.join(',')} })`)
     }
 
-    clazz.addDecorator({
-      name: `${decoratorFullName}<${generics.join(',')}>`,
-      arguments: args,
-    })
-
-    viewAst.sortImports()
-    viewAst.save()
-  }
-
-  connectStoreToStatelessView(dir: string, { name, path }: ExportedNamePath, query: QueryResult) {
-    this.context.print.warning(
-      `Sorry this action is not supported yet. Please wait until next release.`,
-    )
-  }
-
-  connectStoreToStatelessFunctionalView(
-    dir: string,
-    { name, path }: ExportedNamePath,
-    query: QueryResult,
-  ) {
-    this.context.print.warning(
-      `Sorry this action is not supported yet. Please wait until next release.`,
-    )
+    return {
+      args,
+      generics,
+    }
   }
 }
 
