@@ -14,7 +14,7 @@ class Navigator {
     const { init, npm } = this.context
 
     await init()
-    await npm.ensurePackages(['anoa', 'react-navigation'], false)
+    await npm.ensurePackages(['anoa', 'react-navigation@2.18.2'], false)
     await npm.ensurePackages(['@types/react-navigation'], true)
   }
 
