@@ -110,13 +110,17 @@ class ReduxStore {
           value = sv[1].trim()
         } else {
           type = st[1].trim()
-          switch (type) {
-            case 'number':
-              value = '0'
-              break
-            case 'boolean':
-              value = 'false'
-              break
+          if (type.endsWith('[]')) {
+            value = '[]'
+          } else {
+            switch (type) {
+              case 'number':
+                value = '0'
+                break
+              case 'boolean':
+                value = 'false'
+                break
+            }
           }
         }
       } else {
