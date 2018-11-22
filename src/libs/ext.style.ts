@@ -22,6 +22,14 @@ class Style {
     await npm.ensurePackages(['anoa-react-native-theme'], false)
   }
 
+  hasTheme() {
+    const {
+      filesystem: { exists },
+    } = this.context
+
+    return exists('src/views/styles/themes/index.ts') === 'file'
+  }
+
   /**
    * Get all named themes
    */
@@ -72,13 +80,17 @@ class Style {
     let name = second
 
     if (!name) {
-      name = (await prompt.ask([
-        {
-          name: 'name',
-          message: 'Name of theme',
-          type: 'input',
-        },
-      ])).name
+      if (!this.hasTheme()) {
+        name = 'base'
+      } else {
+        name = (await prompt.ask([
+          {
+            name: 'name',
+            message: 'Name of theme',
+            type: 'input',
+          },
+        ])).name
+      }
     }
 
     if (isBlank(name)) {

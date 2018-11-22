@@ -23,7 +23,7 @@ export default {
     const taskConnectTheme = 'Connect theme to view (screen / component)'
     const taskCreateState = 'Create state interface for screen or component class'
 
-    const themes = await style.themes()
+    const hasTheme = style.hasTheme()
 
     // Task query
 
@@ -49,7 +49,7 @@ export default {
     if (!task) {
       const choices = [taskCreateComponent, taskCreateScreen, taskCreateState, taskCreateTheme]
 
-      if (themes) {
+      if (hasTheme) {
         choices.push(taskConnectTheme)
       }
 
@@ -187,7 +187,7 @@ export default {
     const dir = `src/views/${strToCreate.toLowerCase()}s`    
     let connectedToTheme = false
 
-    if (themes) {
+    if (hasTheme) {
       const connectToTheme = await prompt.confirm('Do you want to connect to theme?')
 
       if (connectToTheme) {
