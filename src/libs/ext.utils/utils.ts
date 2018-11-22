@@ -30,9 +30,12 @@ export class Utils {
   loadAstProject() {
     const {
       filesystem: { cwd, exists },
+      print,
     } = this.context
 
     if (!exists('tsconfig.json')) {
+      print.error('tsconfig.json is missing')
+      process.exit()
       return
     }
 
