@@ -41,6 +41,7 @@ export function boilerplateReactNativeInit(context: RootContext) {
         'tslint',
         'tslint-config-prettier',
         'tslint-react',
+        '@babel/plugin-proposal-decorators@7.1.6',
       ],
       true,
     )
@@ -57,6 +58,21 @@ export function boilerplateReactNativeInit(context: RootContext) {
         preset: 'react-native-init',
       }
       return pkg
+    })
+
+    // patch .babelrc
+
+    await patching.update('.babelrc', cfg => {
+      if (typeof cfg === 'string') {
+        cfg = JSON.parse(cfg)
+      }
+
+      cfg.plugins = [
+        ...(cfg.plugins || []),
+        ['@babel/plugin-proposal-decorators', { legacy: true }],
+      ]
+
+      return cfg
     })
 
     // add asset files
