@@ -8,6 +8,7 @@ import {
   VariableDeclarationKind,
   VariableStatement,
   Node,
+  InterfaceDeclaration,
 } from 'ts-simple-ast'
 import { ExportedNamePath, ViewInfo, ViewKind } from './types'
 
@@ -97,47 +98,7 @@ class ReduxStore {
 
     await this.init()
 
-    const reduxStates = states.map(s => {
-      const st = s.split(':')
-      let name = st[0].trim()
-      let type = 'any'
-      let value = `''`
-
-      if (st.length > 1) {
-        const sv = st[1].split('=')
-        if (sv.length > 1) {
-          type = sv[0].trim()
-          value = sv[1].trim()
-        } else {
-          type = st[1].trim()
-          if (type.endsWith('[]')) {
-            value = '[]'
-          } else {
-            switch (type) {
-              case 'number':
-                value = '0'
-                break
-              case 'boolean':
-                value = 'false'
-                break
-            }
-          }
-        }
-      } else {
-        const sv = s.split('=')
-        if (sv.length > 1) {
-          name = sv[0].trim()
-          value = sv[1].trim()
-        }
-      }
-
-      return {
-        name: camelCase(name),
-        type,
-        value,
-        optional: name.endsWith('?'),
-      }
-    })
+    const reduxStates = this._convertArrayToReduxStates(states)
 
     const props = {
       name: pascalCase(name),
@@ -854,6 +815,146 @@ class ReduxStore {
     }
   }
 
+  async addNewReducerStateProperties({ states }: StateAndThunks) {
+    const {
+      print,
+      prompt,
+      strings: { isBlank, pascalCase, snakeCase },
+      utils,
+    } = this.context
+
+    if (!states) {
+      print.warning('Aborted. There is no state found in this project.')
+      process.exit(0)
+      return
+    }
+
+    const keys = Object.keys(states)
+
+    const { key } = await prompt.ask([
+      {
+        name: 'key',
+        type: 'list',
+        message: 'Select state you want to add the properties',
+        choices: keys,
+      },
+    ])
+
+    if (!key) {
+      print.error('State is required')
+      process.exit(0)
+      return
+    }
+
+    const { properties } = await prompt.ask([
+      {
+        type: 'input',
+        name: 'properties',
+        message: `Specify state you'd like to add (separated with space, eg: foo:string='some value' bar:number=26):`,
+      },
+    ])
+
+    if (isBlank(properties)) {
+      print.error('Properties is required')
+      process.exit(0)
+      return
+    }
+
+    const dir = `src/store/reducers/${key}/`
+
+    // modify state.tsx
+    const astState = utils.ast(dir + 'state.ts')
+    const intf = astState.getDefaultExportDeclaration() as InterfaceDeclaration
+
+    if (intf.getKind() !== SyntaxKind.InterfaceDeclaration) {
+      throw new Error(`Can't find state interface declaration on ${dir}state.ts`)
+    }
+
+    const reduxStates = this._convertArrayToReduxStates(properties.split(' ').map(s => s.trim()))
+    reduxStates.forEach(s => {
+      intf.addProperty({
+        name: s.name,
+        hasQuestionToken: s.optional,
+        type: s.type,
+      })
+    })
+    astState.save()
+
+    // modify actions.ts
+
+    const astAction = utils.ast(dir + 'actions.ts')
+    const actActionExp = astAction.sourceFile.getTypeAlias(astAction.getDefaultExportExpression())
+    const actTypes = actActionExp.getFirstChild(c => {
+      return c.getKind() === SyntaxKind.TypeLiteral || c.getKind() === SyntaxKind.UnionType
+    })
+
+    let newStates = actTypes.getText()
+    reduxStates.forEach(s => {
+      newStates += ` | { type: '${snakeCase(key).toUpperCase()}/${snakeCase(s.name).toUpperCase()}' 
+        payload${s.optional ? '?' : ''}: ${s.type}
+     }`
+    })
+
+    actTypes.replaceWithText(newStates)
+    astAction.save()
+
+    // modify index.ts
+
+    const astIndex = utils.ast(dir + 'index.ts')
+    const astIndexExp = astIndex.getDefaultExportExpression()
+    const astIndexDec = astIndex.sourceFile.getVariableDeclaration(astIndexExp)
+    const astIndexFn = astIndexDec.getInitializerIfKind(SyntaxKind.ArrowFunction)
+
+    if (!astIndexFn) {
+      throw new Error('Could not resolve arrow function on: ' + dir + 'index.ts')
+    }
+
+    // get state parameters
+    const astIndexParam = astIndexFn.getParameter('state')
+    const stateParams = astIndexParam.getFirstChildByKind(SyntaxKind.ObjectLiteralExpression)
+
+    // get switch statement
+    const switchStmt = astIndexFn
+      .getBody()
+      .getDescendantStatements()
+      .find(s => s.getKind() === SyntaxKind.SwitchStatement)
+
+    // find case block
+    const caseBlock = switchStmt.getFirstChildByKind(SyntaxKind.CaseBlock)
+    const clauses = caseBlock.getClauses()
+    const caseClauses = clauses
+      .filter(c => c.getKind() !== SyntaxKind.DefaultClause)
+      .map(c => c.getText())
+    const defaultClause = clauses.find(c => c.getKind() == SyntaxKind.DefaultClause)
+
+    // iterate new states
+    reduxStates.forEach(s => {
+      // assign new state parameters
+      stateParams.addPropertyAssignment({
+        name: s.name,
+        initializer: s.value,
+      })
+
+      // add new switch clause
+      caseClauses.push(`case '${snakeCase(key).toUpperCase()}/${snakeCase(s.name).toUpperCase()}':
+      return { ...state, ${s.name}: action.payload }`)
+    })
+
+    // build clause statement
+    const newClauseStmt =
+      caseClauses.join('\r\n') + (defaultClause ? '\r\n' + defaultClause.getText() : '')
+    caseBlock.replaceWithText(`{ ${newClauseStmt} }`)
+
+    // done!
+    astIndex.save()
+
+    print.success(
+      `New properties was successfully added to ${print.colors.magenta(
+        `${pascalCase(key)}State`,
+      )} on ${print.colors.yellow(`${astIndex.filepath}`)}`,
+    )
+  }
+
   private _buildStoreMapArgs(name: string, nodeArgs: Node[], query: QueryResult) {
     let generics: string[] = []
     let args: string[] = []
@@ -928,6 +1029,50 @@ class ReduxStore {
       args,
       generics,
     }
+  }
+
+  _convertArrayToReduxStates(states: string[]) {
+    return states.map(s => {
+      const st = s.split(':')
+      let name = st[0].trim()
+      let type = 'any'
+      let value = `''`
+
+      if (st.length > 1) {
+        const sv = st[1].split('=')
+        if (sv.length > 1) {
+          type = sv[0].trim()
+          value = sv[1].trim()
+        } else {
+          type = st[1].trim()
+          if (type.endsWith('[]')) {
+            value = '[]'
+          } else {
+            switch (type) {
+              case 'number':
+                value = '0'
+                break
+              case 'boolean':
+                value = 'false'
+                break
+            }
+          }
+        }
+      } else {
+        const sv = s.split('=')
+        if (sv.length > 1) {
+          name = sv[0].trim()
+          value = sv[1].trim()
+        }
+      }
+
+      return {
+        name: this.context.strings.camelCase(name),
+        type,
+        value,
+        optional: name.endsWith('?'),
+      }
+    })
   }
 }
 

@@ -20,6 +20,7 @@ export default {
     const taskCreateAction = 'Create new action'
     const taskUpdate = 'Update application root state'
     const taskConnect = 'Connect store to view'
+    const taskAddReducerStateProperties = 'Add new reducer state properties'
 
     let task = undefined
     const stateAndThunks = await reduxStore.getStateAndThunks()
@@ -38,10 +39,17 @@ export default {
       case 'c':
         task = taskConnect
         break
+      case 's':
+        task = taskAddReducerStateProperties
     }
 
     if (!task) {
-      const choices = [taskCreateReducer, taskCreateAction, taskUpdate]
+      const choices = [
+        taskCreateReducer,
+        taskCreateAction,
+        taskAddReducerStateProperties,
+        taskUpdate,
+      ]
       if (hasStore) {
         choices.push(taskConnect)
       }
@@ -58,6 +66,11 @@ export default {
 
     if (task === taskConnect) {
       await reduxStore.connectStore(stateAndThunks)
+      return
+    }
+
+    if (task === taskAddReducerStateProperties) {
+      await reduxStore.addNewReducerStateProperties(stateAndThunks)
       return
     }
 

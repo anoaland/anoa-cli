@@ -1,5 +1,11 @@
 import { RootContext } from '..'
-import { Project, SourceFile, SyntaxKind, PropertySignatureStructure } from 'ts-simple-ast'
+import {
+  Project,
+  SourceFile,
+  SyntaxKind,
+  PropertySignatureStructure,
+  ExportAssignment,
+} from 'ts-simple-ast'
 import * as R from 'ramda'
 
 export class Ast {
@@ -163,6 +169,19 @@ export class Ast {
     })
 
     return this
+  }
+
+  getDefaultExportDeclaration() {
+    return this.sourceFile.getDefaultExportSymbol().getDeclarations()[0]
+  }
+
+  getDefaultExportExpression() {
+    const def = this.getDefaultExportDeclaration() as ExportAssignment
+    if (!def || def.getKind() !== SyntaxKind.ExportAssignment) {
+      throw new Error('Can not find default export assignment in: ' + this.sourceFile.getFilePath())
+    }
+
+    return def.getExpression().getText()
   }
 
   save() {
