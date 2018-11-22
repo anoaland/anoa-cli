@@ -39,7 +39,12 @@ class Npm {
 
     const packagesToAdd = []
     for (const d of packages) {
-      if (pkgDeps.indexOf(d) < 0) {
+      let pkgToFind = d
+      if (d.lastIndexOf('@') > 0) {
+        pkgToFind = d.split('@')[0]
+      }
+
+      if (pkgDeps.indexOf(pkgToFind) < 0) {
         packagesToAdd.push(d)
       }
     }
