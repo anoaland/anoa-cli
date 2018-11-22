@@ -138,7 +138,14 @@ export default {
       location += '/'
     }
 
-    const viewName = pascalCase(name) + (strToCreate === 'screen' ? 'Screen' : '')
+    const viewName = pascalCase(
+      name + (strToCreate === 'screen' && !name.toLowerCase().endsWith('screen') ? 'Screen' : ''),
+    )
+
+    const viewPath =
+      location +
+      kebabCase(name.toLowerCase().endsWith('screen') ? name.substr(0, name.length - 6) : name)
+
     const importLocalProps = [`${viewName}Props`]
     const importLocalState = []
 
@@ -165,20 +172,19 @@ export default {
           importStatements,
         }
 
-        await view.createClassView(strToCreate, name, props, location)
+        await view.createClassView(strToCreate, viewName, viewPath, props, location)
         break
 
       case viewStateless:
-        await view.createStatelessView(strToCreate, name, false, location)
+        await view.createStatelessView(strToCreate, viewName, viewPath, false, location)
         break
 
       case viewStatelessFunctional:
-        await view.createStatelessView(strToCreate, name, true, location)
+        await view.createStatelessView(strToCreate, viewName, viewPath, true, location)
         break
     }
 
-    const dir = `src/views/${strToCreate.toLowerCase()}s`
-    const viewPath = location + kebabCase(name)
+    const dir = `src/views/${strToCreate.toLowerCase()}s`    
     let connectedToTheme = false
 
     if (themes) {

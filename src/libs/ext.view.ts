@@ -8,13 +8,10 @@ class View {
     this.context = context
   }
 
-  async createClassView(kind: ViewKind, name: string, props: any, location: string) {
-    const {
-      strings: { pascalCase, kebabCase },
-      utils,
-    } = this.context
-
+  async createClassView(kind: ViewKind, name: string, path: string, props: any, location: string) {
+    const { utils } = this.context
     const fileList = ['index.tsx', 'props.tsx']
+    
     if (props.withState) {
       fileList.push('state.tsx')
     }
@@ -23,29 +20,31 @@ class View {
 
     await utils.generate(
       'shared/src/views/class/',
-      `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
+      `src/views/${targetPathBase}${location}${path}/`,
       fileList,
       {
-        name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
+        name,
         ...props,
       },
     )
   }
 
-  async createStatelessView(kind: ViewKind, name: string, functional: boolean, location: string) {
-    const {
-      strings: { pascalCase, kebabCase },
-      utils,
-    } = this.context
-
+  async createStatelessView(
+    kind: ViewKind,
+    name: string,
+    path: string,
+    functional: boolean,
+    location: string,
+  ) {
+    const { utils } = this.context
     const targetPathBase = kind === 'screen' ? 'screens' : 'components'
 
     await utils.generate(
       functional ? 'shared/src/views/stateless-functional/' : 'shared/src/views/stateless/',
-      `src/views/${targetPathBase}${location}${kebabCase(name)}/`,
+      `src/views/${targetPathBase}${location}${path}/`,
       ['index.tsx', 'props.tsx'],
       {
-        name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
+        name,
       },
     )
   }
