@@ -21,6 +21,7 @@ export default {
     const taskCreateScreen = 'Create new screen'
     const taskCreateTheme = 'Create new theme'
     const taskConnectTheme = 'Connect theme to view (screen / component)'
+    const taskCreateState = 'Create state interface for screen or component class'
 
     const themes = await style.themes()
 
@@ -41,10 +42,12 @@ export default {
       case 'h':
         task = taskConnectTheme
         break
+      case 'st':
+        task = taskCreateState
     }
 
     if (!task) {
-      const choices = [taskCreateComponent, taskCreateScreen, taskCreateTheme]
+      const choices = [taskCreateComponent, taskCreateScreen, taskCreateState, taskCreateTheme]
 
       if (themes) {
         choices.push(taskConnectTheme)
@@ -68,6 +71,11 @@ export default {
 
     if (task === taskConnectTheme) {
       await style.connectTheme()
+      return
+    }
+
+    if (task === taskCreateState) {
+      await view.createViewState()
       return
     }
 

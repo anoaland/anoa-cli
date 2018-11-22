@@ -1,6 +1,6 @@
 import { RootContext } from '.'
 import { ViewInfo, BriefViewInfo, ViewType, ViewKind } from './types'
-import { SyntaxKind } from 'ts-simple-ast'
+import { SyntaxKind, PropertyAccessExpression } from 'ts-simple-ast'
 
 class View {
   context: RootContext
@@ -48,6 +48,83 @@ class View {
         name: pascalCase(name + (kind === 'screen' ? 'Screen' : '')),
       },
     )
+  }
+
+  async createViewState() {
+    const {
+      prompt,
+      print,
+      view,
+      utils,
+      strings: { pascalCase },
+    } = this.context
+
+    const { kind } = await prompt.ask({
+      name: 'kind',
+      message: 'What kind of view would you like to have state on it?',
+      type: 'list',
+      choices: ['Component', 'Screen'],
+    })
+
+    const dir = `src/views/${kind.toLowerCase()}s`
+    const viewInfoList = (await view.viewInfoList(kind.toLowerCase())).filter(
+      v => v.type === 'class',
+    )
+
+    if (!viewInfoList.length) {
+      print.error(`We could not find any ${kind} class in this project.`)
+      process.exit(0)
+      return
+    }
+
+    const { target } = await prompt.ask({
+      name: 'target',
+      message: `Now select the ${kind}:`,
+      type: 'list',
+      choices: viewInfoList.map(v => v.option),
+    })
+
+    const viewInfo = viewInfoList.find(v => v.option === target)
+    const { name, path } = viewInfo
+    const viewDir = dir + path
+
+    await utils.generate('shared/src/views/class/', `${viewDir}/`, ['state.tsx'], {
+      name: pascalCase(name),
+    })
+
+    const ast = utils.ast(`${viewDir}/index.tsx`)
+    const clazz = ast.sourceFile.getClass(name)
+
+    const extReactComponent = clazz.getExtends().getFirstChild(c => {
+      return (
+        c.getKind() === SyntaxKind.PropertyAccessExpression && c.getText().endsWith('Component')
+      )
+    }) as PropertyAccessExpression
+
+    if (!extReactComponent) {
+      throw new Error('Can not find React.Component extend.')
+    }
+
+    const gn = extReactComponent.getNextSiblings().find(c => {
+      return c.getKind() === SyntaxKind.SyntaxList
+    })
+
+    const generics = (gn ? gn.getText() : 'any').split(',')
+
+    const stateName = `${name}State`
+    if (generics.length === 1) {
+      generics.push(stateName)
+    }
+
+    if (gn) {
+      gn.replaceWithText(generics.join(','))
+    } else {
+      extReactComponent.replaceWithText(`${extReactComponent.getText()}<${generics.join(',')}>`)
+    }
+
+    ast.addNamedImports('./state', [`${name}State`])
+    ast.sortImports()
+    ast.save()
   }
 
   async viewInfoList(kind: 'component' | 'screen', dir: string = ''): Promise<ViewInfo[]> {
