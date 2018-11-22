@@ -10,10 +10,10 @@ class View {
 
   async createClassView(kind: ViewKind, name: string, path: string, props: any, location: string) {
     const { utils } = this.context
-    const fileList = ['index.tsx', 'props.tsx']
+    const fileList = ['index.tsx', 'props.ts']
     
     if (props.withState) {
-      fileList.push('state.tsx')
+      fileList.push('state.ts')
     }
 
     const targetPathBase = kind === 'screen' ? 'screens' : 'components'
@@ -42,7 +42,7 @@ class View {
     await utils.generate(
       functional ? 'shared/src/views/stateless-functional/' : 'shared/src/views/stateless/',
       `src/views/${targetPathBase}${location}${path}/`,
-      ['index.tsx', 'props.tsx'],
+      ['index.tsx', 'props.ts'],
       {
         name,
       },
@@ -87,7 +87,7 @@ class View {
     const { name, path } = viewInfo
     const viewDir = dir + path
 
-    await utils.generate('shared/src/views/class/', `${viewDir}/`, ['state.tsx'], {
+    await utils.generate('shared/src/views/class/', `${viewDir}/`, ['state.ts'], {
       name: pascalCase(name),
     })
 

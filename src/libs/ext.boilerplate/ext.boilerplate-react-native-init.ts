@@ -92,7 +92,7 @@ export function boilerplateReactNativeInit(context: RootContext) {
     ])
     await utils.generate('boilerplate/shared/main-screen', 'src/views/screens/main', [
       'index.tsx',
-      'props.tsx',
+      'props.ts',
     ])
 
     spinner.succeed(`Yay! The ${print.colors.green(projectName)} project is ready!`)

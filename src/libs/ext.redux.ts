@@ -468,7 +468,7 @@ class ReduxStore {
   ) {
     const { utils } = this.context
 
-    const astProps = await utils.ast(`${dir}${path}/props.tsx`)
+    const astProps = await utils.ast(`${dir}${path}/props.ts`)
     const extendedProps = []
 
     if (query.state.props.length) {
@@ -862,7 +862,7 @@ class ReduxStore {
 
     const dir = `src/store/reducers/${key}/`
 
-    // modify state.tsx
+    // modify state.ts
     const astState = utils.ast(dir + 'state.ts')
     const intf = astState.getDefaultExportDeclaration() as InterfaceDeclaration
 

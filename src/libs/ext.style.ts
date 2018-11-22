@@ -417,7 +417,7 @@ class Style {
 
   private _extendsPropsStyle(name: string, viewDir: string) {
     const { utils } = this.context
-    const propsAst = utils.ast(`${viewDir}/props.tsx`)
+    const propsAst = utils.ast(`${viewDir}/props.ts`)
     propsAst
       .extendsInterface(
         `${name}Props`,

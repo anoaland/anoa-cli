@@ -91,7 +91,7 @@ export function boilerplateExpo(context: RootContext) {
     ])
     await utils.generate('boilerplate/shared/main-screen', 'src/views/screens/main', [
       'index.tsx',
-      'props.tsx',
+      'props.ts',
     ])
 
     // send greetings
