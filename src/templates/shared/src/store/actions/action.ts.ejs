@@ -1,7 +1,9 @@
-import { AppThunkAction } from '..';
+<% if (props.useImport) { %> import { AppThunkAction } from '..'; <% } %>
 
-export function <%= props.camelCase(props.name) %>Action(payload: <%= props.payloadType %>): AppThunkAction {
+<%- props.oldFileContents %>
+
+export function <%- props.camelCase(props.name) %>Action(payload: <%- props.payloadType %>): AppThunkAction {
   return dispatch => {
-    dispatch({ type: '<%= props.type %>', payload })
+    dispatch({ type: '<%- props.type %>', payload })
   }
 }

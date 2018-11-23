@@ -8,10 +8,9 @@ export default {
     const {
       parameters: { first },
       reduxStore,
-      // storeActionList,
       prompt,
       print,
-      strings: { kebabCase, isBlank },
+      strings: { isBlank },
     } = context
 
     await reduxStore.reducerActions()
@@ -155,10 +154,6 @@ export default {
         }
 
         await reduxStore.createActionThunk(name, type, payloadType)
-        print.success(
-          'New action was successfully created on ' +
-            print.colors.yellow(`src/store/actions/${kebabCase(name)}-action.ts`),
-        )
       }
     } else {
       await reduxStore.updateReducers()

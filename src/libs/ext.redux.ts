@@ -126,9 +126,11 @@ class ReduxStore {
    */
   async createActionThunk(name: string, type: string, payloadType: string) {
     const {
+      prompt,
       strings: { kebabCase, camelCase, isBlank },
       utils,
       print,
+      filesystem: { read },
     } = this.context
 
     if (isBlank(name)) {
@@ -141,6 +143,72 @@ class ReduxStore {
       process.exit(0)
     }
 
+    const dir = `src/store/actions/`
+
+    let hasAction = true
+    const actionFiles = await utils.fileList('src/store/actions')
+    if (!actionFiles || !actionFiles.length) {
+      hasAction = false
+    }
+
+    let isNewFile = true
+    let filename = ''
+    if (!hasAction) {
+      filename = (await prompt.ask([
+        {
+          type: 'input',
+          name: 'filename',
+          message: 'Save this action to file name:',
+        },
+      ])).filename
+    } else {
+      const optNewFile = 'New file'
+      const optExistingFile = 'Existing file'
+      const { saveTo } = await prompt.ask([
+        {
+          name: 'saveTo',
+          message: 'Save this action to:',
+          type: 'list',
+          choices: [optNewFile, optExistingFile],
+        },
+      ])
+
+      if (saveTo === optNewFile) {
+        filename = (await prompt.ask([
+          {
+            type: 'input',
+            name: 'filename',
+            message: 'Name of file:',
+          },
+        ])).filename
+      } else {
+        filename = (await prompt.ask([
+          {
+            name: 'filename',
+            message: 'Select file:',
+            type: 'list',
+            choices: actionFiles.map(f => f.name),
+          },
+        ])).filename
+        isNewFile = false
+      }
+    }
+
+    if (isBlank(filename)) {
+      print.error('File name is required.')
+      process.exit(0)
+      return
+    }
+
+    let oldFileContents = ''
+    if (isNewFile) {
+      // force .ts extentions
+      const nameParts = filename.split('.')
+      filename = kebabCase(nameParts[0]) + '.ts'
+    } else {
+      oldFileContents = read(dir + filename)
+    }
+
     await this.init()
 
     const props = {
@@ -148,14 +216,20 @@ class ReduxStore {
       type,
       camelCase,
       payloadType,
+      oldFileContents,
+      useImport: isBlank(oldFileContents),
     }
 
     await utils.generate(
       'shared/src/store/actions/',
-      `src/store/actions/`,
-      [{ source: 'action.ts', dest: `${kebabCase(name)}-action.ts` }],
-
+      dir,
+      [{ source: 'action.ts', dest: filename }],
       props,
+    )
+
+    print.success(
+      'New action was successfully created on ' +
+        print.colors.yellow(`src/store/actions/${filename}`),
     )
   }
 
