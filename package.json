@@ -1,6 +1,6 @@
 {
   "name": "anoa-cli",
-  "version": "0.2.0-rc1",
+  "version": "0.2.0-rc2",
   "description": "React Native Typescript Boilerplate & Scaffolder CLI",
   "private": false,
   "author": "Budi Adiono <budiadiono@gmail.com>",
