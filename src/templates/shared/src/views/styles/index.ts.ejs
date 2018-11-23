@@ -5,8 +5,10 @@
 import { ThemeContext, ThemeContextProps } from 'anoa-react-native-theme'
 import { <%- props.themeNames.join(', ') %> } from './themes'
 
-export const AppStyle = new ThemeContext(<%- props.defaultTheme %>, {
+const themes = {
   <%- props.childThemes.join(',') %>
-})
+}
 
-export type AppStyleProps = ThemeContextProps<typeof <%- props.defaultTheme %>>
+export const AppStyle = new ThemeContext(<%- props.defaultTheme %>, themes)
+export type AppThemes = typeof themes
+export type AppStyleProps = ThemeContextProps<typeof <%- props.defaultTheme %>, AppThemes>
