@@ -263,7 +263,8 @@ class ReduxStore {
       node.getDescendantsOfKind(SyntaxKind.PropertySignature).forEach(c1 => {
         const flds = c1.getText().split(':')
         const key = flds[0].trim()
-        const val = flds[1].trim()
+        const val = flds[1].split(';')[0].trim()
+
         obj[key] = key === 'type' ? val.slice(1, val.length - 1) : val
       })
       info.push(obj)
