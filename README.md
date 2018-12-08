@@ -23,17 +23,17 @@ $ anoa init <project-name>
 **Anoa** comes with 2 boilerplates:
 
 ```bash
-? Select boilerplate you would like to use: (Use arrow keys)
+? Select project type you would like to use: (Use arrow keys)
   React Native Init
   Expo
 ```
 
-> You need **react-native-cli** installed globally for **React Native Init** boilerplate and/or **expo-cli** for **Expo** boilerplate.
+> You need **react-native-cli** installed globally for **React Native Init** project type and/or **expo-cli** for **Expo**.
 
-Choose an appropriate boilerplate for you and wait until the project is ready.
+Choose an appropriate project type for you and wait until the project is ready.
 
 ```bash
-? Select boilerplate you would like to use: React Native Init
+? Select project type you would like to use: React Native Init
 | Creating MyAwesomeApp project...
 ```
 
@@ -47,39 +47,41 @@ It's mean boilerplate is ready. Go the the project folder and run the project!
 
 ## Project Structure
 
-Both of **Expo** and **React Native Init** boilerplate have same project structure and same pattern.
-
-```bash
-.
-+-- assets               (Project assets such as images and fonts)
-+-- src
-|   +-- data             (SQLite repositories)
-|   |   +-- models
-|   |   +-- providers
-|   +-- store            (All about Redux)
-|   |   +-- actions
-|   |   +-- reducers
-|   +-- views            (Views & Themes)
-|   |   +-- components
-|   |   +-- screens
-|   |   +-- styles
-|   +-- App.tsx           (Application root component)
-+-- index.js              (for React Native Init) / App.js (for Expo)
-```
+Both of **Expo** and **React Native Init** project have same structure and pattern.
 
 At the very beginning you `init` the project, **Anoa** will only generates a minimum project structure like so:
 
 ```bash
 .
-+-- assets               (Project assets such as images and fonts)
-+-- src
-|   +-- views            (Views & Themes)
-|   |   +-- screens
-|   |   |   +-- main     (Main screen view containing simple hello world view)
-|   |   |   |   +-- index.tsx
-|   |   |   |   +-- props.ts
-|   +-- App.tsx           (Application root component)
-+-- index.js              (for React Native Init) / App.js (for Expo)
+├── assets               (Project assets such as images and fonts)
+├── src
+│   ├── views            (Views & Themes)
+│   │   ├── screens
+│   │   │   ├── main     (Main screen view containing simple hello world view)
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── props.ts
+│   ├── App.tsx           (Application root component)
+├── index.js              (for React Native Init) / App.js (for Expo)
+```
+
+And after you play arround with the CLI you'll get something like this:
+
+```bash
+.
+├── assets               (Project assets such as images and fonts)
+├── src
+│   ├── data             (SQLite repositories)
+│   │   ├── models
+│   │   ├── providers
+│   ├── store            (All about Redux)
+│   │   ├── actions
+│   │   ├── reducers
+│   ├── views            (Views & Themes)
+│   │   ├── components
+│   │   ├── screens
+│   │   ├── styles
+│   ├── App.tsx           (Application root component)
+├── index.js              (for React Native Init) / App.js (for Expo)
 ```
 
 ## CLI Commands

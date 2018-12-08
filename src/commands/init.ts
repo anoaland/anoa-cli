@@ -29,16 +29,16 @@ export default {
     const rni = 'React Native Init'
     const expo = 'Expo'
 
-    const { boilerplate } = await prompt.ask([
+    const { projectType } = await prompt.ask([
       {
-        name: 'boilerplate',
-        message: 'Select boilerplate you would like to use:',
+        name: 'projectType',
+        message: 'Select project type you would like to use:',
         type: 'list',
         choices: [rni, expo],
       },
     ])
 
-    switch (boilerplate) {
+    switch (projectType) {
       case expo:
         await context.boilerplateExpo(projectName)
         break
