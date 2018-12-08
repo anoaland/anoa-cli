@@ -23,12 +23,15 @@ export default {
       return
     }
 
+    const targetScreen = screens.find(s => s.option === screen)
+
     const { routes, kind } = await prompt.ask([
       {
         name: 'routes',
         message: 'Routes to:',
         type: 'checkbox',
-        choices: screens.map(s => s.option),
+        radio: true,
+        choices: screens.filter(s => s !== targetScreen).map(s => s.option),
       },
 
       {
@@ -50,8 +53,6 @@ export default {
       process.exit(0)
       return
     }
-
-    const targetScreen = screens.find(s => s.option === screen)
 
     await navigator.create(
       kind.replace(/\s/g, ''),
