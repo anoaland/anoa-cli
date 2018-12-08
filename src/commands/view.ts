@@ -31,18 +31,23 @@ export default {
 
     switch (first) {
       case 'c':
+      case 'component':
         task = taskCreateComponent
         break
       case 's':
+      case 'screen':
         task = taskCreateScreen
         break
       case 't':
+      case 'theme':
         task = taskCreateTheme
         break
       case 'h':
+      case 'theme:connect':
         task = taskConnectTheme
         break
       case 'st':
+      case 'state':
         task = taskCreateState
     }
 
