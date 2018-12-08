@@ -205,7 +205,7 @@ export class Utils {
     return dirs
   }
 
-  async dirNamesDeep(dir: string) {
+  async dirNamesDeep(dir: string): Promise<string[]> {
     const res = []
     let id = 0
 

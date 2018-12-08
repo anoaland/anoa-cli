@@ -11,7 +11,7 @@ class View {
   async createClassView(kind: ViewKind, name: string, path: string, props: any, location: string) {
     const { utils } = this.context
     const fileList = ['index.tsx', 'props.ts']
-    
+
     if (props.withState) {
       fileList.push('state.ts')
     }
@@ -130,7 +130,6 @@ class View {
     const {
       filesystem: { exists },
       utils,
-      strings: { padEnd },
     } = this.context
 
     const dirs = await utils.dirNamesDeep(`src/views/${kind}s${dir}`)
@@ -144,7 +143,7 @@ class View {
         if (briefInfo) {
           infoList.push(<ViewInfo>{
             path: d,
-            option: padEnd(briefInfo.name + ' ', 20, '─') + ' ' + d,
+            option: `${briefInfo.name} [${d.substr(1, d.length - 1)}]`,
             ...briefInfo,
           })
         }
