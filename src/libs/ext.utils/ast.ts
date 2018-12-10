@@ -5,6 +5,7 @@ import {
   SyntaxKind,
   PropertySignatureStructure,
   ExportAssignment,
+  ClassDeclaration,
 } from 'ts-simple-ast'
 import * as R from 'ramda'
 
@@ -182,6 +183,12 @@ export class Ast {
     }
 
     return def.getExpression().getText()
+  }
+
+  getDefaultExportedClass(): ClassDeclaration {
+    return this.sourceFile.getExportedDeclarations().find(d => {
+      return d.getType().isClass()
+    }) as ClassDeclaration
   }
 
   save() {

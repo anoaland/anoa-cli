@@ -24,6 +24,7 @@ export default {
     }
 
     const targetScreen = screens.find(s => s.option === screen)
+    const isReplaceRenderFunction = await prompt.confirm(`Replace ${targetScreen.name} render function?`)
 
     const { routes, kind } = await prompt.ask([
       {
@@ -57,6 +58,7 @@ export default {
     await navigator.create(
       kind.replace(/\s/g, ''),
       targetScreen,
+      isReplaceRenderFunction,
       screens.filter(s => routes.indexOf(s.option) > -1),
     )
 
