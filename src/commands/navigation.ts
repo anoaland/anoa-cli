@@ -13,6 +13,27 @@ export default {
       strings: { isBlank },
     } = context
 
+    const { kind } = await prompt.ask([
+      {
+        name: 'kind',
+        message: 'Type of navigator:',
+        type: 'list',
+        choices: [
+          'Stack Navigator',
+          'Switch Navigator',
+          'Drawer Navigator',
+          'Bottom Tab Navigator',
+          'Material Top Tab Navigator',
+        ],
+      },
+    ])
+
+    if (!kind) {
+      print.error('Type of navigator is required.')
+      process.exit(0)
+      return
+    }
+
     const screens = await view.viewInfoList('screen')
     const { screen } = await prompt.ask([
       {
@@ -61,27 +82,6 @@ export default {
         choices: initialRouteNames,
       },
     ])
-
-    const { kind } = await prompt.ask([
-      {
-        name: 'kind',
-        message: 'Type of navigator:',
-        type: 'list',
-        choices: [
-          'Stack Navigator',
-          'Switch Navigator',
-          'Drawer Navigator',
-          'Bottom Tab Navigator',
-          'Material Top Tab Navigator',
-        ],
-      },
-    ])
-
-    if (!kind) {
-      print.error('Type of navigator is required.')
-      process.exit(0)
-      return
-    }
 
     await navigator.create(
       kind.replace(/\s/g, ''),
