@@ -5,7 +5,13 @@ export default {
   alias: ['n', 'nav'],
   description: 'Navigator generator',
   run: async (context: RootContext) => {
-    const { view, prompt, navigator, print } = context
+    const {
+      view,
+      prompt,
+      navigator,
+      print,
+      strings: { isBlank },
+    } = context
 
     const screens = await view.viewInfoList('screen')
     const { screen } = await prompt.ask([
@@ -24,9 +30,11 @@ export default {
     }
 
     const targetScreen = screens.find(s => s.option === screen)
-    const isReplaceRenderFunction = await prompt.confirm(`Replace ${targetScreen.name} render function?`)
+    const isReplaceRenderFunction = await prompt.confirm(
+      `Replace ${targetScreen.name} render function?`,
+    )
 
-    const { routes, kind } = await prompt.ask([
+    const { routes } = await prompt.ask([
       {
         name: 'routes',
         message: 'Routes to:',
@@ -34,7 +42,27 @@ export default {
         radio: true,
         choices: screens.filter(s => s !== targetScreen).map(s => s.option),
       },
+    ])
 
+    if (!routes || !routes.length) {
+      print.error('Routes is required.')
+      process.exit(0)
+      return
+    }
+
+    const initialRouteNames = routes.map(r => {
+      return r.substr(0, r.indexOf('[') - 7)
+    })
+    const { initialRouteName } = await prompt.ask([
+      {
+        name: 'initialRouteName',
+        message: 'Initial Route Name',
+        type: 'list',
+        choices: initialRouteNames,
+      },
+    ])
+
+    const { kind } = await prompt.ask([
       {
         name: 'kind',
         message: 'Type of navigator:',
@@ -60,6 +88,7 @@ export default {
       targetScreen,
       isReplaceRenderFunction,
       screens.filter(s => routes.indexOf(s.option) > -1),
+      isBlank(initialRouteName) ? initialRouteNames[0] : initialRouteName,
     )
 
     print.success(

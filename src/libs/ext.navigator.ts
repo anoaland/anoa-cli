@@ -30,6 +30,7 @@ class Navigator {
     screen: ViewInfo,
     isReplaceRenderFunction: boolean,
     routes: ViewInfo[],
+    initialRouteName: string
   ) {
     const {
       strings: { pascalCase, snakeCase, startCase },
@@ -58,6 +59,7 @@ class Navigator {
       name,
       routeConfigMap,
       imports: utils.sortImport(imports),
+      initialRouteName
     }
 
     await this.init()

@@ -2,4 +2,6 @@
 
 export const <%- props.name %> = create<%- props.kind %>({
   <%- props.routeConfigMap.join(', ') %>
+}, {
+  initialRouteName: '<%- props.initialRouteName %>'
 })
