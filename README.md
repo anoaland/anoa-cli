@@ -124,9 +124,9 @@ Run `anoa store` command and choose `Create new reducer`:
 $ anoa store
 ? What would you like to do with store?
 > Create new reducer
-  Create new action
-  Add new reducer state properties
-  Update application root state
+  Add new fields into existing state
+  Add new action creator
+  Update AppStore
 ```
 
 After name and state specified, **Anoa** will installs Redux packages for you.

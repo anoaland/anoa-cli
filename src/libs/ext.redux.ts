@@ -120,7 +120,7 @@ class ReduxStore {
   }
 
   /**
-   * Create new action thunk.
+   * Add new action creator.
    * @param name Action function name
    * @param type Action type
    */
@@ -449,7 +449,7 @@ class ReduxStore {
     return await this.context.utils.dirList('src/store/reducers')
   }
 
-  async getStateAndThunks(): Promise<StateAndThunks> {
+  async getReducerAndThunks(): Promise<StateAndThunks> {
     const states = await this.reducerStates()
     const thunks = await this.thunkActions()
     return {
@@ -899,7 +899,7 @@ class ReduxStore {
     } = this.context
 
     if (!states) {
-      print.warning('Aborted. There is no state found in this project.')
+      print.warning('Aborted. No reducer found in this project.')
       process.exit(0)
       return
     }
@@ -910,7 +910,7 @@ class ReduxStore {
       {
         name: 'key',
         type: 'list',
-        message: 'Select state you want to add the properties',
+        message: 'Select state:',
         choices: keys,
       },
     ])
@@ -925,12 +925,12 @@ class ReduxStore {
       {
         type: 'input',
         name: 'properties',
-        message: `Specify state you'd like to add (separated with space, eg: foo:string='some value' bar:number=26):`,
+        message: `Field(s) (separated with space, eg: foo:string='some value' bar:number=26):`,
       },
     ])
 
     if (isBlank(properties)) {
-      print.error('Properties is required')
+      print.error('Field(s) is required')
       process.exit(0)
       return
     }
@@ -1024,7 +1024,7 @@ class ReduxStore {
     astIndex.save()
 
     print.success(
-      `New properties was successfully added to ${print.colors.magenta(
+      `New field(s) was successfully added to ${print.colors.magenta(
         `${pascalCase(key)}State`,
       )} on ${print.colors.yellow(`${astIndex.filepath}`)}`,
     )

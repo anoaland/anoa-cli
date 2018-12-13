@@ -16,13 +16,13 @@ export default {
     await reduxStore.reducerActions()
 
     const taskCreateReducer = 'Create new reducer'
-    const taskCreateAction = 'Create new action'
-    const taskUpdate = 'Update application root state'
+    const taskAddActionCreator = 'Add new action creator'
+    const taskUpdate = 'Update AppStore'
     const taskConnect = 'Connect store to view'
-    const taskAddReducerStateProperties = 'Add new reducer state properties'
+    const taskAddReducerStateFields = 'Add new fields into existing state'
 
     let task = undefined
-    const stateAndThunks = await reduxStore.getStateAndThunks()
+    const stateAndThunks = await reduxStore.getReducerAndThunks()
     const hasStore = !!stateAndThunks.states || !!stateAndThunks.thunks
 
     switch (first) {
@@ -30,7 +30,7 @@ export default {
         task = taskCreateReducer
         break
       case 'a':
-        task = taskCreateAction
+        task = taskAddActionCreator
         break
       case 'u':
         task = taskUpdate
@@ -39,14 +39,14 @@ export default {
         task = taskConnect
         break
       case 's':
-        task = taskAddReducerStateProperties
+        task = taskAddReducerStateFields
     }
 
     if (!task) {
       const choices = [
         taskCreateReducer,
-        taskCreateAction,
-        taskAddReducerStateProperties,
+        taskAddReducerStateFields,
+        taskAddActionCreator,        
         taskUpdate,
       ]
       if (hasStore) {
@@ -68,7 +68,7 @@ export default {
       return
     }
 
-    if (task === taskAddReducerStateProperties) {
+    if (task === taskAddReducerStateFields) {
       await reduxStore.addNewReducerStateProperties(stateAndThunks)
       return
     }
@@ -80,7 +80,7 @@ export default {
           {
             type: 'input',
             name: 'name',
-            message: 'Reducer name',
+            message: 'Reducer name:',
           },
         ])
 
@@ -88,7 +88,7 @@ export default {
           {
             type: 'input',
             name: 'states',
-            message: `Specify state you'd like to have (separated with space, eg: foo:string='some value' bar:number=26), or leave it blank thus we will generate example for you:`,
+            message: `State fields (separated with space, eg: foo:string='some value' bar:number=26), or leave it blank, we'll create an example for you:`,
           },
         ])
 

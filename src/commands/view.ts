@@ -214,7 +214,7 @@ export default {
       }
     }
 
-    const sa = await reduxStore.getStateAndThunks()
+    const sa = await reduxStore.getReducerAndThunks()
     if (sa.states || sa.thunks) {
       const connectToStore = await prompt.confirm('Do you want to connect to redux store?')
       if (connectToStore) {
