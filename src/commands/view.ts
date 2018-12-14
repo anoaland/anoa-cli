@@ -177,19 +177,19 @@ export default {
           importStatements,
         }
 
-        await view.createClassView(strToCreate, viewName, viewPath, props, location)
+        await view.createClassView(strToCreate, viewName, viewPath, props)
         break
 
       case viewStateless:
-        await view.createStatelessView(strToCreate, viewName, viewPath, false, location)
+        await view.createStatelessView(strToCreate, viewName, viewPath, false)
         break
 
       case viewStatelessFunctional:
-        await view.createStatelessView(strToCreate, viewName, viewPath, true, location)
+        await view.createStatelessView(strToCreate, viewName, viewPath, true)
         break
     }
 
-    const dir = `src/views/${strToCreate.toLowerCase()}s`    
+    const dir = `src/views/${strToCreate.toLowerCase()}s`
     let connectedToTheme = false
 
     if (hasTheme) {
