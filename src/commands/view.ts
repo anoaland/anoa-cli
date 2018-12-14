@@ -7,10 +7,10 @@ export default {
   description: 'View generator',
   run: async (context: RootContext) => {
     const {
-      parameters: { first, second },
+      parameters: { first, second, third },
       prompt,
       view,
-      strings: { pascalCase, kebabCase },
+      strings: { pascalCase, kebabCase, isBlank },
       print,
       utils,
       style,
@@ -127,16 +127,20 @@ export default {
     // Select location
 
     let location = '/'
-    const locations = await utils.dirNames(`src/views/${strToCreate}s`)
-    if (locations.length) {
-      location = (await prompt.ask([
-        {
-          name: 'location',
-          message: 'Location',
-          type: 'list',
-          choices: locations,
-        },
-      ])).location
+    if (!isBlank(third)) {
+      location = third.startsWith('/') ? third : '/' + third
+    } else {
+      const locations = await utils.dirNames(`src/views/${strToCreate}s`)
+      if (locations.length) {
+        location = (await prompt.ask([
+          {
+            name: 'location',
+            message: 'Location',
+            type: 'list',
+            choices: locations,
+          },
+        ])).location
+      }
     }
 
     if (location.length > 1) {
