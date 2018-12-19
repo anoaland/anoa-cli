@@ -46,7 +46,7 @@ export default {
       const choices = [
         taskCreateReducer,
         taskAddReducerStateFields,
-        taskAddActionCreator,        
+        taskAddActionCreator,
         taskUpdate,
       ]
       if (hasStore) {

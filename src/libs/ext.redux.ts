@@ -254,8 +254,7 @@ class ReduxStore {
     }
 
     let results: NamedReducerActions = {}
-
-    const info: ReducerActionInfo[] = []
+    let info: ReducerActionInfo[] = []
 
     const parseProperty = (node: UnionTypeNode | TypeLiteralNode) => {
       // @ts-ignore
@@ -271,8 +270,9 @@ class ReduxStore {
     }
 
     actionFiles.forEach(f => {
-      const { sourceFile } = utils.ast(f)
+      info = []
 
+      const { sourceFile } = utils.ast(f)
       const def = sourceFile.getDefaultExportSymbol()
       const name = def.getFullyQualifiedName().split('.')[1]
       const typeAlias = sourceFile.getTypeAlias(name)
