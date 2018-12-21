@@ -474,7 +474,7 @@ class ReduxStore {
 
       kind = (await prompt.ask({
         name: 'kind',
-        message: 'What kind of view would you like to connect to theme?',
+        message: 'Select kind of view:',
         type: 'list',
         choices: ['Component', 'Screen'],
       })).kind
@@ -490,7 +490,7 @@ class ReduxStore {
 
       const { target } = await prompt.ask({
         name: 'target',
-        message: `Select the ${kind} you want to connect to`,
+        message: `Select the ${kind}:`,
         type: 'list',
         choices: viewInfoList.map(v => v.option),
       })
@@ -595,7 +595,7 @@ class ReduxStore {
         {
           name: 'statesToMap',
           type: 'checkbox',
-          message: 'Select state(s) you want to map',
+          message: 'Select state(s) you want to map:',
           radio: true,
           choices,
         },
