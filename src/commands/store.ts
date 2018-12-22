@@ -16,10 +16,11 @@ export default {
     await reduxStore.reducerActions()
 
     const taskCreateReducer = 'Create new reducer'
+    const taskAddReducerStateFields = 'Add new fields into existing state'
+    const taskAddActionType = 'Add new action type'
     const taskAddActionCreator = 'Add new action creator'
     const taskUpdate = 'Update AppStore'
     const taskConnect = 'Connect store to view'
-    const taskAddReducerStateFields = 'Add new fields into existing state'
 
     let task = undefined
     const stateAndThunks = await reduxStore.getReducerAndThunks()
@@ -28,6 +29,9 @@ export default {
     switch (first) {
       case 'r':
         task = taskCreateReducer
+        break
+      case 't':
+        task = taskAddActionType
         break
       case 'a':
         task = taskAddActionCreator
@@ -46,6 +50,7 @@ export default {
       const choices = [
         taskCreateReducer,
         taskAddReducerStateFields,
+        taskAddActionType,
         taskAddActionCreator,
         taskUpdate,
       ]
@@ -70,6 +75,11 @@ export default {
 
     if (task === taskAddReducerStateFields) {
       await reduxStore.addNewReducerStateProperties(stateAndThunks)
+      return
+    }
+
+    if (task === taskAddActionType) {
+      await reduxStore.addNewActionType(stateAndThunks)
       return
     }
 

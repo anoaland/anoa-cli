@@ -1030,6 +1030,123 @@ class ReduxStore {
     )
   }
 
+  async addNewActionType({ states }: StateAndThunks) {
+    const {
+      print,
+      prompt,
+      strings: { isBlank, pascalCase, snakeCase },
+      utils,
+    } = this.context
+
+    if (!states) {
+      print.warning('Aborted. No reducer found in this project.')
+      process.exit(0)
+      return
+    }
+
+    const keys = Object.keys(states)
+
+    const { key } = await prompt.ask([
+      {
+        name: 'key',
+        type: 'list',
+        message: 'Select reducer:',
+        choices: keys,
+      },
+    ])
+
+    if (!key) {
+      print.error('Reducer is required')
+      process.exit(0)
+      return
+    }
+
+    const { name } = await prompt.ask([
+      {
+        type: 'input',
+        name: 'name',
+        message: `Action type name:`,
+      },
+    ])
+
+    if (isBlank(name)) {
+      print.error('Action type name is required')
+      process.exit(0)
+      return
+    }
+
+    const { payload } = await prompt.ask([
+      {
+        type: 'input',
+        name: 'payload',
+        message: `Payload type (optional):`,
+      },
+    ])
+
+    const dir = `src/store/reducers/${key}/`
+
+    // modify actions.ts
+
+    const astAction = utils.ast(dir + 'actions.ts')
+    const actActionExp = astAction.sourceFile.getTypeAlias(astAction.getDefaultExportExpression())
+    const actTypes = actActionExp.getFirstChild(c => {
+      return c.getKind() === SyntaxKind.TypeLiteral || c.getKind() === SyntaxKind.UnionType
+    })
+
+    let newActTypes = actTypes.getText()
+    newActTypes += ` | { type: '${snakeCase(key).toUpperCase()}/${snakeCase(
+      name,
+    ).toUpperCase()}'         
+        ${payload ? `payload:${payload}` : ''}
+     }`
+
+    actTypes.replaceWithText(newActTypes)
+    astAction.save()
+
+    // modify index.ts
+
+    const astIndex = utils.ast(dir + 'index.ts')
+    const astIndexExp = astIndex.getDefaultExportExpression()
+    const astIndexDec = astIndex.sourceFile.getVariableDeclaration(astIndexExp)
+    const astIndexFn = astIndexDec.getInitializerIfKind(SyntaxKind.ArrowFunction)
+
+    if (!astIndexFn) {
+      throw new Error('Could not resolve arrow function on: ' + dir + 'index.ts')
+    }
+
+    // get switch statement
+    const switchStmt = astIndexFn
+      .getBody()
+      .getDescendantStatements()
+      .find(s => s.getKind() === SyntaxKind.SwitchStatement)
+
+    // find case block
+    const caseBlock = switchStmt.getFirstChildByKind(SyntaxKind.CaseBlock)
+    const clauses = caseBlock.getClauses()
+    const caseClauses = clauses
+      .filter(c => c.getKind() !== SyntaxKind.DefaultClause)
+      .map(c => c.getText())
+    const defaultClause = clauses.find(c => c.getKind() == SyntaxKind.DefaultClause)
+
+    // add new switch clause
+    caseClauses.push(`case '${snakeCase(key).toUpperCase()}/${snakeCase(name).toUpperCase()}':
+    return { ...state }`)
+
+    // build clause statement
+    const newClauseStmt =
+      caseClauses.join('\r\n') + (defaultClause ? '\r\n' + defaultClause.getText() : '')
+    caseBlock.replaceWithText(`{ ${newClauseStmt} }`)
+
+    // done!
+    astIndex.save()
+
+    print.success(
+      `New action type was successfully added to ${print.colors.magenta(
+        `${pascalCase(key)} reducer`,
+      )} on ${print.colors.yellow(`${astIndex.filepath}`)}`,
+    )
+  }
+
   private _buildStoreMapArgs(name: string, nodeArgs: Node[], query: QueryResult) {
     let generics: string[] = []
     let args: string[] = []
