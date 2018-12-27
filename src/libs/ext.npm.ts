@@ -50,9 +50,9 @@ class Npm {
     }
 
     if (packagesToAdd.length > 0) {
-      const spinner = print.spin('Adding required packages...')
+      const spinner = print.spin(`Adding ${packagesToAdd.join(', ')}...`)
       await this.addPackages(packagesToAdd, dev)
-      spinner.succeed('Required packages added.')
+      spinner.succeed('Required packages successfully added.')
     }
 
     return packagesToAdd
