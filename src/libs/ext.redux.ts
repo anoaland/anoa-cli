@@ -19,6 +19,7 @@ interface ReducerActionInfo {
 
 interface ThunkActionInfo {
   file: string
+  name: string
   params: Record<string, string>
 }
 
@@ -26,7 +27,7 @@ type NamedReducerActions = Record<string, ReducerActionInfo[]>
 
 type NamedReducerTypes = Record<string, Record<string, string>>
 
-type NamedThunkActions = Record<string, ThunkActionInfo>
+type NamedThunkActions = Record<string, Record<string, ThunkActionInfo>>
 
 interface StateAndThunks {
   states: NamedReducerTypes
@@ -366,10 +367,10 @@ class ReduxStore {
       // @ts-ignore
       .map(r => ({ name: r.name, path: 'src/store/actions/' + r.name }))
 
-    let results = {}
+    const results = {}
     for (const file of files) {
       const { sourceFile } = utils.ast(file.path)
-
+      const thunkFunctions = {}
       sourceFile.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(c => {
         let params = {}
         c.getParameters().forEach(p => {
@@ -377,11 +378,13 @@ class ReduxStore {
         })
 
         // c.getParameter('payload').getText()
-        results[c.getName()] = <ThunkActionInfo>{
+        thunkFunctions[c.getName()] = <ThunkActionInfo>{
+          name: c.getName(),
           file: file.name,
           params,
         }
       })
+      results[file.name] = thunkFunctions
     }
 
     return results
@@ -619,9 +622,16 @@ class ReduxStore {
     }
 
     if (thunks) {
-      const choices = []
+      const thunksMap: Record<string, ThunkActionInfo> = {}
+      const choices = {}
+
       for (const k of Object.keys(thunks)) {
-        choices.push(`${k}(${JSON.stringify(thunks[k].params).replace(/\"/g, '')})`)
+        choices[k] = []
+        for (const thk of Object.keys(thunks[k])) {
+          const t = thunks[k][thk]
+          choices[k].push(`${t.name}(${JSON.stringify(t.params).replace(/\"/g, '')})`)
+          thunksMap[t.name] = t
+        }
       }
 
       const { actionsToMap } = await prompt.ask([
@@ -636,7 +646,7 @@ class ReduxStore {
 
       for (const st of actionsToMap as string[]) {
         const a = st.split('(')[0].trim()
-        const act = thunks[a]
+        const act = thunksMap[a]
         const prop = a.substr(0, a.length - 6)
         actionProps.push({
           name: prop,
