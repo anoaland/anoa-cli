@@ -2,7 +2,7 @@ import { RootContext } from '../'
 
 export function boilerplateExpo(context: RootContext) {
   return async (projectName: string) => {
-    const { system, print, npm, patching, strings, utils } = context
+    const { system, print, npm, patching, strings, utils, yarn } = context
 
     // ensure expo is installed
 
@@ -26,7 +26,7 @@ export function boilerplateExpo(context: RootContext) {
     // execute expo-cli to create initial boilerplate
 
     const spinner = print.spin(`Creating ${print.colors.yellow(projectName)} project...`)
-    await system.run(`expo init ${projectName} -t blank`)
+    await system.run(`expo init ${projectName} -t blank ${yarn ? '--yarn' : '--npm'}`)
 
     // add necessary packages
 
