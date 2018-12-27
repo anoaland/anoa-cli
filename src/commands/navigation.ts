@@ -38,14 +38,14 @@ export default {
     const { screen } = await prompt.ask([
       {
         name: 'screen',
-        message: 'What screen should this navigator belongs to?',
+        message: 'Attach this navigator to:',
         type: 'list',
         choices: screens.map(s => s.option),
       },
     ])
 
     if (!screen) {
-      print.error('Screen where this navigator belongs to is required.')
+      print.error('Screen to be attached is required.')
       process.exit(0)
       return
     }
@@ -96,5 +96,23 @@ export default {
         `'src/views/screens${targetScreen.path}/nav.tsx'`,
       )}.`,
     )
+
+    if (isReplaceRenderFunction) {
+      print.success(
+        `The render function of ${
+          targetScreen.name
+        } was successfully updated. Go to ${print.colors.yellow(
+          `'src/views/screens${targetScreen.path}/index.tsx'`,
+        )} to see the changes.`,
+      )
+    } else {
+      print.success(
+        `Go to ${print.colors.yellow(
+          `'src/views/screens${targetScreen.path}/index.tsx'`,
+        )} and render the ${print.colors.yellow(
+          `<${targetScreen.name}Nav/>`,
+        )} component imported from ${print.colors.yellow(`./nav`)}`,
+      )
+    }
   },
 }
