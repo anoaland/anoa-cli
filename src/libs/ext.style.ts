@@ -336,7 +336,11 @@ class Style {
 
     this._extendsPropsStyle(name, viewDir)
 
-    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
+    print.success(
+      `Theme was successfully connected to ${print.colors.magenta(name)} on ${print.colors.yellow(
+        `'${viewDir}/index.tsx'`,
+      )}. `,
+    )
     print.success(
       `Use ${print.colors.yellow(
         `const { theme } = this.props as Required<${name}Props>`,
@@ -373,7 +377,9 @@ class Style {
 
     this._extendsPropsStyle(name, viewDir)
 
-    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)} on ${print.colors.yellow(
+      `'${viewDir}/index.tsx'`,
+    )}.`)
     print.success(
       `Use ${print.colors.yellow(
         `const { theme } = props as Required<${name}Props>`,
@@ -419,7 +425,9 @@ class Style {
     exported.replaceWithText(stmt)
     viewAst.save()
 
-    print.success(`Theme was successfully connected to ${print.colors.magenta(name)}.`)
+    print.success(`Theme was successfully connected to ${print.colors.magenta(name)} on ${print.colors.yellow(
+      `'${viewDir}/index.tsx'`,
+    )}.`)
     print.success(
       `The parameter ${print.colors.yellow(param)} in the ${print.colors.magenta(
         name,
