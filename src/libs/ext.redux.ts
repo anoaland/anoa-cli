@@ -79,7 +79,7 @@ class ReduxStore {
    * @param name Reducer Name
    * @param states List of state, separated with space
    */
-  async createReducer(name: string, states: string[]) {
+  async createReducer(name: string, states: string[], actions: string[]) {
     const {
       strings: { pascalCase, kebabCase, snakeCase, camelCase, isBlank },
       utils,
@@ -92,18 +92,24 @@ class ReduxStore {
     }
 
     states = uniq(states.filter(s => !isBlank(s)))
-    if (!states) {
+    if (!states.length) {
       print.error('Reducer state is required')
       process.exit(0)
+    }
+
+    actions = uniq(actions.filter(s => !isBlank(s)))
+    if (!actions.length) {
     }
 
     await this.init()
 
     const reduxStates = this._convertArrayToReduxStates(states)
+    const reduxActionTypes = this._convertArrayToReduxActions(actions)
 
     const props = {
       name: pascalCase(name),
       states: reduxStates,
+      actions: reduxActionTypes,
       upperCase: s => {
         return snakeCase(s).toUpperCase()
       },
@@ -1272,6 +1278,25 @@ class ReduxStore {
         name: this.context.strings.camelCase(name),
         type,
         value,
+        optional: name.endsWith('?'),
+      }
+    })
+  }
+
+  _convertArrayToReduxActions(actions: string[]) {
+    return actions.map(s => {
+      const st = s.split(':')
+      let name = st[0].trim()
+      let payload = ''
+
+      if (st.length > 1) {
+        // has payload
+        payload = st[1].trim()
+      }
+
+      return {
+        name: this.context.strings.camelCase(name),
+        payload,
         optional: name.endsWith('?'),
       }
     })

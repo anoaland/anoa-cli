@@ -86,23 +86,29 @@ export default {
     if (task !== taskUpdate) {
       if (task === taskCreateReducer) {
         // create reducer
-        const { name } = await prompt.ask([
+        const { name, states, actions } = await prompt.ask([
           {
             type: 'input',
             name: 'name',
             message: 'Reducer name:',
           },
-        ])
-
-        const { states } = await prompt.ask([
           {
             type: 'input',
             name: 'states',
-            message: `State fields (separated with space, eg: foo:string='some value' bar:number=26), or leave it blank, we'll create an example for you:`,
+            message: `State field(s) (separated with space, eg: foo:string='some value' bar:number=26), or leave it blank, we'll create an example for you:`,
+          },
+          {
+            type: 'input',
+            name: 'actions',
+            message: `Action type(s) (separated with space, eg: add:string remove:string clear), or leave it blank, we'll create an example for you:`,
           },
         ])
 
-        await reduxStore.createReducer(name, (states || 'foo bar').split(' ').map(s => s.trim()))
+        await reduxStore.createReducer(
+          name,
+          (states || 'foo bar').split(' ').map(s => s.trim()),
+          (actions || '').split(' ').map(s => s.trim()),
+        )
         print.success(
           'New reducer was successfully created on ' +
             print.colors.yellow(`src/store/reducers/${name.toLowerCase()}/index.ts`),

@@ -8,9 +8,9 @@ const <%- props.name %>Reducer: Reducer<<%- props.name %>State, <%- props.name %
   },
   action
 ) => {
-  switch (action.type) {<% props.states.forEach(function(s) { %>
-    case '<%- props.upperCase(props.name) %>/<%- props.upperCase(s.name) %>':
-      return { ...state, <%- props.camelCase(s.name) %>: action.payload }
+  switch (action.type) {<% props.actions.forEach(function(a) { %>
+    case '<%- props.upperCase(props.name) %>/<%- props.upperCase(a.name) %>':
+      return { ...state }
     <% }) %>  
     default:
       return state
