@@ -910,7 +910,7 @@ class ReduxStore {
     const {
       print,
       prompt,
-      strings: { isBlank, pascalCase, snakeCase },
+      strings: { isBlank, pascalCase },
       utils,
     } = this.context
 
@@ -971,24 +971,6 @@ class ReduxStore {
     })
     astState.save()
 
-    // modify actions.ts
-
-    const astAction = utils.ast(dir + 'actions.ts')
-    const actActionExp = astAction.sourceFile.getTypeAlias(astAction.getDefaultExportExpression())
-    const actTypes = actActionExp.getFirstChild(c => {
-      return c.getKind() === SyntaxKind.TypeLiteral || c.getKind() === SyntaxKind.UnionType
-    })
-
-    let newStates = actTypes.getText()
-    reduxStates.forEach(s => {
-      newStates += ` | { type: '${snakeCase(key).toUpperCase()}/${snakeCase(s.name).toUpperCase()}' 
-        payload${s.optional ? '?' : ''}: ${s.type}
-     }`
-    })
-
-    actTypes.replaceWithText(newStates)
-    astAction.save()
-
     // modify index.ts
 
     const astIndex = utils.ast(dir + 'index.ts')
@@ -1004,20 +986,6 @@ class ReduxStore {
     const astIndexParam = astIndexFn.getParameter('state')
     const stateParams = astIndexParam.getFirstChildByKind(SyntaxKind.ObjectLiteralExpression)
 
-    // get switch statement
-    const switchStmt = astIndexFn
-      .getBody()
-      .getDescendantStatements()
-      .find(s => s.getKind() === SyntaxKind.SwitchStatement)
-
-    // find case block
-    const caseBlock = switchStmt.getFirstChildByKind(SyntaxKind.CaseBlock)
-    const clauses = caseBlock.getClauses()
-    const caseClauses = clauses
-      .filter(c => c.getKind() !== SyntaxKind.DefaultClause)
-      .map(c => c.getText())
-    const defaultClause = clauses.find(c => c.getKind() == SyntaxKind.DefaultClause)
-
     // iterate new states
     reduxStates.forEach(s => {
       // assign new state parameters
@@ -1025,16 +993,7 @@ class ReduxStore {
         name: s.name,
         initializer: s.value,
       })
-
-      // add new switch clause
-      caseClauses.push(`case '${snakeCase(key).toUpperCase()}/${snakeCase(s.name).toUpperCase()}':
-      return { ...state, ${s.name}: action.payload }`)
     })
-
-    // build clause statement
-    const newClauseStmt =
-      caseClauses.join('\r\n') + (defaultClause ? '\r\n' + defaultClause.getText() : '')
-    caseBlock.replaceWithText(`{ ${newClauseStmt} }`)
 
     // done!
     astIndex.save()
