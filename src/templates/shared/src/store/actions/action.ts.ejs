@@ -2,8 +2,8 @@
 
 <%- props.oldFileContents %>
 
-export function <%- props.camelCase(props.name) %>Action(payload: <%- props.payloadType %>): AppThunkAction {
+export function <%- props.camelCase(props.name) %>Action(<% if (props.payloadType) {%> payload: <%- props.payloadType %> <% } %>): AppThunkAction {
   return dispatch => {
-    dispatch({ type: '<%- props.type %>', payload })
+    dispatch({ type: '<%- props.type %>'<% if (props.payloadType) {%>, payload <% } %>})
   }
 }
