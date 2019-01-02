@@ -9,6 +9,7 @@ import {
   VariableStatement,
   Node,
   InterfaceDeclaration,
+  PropertySignature,
 } from 'ts-simple-ast'
 import { ExportedNamePath, ViewInfo, ViewKind } from './types'
 
@@ -329,21 +330,32 @@ class ReduxStore {
 
     let results = {}
 
+    function getPropInfo(ps: PropertySignature) {
+      const type = ps.getType().getText()
+      return {
+        name: ps.getName(),
+        type: type.indexOf('.') > -1 ? type.split('.')[1] : type,
+      }
+    }
+
     for (const { path, name } of stateFiles) {
       const { sourceFile } = utils.ast(path)
 
       let stateProps = {}
 
       sourceFile.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach(c => {
-        c.getProperties().forEach(c1 => {
-          let type = c1.getLastChild().getText()
+        // get state properties from base interface
+        c.getBaseDeclarations().forEach((i: InterfaceDeclaration) => {
+          i.getProperties().forEach(ps => {
+            const pi = getPropInfo(ps)
+            stateProps[pi.name] = pi.type
+          })
+        })
 
-          if (c1.getChildAtIndex(1).getKind() === SyntaxKind.QuestionToken) {
-            if (type.indexOf('undefined') < 0) {
-              type += ' | undefined'
-            }
-          }
-          stateProps[c1.getFirstChild().getText()] = type
+        // get state properties
+        c.getProperties().forEach(ps => {
+          const pi = getPropInfo(ps)
+          stateProps[pi.name] = pi.type
         })
       })
 
