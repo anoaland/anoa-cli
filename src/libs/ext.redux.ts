@@ -922,7 +922,7 @@ class ReduxStore {
     const {
       print,
       prompt,
-      strings: { isBlank, pascalCase },
+      strings: { isBlank, pascalCase, kebabCase },
       utils,
     } = this.context
 
@@ -963,7 +963,7 @@ class ReduxStore {
       return
     }
 
-    const dir = `src/store/reducers/${key}/`
+    const dir = `src/store/reducers/${kebabCase(key)}/`
 
     // modify state.ts
     const astState = utils.ast(dir + 'state.ts')
