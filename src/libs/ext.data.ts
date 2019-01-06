@@ -144,17 +144,29 @@ class Data {
       return
     }
 
+    name = kebabCase(name.trim())
+
+    if (!name.toLowerCase().endsWith('-provider')) {
+      name += '-provider'
+    }
+
     await utils.generate(
       'shared/src/data/providers',
       'src/data/providers/',
-      [{ source: 'provider.ts', dest: `${kebabCase(name)}.ts` }],
+      [{ source: 'provider.ts', dest: `${name}.ts` }],
       {
         name: pascalCase(name),
       },
     )
 
     await this.updateProviderExports()
-    return await this.initProvider()
+    await this.initProvider()
+
+    print.success(
+      `A new data provider named ${print.colors.magenta(
+        pascalCase(name),
+      )} was successfully created on ${print.colors.yellow(`src/data/providers/${name}.ts`)}`,
+    )
   }
 
   async updateProviderExports() {

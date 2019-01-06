@@ -104,14 +104,6 @@ export default {
       }
 
       await data.createProvider(name)
-
-      print.success(
-        `A new data provider named ${print.colors.magenta(
-          pascalCase(name),
-        )} was successfully created on ${print.colors.yellow(
-          `src/data/providers/${kebabCase(name)}.ts`,
-        )}`,
-      )
     }
   },
 }
