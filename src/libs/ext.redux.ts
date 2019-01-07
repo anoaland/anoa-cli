@@ -1021,7 +1021,7 @@ class ReduxStore {
     const {
       print,
       prompt,
-      strings: { isBlank, pascalCase, snakeCase },
+      strings: { isBlank, pascalCase, snakeCase, kebabCase },
       utils,
     } = this.context
 
@@ -1070,7 +1070,7 @@ class ReduxStore {
       },
     ])
 
-    const dir = `src/store/reducers/${key}/`
+    const dir = `src/store/reducers/${kebabCase(key)}/`
 
     // modify actions.ts
 
