@@ -11,9 +11,7 @@ class Navigator {
    * Ensure all required navigator packages installed.
    */
   async init() {
-    const { init, npm } = this.context
-
-    await init()
+    const { npm } = this.context
     await npm.ensurePackages(['anoa', 'react-navigation@2.18.2'], false)
     await npm.ensurePackages(['@types/react-navigation'], true)
   }
@@ -30,7 +28,7 @@ class Navigator {
     screen: ViewInfo,
     isReplaceRenderFunction: boolean,
     routes: ViewInfo[],
-    initialRouteName: string
+    initialRouteName: string,
   ) {
     const {
       strings: { pascalCase, snakeCase, startCase },
@@ -59,7 +57,7 @@ class Navigator {
       name,
       routeConfigMap,
       imports: utils.sortImport(imports),
-      initialRouteName
+      initialRouteName,
     }
 
     await this.init()

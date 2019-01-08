@@ -17,8 +17,7 @@ class Style {
   }
 
   async init() {
-    const { npm, init } = this.context
-    await init()
+    const { npm } = this.context
     await npm.ensurePackages(['anoa-react-native-theme'], false)
   }
 

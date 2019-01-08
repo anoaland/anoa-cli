@@ -15,7 +15,10 @@ export default {
       utils,
       style,
       reduxStore,
+      init
     } = context
+
+    init(true)
 
     const taskCreateComponent = 'Create new component'
     const taskCreateScreen = 'Create new screen'

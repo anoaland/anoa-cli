@@ -10,9 +10,7 @@ class Data {
    * Ensure all required data packages installed.
    */
   async init(): Promise<boolean> {
-    const { init, npm, utils } = this.context
-
-    await init()
+    const { npm, utils } = this.context
 
     const devPackages = []
     const packages = ['sqlite-ts']

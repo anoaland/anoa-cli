@@ -10,8 +10,11 @@ export default {
       prompt,
       print,
       data,
-      strings: { kebabCase, pascalCase },
+      strings: { kebabCase, pascalCase },      
+      init
     } = context
+
+    init(true)
 
     const taskCreateModel = 'Create new data model'
     const taskCreateProvider = 'Create new data provider'

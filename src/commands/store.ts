@@ -11,7 +11,10 @@ export default {
       prompt,
       print,
       strings: { isBlank },
+      init,
     } = context
+
+    init(true)
 
     await reduxStore.reducerActions()
 

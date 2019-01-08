@@ -414,13 +414,11 @@ class ReduxStore {
    */
   async init() {
     const {
-      init,
       npm,
       filesystem: { exists },
       utils,
     } = this.context
 
-    await init()
     await npm.ensurePackages(['anoa', 'react-redux', 'redux', 'redux-thunk'], false)
     await npm.ensurePackages(['@types/react-redux'], true)
 

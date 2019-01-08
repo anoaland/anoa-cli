@@ -11,7 +11,10 @@ export default {
       navigator,
       print,
       strings: { isBlank },
+      init
     } = context
+
+    init(true)
 
     const { kind } = await prompt.ask([
       {
