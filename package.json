@@ -1,6 +1,6 @@
 {
   "name": "anoa-cli",
-  "version": "0.3.0-rc5",
+  "version": "0.3.0-rc6",
   "description": "React Native Typescript Boilerplate & Code Generator CLI",
   "private": false,
   "author": "Budi Adiono <budiadiono@gmail.com>",
