@@ -28,23 +28,28 @@ export function boilerplateReactNativeInit(context: RootContext) {
     const spinner = print.spin(`Creating ${print.colors.yellow(projectName)} project...`)
     await system.run(`react-native init ${projectName}`)
 
-    // add necessary packages
-
+    // go to project dir    
     process.chdir(projectName)
 
-    await npm.addPackages(
-      [
-        'typescript',
-        'react-native-typescript-transformer',
-        '@types/react',
-        '@types/react-native',
-        'tslint',
-        'tslint-config-prettier',
-        'tslint-react',
-        '@babel/plugin-proposal-decorators@7.1.6',
-      ],
-      true,
-    )
+    // determine babel config file
+    const useBabelConfigJs = filesystem.exists('babel.config.js')
+
+    // add necessary packages
+
+    const devPackages = [
+      'typescript',
+      'react-native-typescript-transformer',
+      '@types/react',
+      '@types/react-native',
+      'tslint',
+      'tslint-config-prettier',
+      'tslint-react',
+      '@babel/plugin-proposal-decorators@7.1.6',
+    ]
+    if (useBabelConfigJs) {
+      devPackages.push('babel-merge')
+    }
+    await npm.addPackages(devPackages, true)
 
     // we don't use App.js
 
@@ -60,20 +65,32 @@ export function boilerplateReactNativeInit(context: RootContext) {
       return pkg
     })
 
-    // patch .babelrc
+    if (filesystem.exists('.babelrc')) {
+      // patch .babelrc
+      await patching.update('.babelrc', cfg => {
+        if (typeof cfg === 'string') {
+          cfg = JSON.parse(cfg)
+        }
 
-    await patching.update('.babelrc', cfg => {
-      if (typeof cfg === 'string') {
-        cfg = JSON.parse(cfg)
-      }
+        cfg.plugins = [
+          ...(cfg.plugins || []),
+          ['@babel/plugin-proposal-decorators', { legacy: true }],
+        ]
 
-      cfg.plugins = [
-        ...(cfg.plugins || []),
-        ['@babel/plugin-proposal-decorators', { legacy: true }],
-      ]
+        return cfg
+      })
+    } else if (useBabelConfigJs) {
+      filesystem.rename('babel.config.js', 'babel-ori.config.js')
 
-      return cfg
-    })
+      const contents = `const defaultConfig = require('./babel-ori.config.js')
+const babelMerge = require('babel-merge')
+
+module.exports = babelMerge(defaultConfig, {
+  plugins: [['@babel/plugin-proposal-decorators', { legacy: true }]],
+})`
+
+      filesystem.write('babel.config.js', contents)
+    }
 
     // add asset files
 
