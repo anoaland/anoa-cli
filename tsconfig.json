@@ -12,7 +12,8 @@
     "inlineSourceMap": true,
     "outDir": "dist",
     "strict": false,
-    "target": "es5"
+    "target": "es5",
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
