@@ -1,0 +1,60 @@
+{
+  "name": "anoa-cli",
+  "version": "1.0.0-beta1",
+  "description": "React Native Typescript Boilerplate & Code Generator CLI",
+  "private": false,
+  "author": "Budi Adiono <budiadiono@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anoaland/anoa-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "react-native",
+    "typescript",
+    "boilerplate",
+    "scaffolder"
+  ],
+  "bin": {
+    "anoa": "bin/anoa"
+  },
+  "scripts": {
+    "test": "jest tests/functional",
+    "test:boilerplate": "jest tests/integration/boilerplate",
+    "test:boilerplate:expo": "jest tests/integration/boilerplate/expo",
+    "test:boilerplate:react-native-init": "jest tests/integration/boilerplate/react-native-init",
+    "format": "prettier --write **/*.{js,ts,tsx,json}",
+    "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "bin",
+    "dist"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "gluegun": "^3.2.0",
+    "jsx-ast-utils": "^2.0.1",
+    "lodash": "^4.17.11",
+    "prettier": "^1.16.4",
+    "remove": "^0.1.5",
+    "semver": "^5.6.0",
+    "ts-morph": "^1.1.0",
+    "typescript": "^3.3.3"
+  },
+  "devDependencies": {
+    "@types/node": "^11.9.4",
+    "@types/prettier": "^1.16.1",
+    "@types/semver": "^5.5.0",
+    "concat-stream": "^2.0.0",
+    "cross-spawn": "^6.0.5",
+    "jest": "^24.1.0",
+    "jest-mock-process": "^1.1.0",
+    "node-buffertrim": "^1.0.0",
+    "tempy": "^0.2.1",
+    "tslint": "^5.12.1",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-react": "^3.6.0"
+  }
+}

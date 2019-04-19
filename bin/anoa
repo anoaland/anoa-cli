@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+
+// run the CLI with the current process arguments
+// tslint:disable-next-line:no-var-requires
+require('../dist/index').run(process.argv)
