@@ -2,6 +2,7 @@ const tempy = require('tempy')
 const utils = require('../../utils')
 const { filesystem } = require('gluegun')
 const { Project } = require('ts-morph')
+const path = require('path')
 
 const qaList = [
   {

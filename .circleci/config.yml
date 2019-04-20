@@ -26,10 +26,12 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
 
+      - run: sudo chown -R $(whoami) /usr/local
       - run: yarn global add expo-cli
       - run: yarn global add react-native-cli
       - run: yarn install
       - run: yarn build
+      - run: yarn link
 
       - save_cache:
           paths:
