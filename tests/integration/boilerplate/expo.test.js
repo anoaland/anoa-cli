@@ -2,6 +2,7 @@ const tempy = require('tempy')
 const utils = require('../../utils')
 const { filesystem } = require('gluegun')
 const { Project } = require('ts-morph')
+const path = require('path')
 
 const qaList = [
   {
@@ -26,7 +27,7 @@ const qaList = [
 jest.setTimeout(10 * 60 * 1000)
 
 describe('expo boilerplate tests', () => {
-  const ANOA = `${process.cwd()}\\bin\\anoa`
+  const ANOA = path.join(process.cwd(), 'bin', 'anoa')
   const originalDir = process.cwd()
   let tempDir
 

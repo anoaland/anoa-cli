@@ -13,7 +13,7 @@ const qaList = [
 jest.setTimeout(10 * 60 * 1000)
 
 describe('react-native-init boilerplate tests', () => {
-  const ANOA = `${process.cwd()}\\bin\\anoa`
+  const ANOA = path.join(process.cwd(), 'bin', 'anoa')
   const originalDir = process.cwd()
   let tempDir
 
