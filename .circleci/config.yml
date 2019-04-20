@@ -31,7 +31,7 @@ jobs:
       - run: yarn global add react-native-cli
       - run: yarn install
       - run: yarn build
-      - run: yarn link
+      - run: sudo chown -R $(whoami) ~/repo/bin
 
       - save_cache:
           paths:
