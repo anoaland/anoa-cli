@@ -2,7 +2,7 @@
 
 React Native Typescript Boilerplate & Code Generator CLI
 
-[![CircleCI](https://circleci.com/gh/anoaland/anoa-cli.svg?style=svg)](https://circleci.com/gh/anoaland/anoa-cli)
+[![CircleCI](https://circleci.com/gh/anoaland/anoa-cli/tree/dev.svg?style=svg)](https://circleci.com/gh/anoaland/anoa-cli/tree/dev)
 
 # Notice
 
