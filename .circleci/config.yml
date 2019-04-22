@@ -39,4 +39,5 @@ jobs:
 
       # run tests!
       - run: yarn test
+      - run: yarn test:version
       - run: yarn test:boilerplate

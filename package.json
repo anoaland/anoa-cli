@@ -23,6 +23,7 @@
     "test:boilerplate": "jest tests/integration/boilerplate",
     "test:boilerplate:expo": "jest tests/integration/boilerplate/expo",
     "test:boilerplate:react-native-init": "jest tests/integration/boilerplate/react-native-init",
+    "test:version": "jest tests/integration/version",
     "format": "prettier --write **/*.{js,ts,tsx,json}",
     "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
   },

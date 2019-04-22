@@ -20,10 +20,10 @@ async function run(argv) {
             print.info(padEnd(c[0], 25) + c[1])
           })
       }
-    })
+    })    
     .version({
       name: 'version',
-      alias: ['-v', 'v', '--version', '--v'],
+      alias: ['-v'],
       description: 'Show version',
       dashed: true,
       run: (ctx: RootContext) => {
@@ -32,6 +32,13 @@ async function run(argv) {
     })
     .defaultCommand({
       run: (ctx: RootContext) => {
+
+        // fallback '-v' command
+        if (ctx.parameters.options.v) {
+          ctx.runtime.run('version')
+          return
+        }
+        
         ctx.runtime.run('anoa')
       }
     })

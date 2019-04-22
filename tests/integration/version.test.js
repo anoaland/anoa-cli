@@ -1,8 +1,9 @@
 const { filesystem } = require('gluegun')
 const { trim } = require('lodash')
 const utils = require('../utils')
+const path = require('path')
 
-const ANOA = './bin/anoa'
+const ANOA = path.join(process.cwd(), 'bin', 'anoa')
 const VERSION = trim(filesystem.read('./package.json', 'json').version)
 
 describe('anoa version test', () => {
