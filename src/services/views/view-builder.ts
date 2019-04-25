@@ -4,6 +4,7 @@ import { Utils } from '../core'
 import { ViewKindEnum, ViewTypeEnum } from './enums'
 import { ViewClassBuilder } from './view-class-builder'
 import { ViewStatelessBuilder } from './view-stateless-builder'
+import { ViewStatelessFunctionalBuilder } from './view-stateless-functional-builder'
 
 export class ViewBuilder {
   context: RootContext
@@ -102,6 +103,15 @@ export class ViewBuilder {
 
       case ViewTypeEnum.stateless:
         new ViewStatelessBuilder(
+          this.context,
+          this.name,
+          this.kind,
+          this.location
+        ).build()
+        break
+
+      case ViewTypeEnum.statelessFunctional:
+        new ViewStatelessFunctionalBuilder(
           this.context,
           this.name,
           this.kind,
