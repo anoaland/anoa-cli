@@ -1,8 +1,8 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
+import { ViewBuilder } from './builders/view-builder'
 import { TaskEnum, ViewKindEnum, ViewTypeEnum } from './enums'
 import { helps } from './help'
-import { ViewBuilder } from './view-builder'
 
 export class ViewService {
   context: RootContext

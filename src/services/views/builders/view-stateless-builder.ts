@@ -1,9 +1,9 @@
 import * as path from 'path'
 import Project from 'ts-morph'
-import { RootContext } from '../../libs'
-import { Source, Utils } from '../core'
-import { ViewKindEnum } from './enums'
-import { PropsBuilder } from './props-builder'
+import { RootContext } from '../../../libs'
+import { Source, Utils } from '../../core'
+import { ViewKindEnum } from '../enums'
+import { PropsHelper } from '../helpers/props-helper'
 
 export class ViewStatelessBuilder {
   context: RootContext
@@ -44,19 +44,19 @@ export class ViewStatelessBuilder {
     } = this.context
 
     // build props
-    const propsBuilder = new PropsBuilder(
+    const propsHelper = new PropsHelper(
       this.context,
       this.project,
       this.name,
       this.location
     )
 
-    const props = await propsBuilder.init()
+    const props = await propsHelper.init()
 
     // processing
     const spinner = print.spin('Generating...')
 
-    await propsBuilder.buildFile()
+    await propsHelper.createFile()
 
     // build main file
     const mainFile = this.project.createSourceFile(targetFile)

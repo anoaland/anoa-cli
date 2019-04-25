@@ -1,12 +1,11 @@
 import * as path from 'path'
-import { Project } from 'ts-morph'
-import { RootContext } from '../../libs'
-import { Source, Utils } from '../core'
-import { ViewKindEnum } from './enums'
-import { PropsBuilder } from './props-builder'
-import { StateBuilder } from './state-builder'
+import Project, { VariableDeclarationKind } from 'ts-morph'
+import { RootContext } from '../../../libs'
+import { Source, Utils } from '../../core'
+import { ViewKindEnum } from '../enums'
+import { PropsHelper } from '../helpers/props-helper'
 
-export class ViewClassBuilder {
+export class ViewStatelessFunctionalBuilder {
   context: RootContext
   kind: ViewKindEnum
   utils: Utils
@@ -45,28 +44,19 @@ export class ViewClassBuilder {
     } = this.context
 
     // build props
-    const propsBuilder = new PropsBuilder(
+    const propsHelper = new PropsHelper(
       this.context,
       this.project,
       this.name,
       this.location
     )
-    const props = await propsBuilder.init()
 
-    // build state
-    const stateBuilder = new StateBuilder(
-      this.context,
-      this.project,
-      this.name,
-      this.location
-    )
-    const state = await stateBuilder.init()
+    const props = await propsHelper.init()
 
     // processing
     const spinner = print.spin('Generating...')
 
-    await propsBuilder.buildFile()
-    await stateBuilder.buildFile()
+    await propsHelper.createFile()
 
     // build main file
     const mainFile = this.project.createSourceFile(targetFile)
@@ -80,41 +70,23 @@ export class ViewClassBuilder {
         namedImports: ['View', 'Text']
       },
       {
-        moduleSpecifier: './state',
-        namedImports: [state]
-      },
-      {
         moduleSpecifier: './props',
         namedImports: [props]
       }
     ])
 
-    // main class
-    const mainClass = mainFile.addClass({
-      name: this.name,
-      extends: `React.Component<${props.name}, ${state.name}>`,
-      isExported: true
-    })
-
-    const stateInit = state.fields.length
-      ? state.fields
-          .filter(p => !p.optional)
-          .map(p => `${p.name}: ${p.initial}`)
-          .join(',')
-      : ''
-
-    mainClass.addConstructor({
-      parameters: [
+    mainFile.addVariableStatement({
+      declarationKind: VariableDeclarationKind.Const,
+      isExported: true,
+      declarations: [
         {
-          name: 'props',
-          type: props.name
+          name: this.name,
+          type: `React.SFC<${props.name}>`,
+          initializer: `props => {
+            return (<View><Text>${this.name}</Text></View>)
+          }`
         }
-      ],
-      bodyText: `super(props); this.state = {${stateInit}};`
-    })
-    mainClass.addMethod({
-      name: 'render',
-      bodyText: `return <View><Text>${this.name}</Text></View>`
+      ]
     })
 
     await this.source.prettifySoureFile(mainFile)

@@ -1,9 +1,9 @@
 import * as path from 'path'
 import Project, { PropertySignatureStructure } from 'ts-morph'
-import { RootContext } from '../../libs'
-import { FieldObject, ObjectBuilder, Source, Utils } from '../core'
+import { RootContext } from '../../../libs'
+import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
 
-export class PropsBuilder {
+export class StateHelper {
   context: RootContext
   name: string
   location: string
@@ -29,20 +29,26 @@ export class PropsBuilder {
     this.objectBuilder = new ObjectBuilder(context)
   }
 
-  async init(): Promise<PropsFile> {
+  /**
+   * Init state name and asking user to input state fields
+   */
+  async init(): Promise<StateFile> {
     const { print, naming } = this.context
-    print.fancy(print.colors.yellow(`• Props:`))
-    this.fields = await this.objectBuilder.queryUserInput()
-    this.name = naming.props(this.name)
+    print.fancy(print.colors.yellow(`• State:`))
+    this.fields = await this.objectBuilder.queryUserInput(true)
+    this.name = naming.state(this.name)
     return {
       name: this.name,
       fields: this.fields
     }
   }
 
-  async buildFile() {
+  /**
+   * Build file processing
+   */
+  async createFile() {
     const stateFile = this.project.createSourceFile(
-      path.join(this.location, 'props.ts')
+      path.join(this.location, 'state.ts')
     )
     stateFile.addInterface({
       name: this.name,
@@ -61,7 +67,7 @@ export class PropsBuilder {
   }
 }
 
-export interface PropsFile {
+export interface StateFile {
   name: string
   fields: FieldObject[]
 }
