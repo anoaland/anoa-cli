@@ -1,3 +1,4 @@
+import * as path from 'path'
 import { RootContext } from '.'
 
 /**
@@ -11,6 +12,16 @@ export function config(_context: RootContext) {
       components: 'views/components',
       screens: 'views/screens',
       assets: 'assets'
+    },
+    naming: {
+      screen: {
+        prefix: '',
+        suffix: 'Screen'
+      },
+      component: {
+        prefix: '',
+        suffix: ''
+      }
     }
   }
 }
@@ -21,17 +32,47 @@ export function config(_context: RootContext) {
  */
 export function folder({ config: { folders } }: RootContext) {
   return {
-    src: (path: string) => {
-      return `${folders.source}/${path}`
+    src: (pathOrFilename: string = '') => {
+      return path.join(folders.source, pathOrFilename)
     },
-    components: (path: string) => {
-      return `${folders.source}/${folders.components}/${path}`
+    components: (pathOrFilename: string = '') => {
+      return path.join(folders.source, folders.components, pathOrFilename)
     },
-    screens: (path: string) => {
-      return `${folders.source}/${folders.screens}/${path}`
+    screens: (pathOrFilename: string = '') => {
+      return path.join(folders.source, folders.screens, pathOrFilename)
     },
-    assets: (path: string) => {
-      return `${folders.assets}/${path}`
+    assets: (pathOrFilename: string = '') => {
+      return path.join(folders.assets, pathOrFilename)
+    }
+  }
+}
+
+export function naming({
+  config: {
+    naming: { screen, component }
+  },
+  strings: { pascalCase, trim }
+}: RootContext) {
+  return {
+    screen: (name: string) => {
+      return (
+        pascalCase(trim(screen.suffix)) +
+        pascalCase(trim(name)) +
+        pascalCase(trim(screen.suffix))
+      )
+    },
+    component: (name: string) => {
+      return (
+        pascalCase(trim(component.suffix)) +
+        pascalCase(trim(name)) +
+        pascalCase(trim(component.suffix))
+      )
+    },
+    state: (name: string) => {
+      return pascalCase(trim(name)) + 'State'
+    },
+    props: (name: string) => {
+      return pascalCase(trim(name)) + 'Props'
     }
   }
 }

@@ -45,6 +45,7 @@
     "typescript": "^3.3.3"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.123",
     "@types/node": "^11.9.4",
     "@types/prettier": "^1.16.1",
     "@types/semver": "^5.5.0",

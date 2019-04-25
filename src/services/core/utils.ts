@@ -1,3 +1,5 @@
+import { InspectTreeResult } from 'fs-jetpack/types'
+import * as _ from 'lodash'
 import * as path from 'path'
 import { RootContext } from '../../libs'
 import { Validate } from './validate'
@@ -86,7 +88,7 @@ export class Utils {
    * Show (Y/n) confirm message with Y as default.
    * @param message message
    */
-  async confirm(message: string) {
+  async confirm(message: string): Promise<boolean> {
     const {
       prompt,
       print: { colors }
@@ -97,10 +99,10 @@ export class Utils {
       message: message + colors.gray(' (Y/n)'),
       default: 'Y',
       initial: 'true',
-      format: (res: boolean) => (res ? 'Yes' : 'No')
+      format: (res: boolean) => (res ? 'Yes' : 'No')      
     })
 
-    return confirm
+    return confirm as any
   }
 
   /**
@@ -142,4 +144,95 @@ export class Utils {
       error.stderr ? error.stderr : error.toString()
     )
   }
+
+  printHelps(
+    helps: { [key: string]: string },
+    pad: number = 30,
+    title: string = 'Usage'
+  ) {
+    const {
+      print,
+      strings: { padEnd }
+    } = this.context
+
+    print.newline()
+    print.info(title + ':')
+    const keys = Object.keys(helps)
+    for (const key of keys) {
+      print.info(`  ${padEnd('anoa ' + key, pad)} ${helps[key]}`)
+    }
+    print.newline()
+  }
+
+  dirList(dir: string) {
+    const {
+      filesystem: { inspectTree }
+    } = this.context
+
+    const tree = inspectTree(dir)
+    if (!tree || !tree.children || !tree.children.length) {
+      return []
+    }
+
+    return tree.children.filter(r => r.type === 'dir')
+  }
+
+  dirNames(dir: string) {
+    const dirs = this.dirList(dir).map(d => '/' + d.name)
+    if (dirs.length) {
+      dirs.splice(0, 0, '/')
+    }
+
+    return dirs
+  }
+
+  dirNamesDeep(dir: string): string[] {
+    const res: DirectoryInfo[] = []
+    let id = 0
+
+    let parent = '/'
+    let level = 0
+
+    function iterate(parentId: number, trees: InspectTreeResult[]) {
+      trees.forEach(t => {
+        const pId = id++
+
+        let prnId = parentId
+        if (parentId > -1) {
+          let found = false
+          while (!found) {
+            const prn = res.find(p => p.id === prnId)
+            if (!prn) {
+              found = true
+            } else {
+              level++
+              prnId = prn.parentId
+              parent = '/' + prn.name + parent
+            }
+          }
+        }
+
+        res.push({ id: pId, name: t.name, parent, parentId, level })
+        parent = '/'
+        level = 0
+
+        if (t.children && t.children.length) {
+          iterate(pId, t.children.filter(c => c.type === 'dir'))
+        }
+      })
+    }
+
+    const tree = this.dirList(dir)
+    iterate(-1, tree)
+
+    return res.map(p => p.parent + p.name)
+  }
+}
+
+export interface DirectoryInfo {
+  id: number
+  parentId: number
+  name: string
+  parent: string
+  level: number
 }

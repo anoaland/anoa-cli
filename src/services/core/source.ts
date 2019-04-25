@@ -1,5 +1,6 @@
 import * as path from 'path'
 import { format, resolveConfig } from 'prettier'
+import { SourceFile } from 'ts-morph'
 import { RootContext } from '../../libs'
 
 export class Source {
@@ -68,6 +69,26 @@ export class Source {
     write(
       filepath,
       format(source, {
+        ...opt,
+        parser: 'typescript'
+      })
+    )
+  }
+
+  /**
+   * Format sourfile with prettier
+   * @param sourceFile ts-morph source file
+   */
+  async prettifySoureFile(sourceFile: SourceFile) {
+    const {
+      filesystem: { cwd }
+    } = this.context
+
+    sourceFile.organizeImports()
+
+    const opt = await resolveConfig(cwd())
+    sourceFile.replaceWithText(
+      format(sourceFile.getFullText(), {
         ...opt,
         parser: 'typescript'
       })
