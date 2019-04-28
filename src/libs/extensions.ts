@@ -56,14 +56,14 @@ export function naming({
   return {
     screen: (name: string) => {
       return (
-        pascalCase(trim(screen.suffix)) +
+        pascalCase(trim(screen.prefix)) +
         pascalCase(trim(name)) +
         pascalCase(trim(screen.suffix))
       )
     },
     component: (name: string) => {
       return (
-        pascalCase(trim(component.suffix)) +
+        pascalCase(trim(component.prefix)) +
         pascalCase(trim(name)) +
         pascalCase(trim(component.suffix))
       )
