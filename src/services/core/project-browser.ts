@@ -48,7 +48,7 @@ export class ProjectBrowser {
     const { selectedReactClass } = await prompt.ask([
       {
         name: 'selectedReactClass',
-        type: 'list',
+        type: 'autocomplete',
         message,
         choices: files.map(f => f.key),
         validate(val) {

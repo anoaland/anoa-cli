@@ -57,7 +57,7 @@ export class ViewBuilder {
       prompts.push({
         name: 'location',
         message: `Folder/location (relative to ${rootDir}):`,
-        type: 'list',
+        type: 'autocomplete',
         choices: dirs,
         initial: '/'
       })
