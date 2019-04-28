@@ -56,8 +56,6 @@ export class ViewStatelessBuilder {
     // processing
     const spinner = print.spin('Generating...')
 
-    await propsHelper.createFile()
-
     // build main file
     const mainFile = this.project.createSourceFile(targetFile)
     mainFile.addImportDeclarations([
@@ -68,21 +66,28 @@ export class ViewStatelessBuilder {
       {
         moduleSpecifier: 'react-native',
         namedImports: ['View', 'Text']
-      },
-      {
-        moduleSpecifier: './props',
-        namedImports: [props]
       }
     ])
 
+    const hasProps = props.fields.length
+    if (hasProps) {
+      await propsHelper.createFile()
+      mainFile.addImportDeclaration({
+        moduleSpecifier: './props',
+        namedImports: [props]
+      })
+    }
+
     mainFile.addFunction({
       name: this.name,
-      parameters: [
-        {
-          name: 'props',
-          type: props.name
-        }
-      ],
+      parameters: hasProps
+        ? [
+            {
+              name: 'props',
+              type: props.name
+            }
+          ]
+        : undefined,
       isExported: true,
       bodyText: `return <View><Text>${this.name}</Text></View>`
     })
