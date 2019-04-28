@@ -153,7 +153,7 @@ export class ObjectBuilder {
 
 export interface FieldObject {
   name: string
-  type: string
-  initial: string
+  type: string  
   optional: boolean
+  initial?: string
 }

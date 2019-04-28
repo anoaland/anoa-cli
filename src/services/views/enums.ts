@@ -1,7 +1,7 @@
 export enum TaskEnum {
   createComponent = 'Create new component',
   createScreen = 'Create new screen',
-  addState = 'Add state to screen or component'
+  addOrModifyState = 'Add/modify view state'
 }
 
 export enum ViewTypeEnum {

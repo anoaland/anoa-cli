@@ -2,6 +2,7 @@ import * as path from 'path'
 import { Project } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { Source, Utils } from '../../core'
+import { ReactUtils } from '../../core/react-utils'
 import { ViewKindEnum } from '../enums'
 import { PropsHelper } from '../helpers/props-helper'
 import { StateHelper } from '../helpers/state-helper'
@@ -96,13 +97,6 @@ export class ViewClassBuilder {
       isExported: true
     })
 
-    const stateInit = state.fields.length
-      ? state.fields
-          .filter(p => !p.optional)
-          .map(p => `${p.name}: ${p.initial}`)
-          .join(',')
-      : ''
-
     mainClass.addConstructor({
       parameters: [
         {
@@ -110,7 +104,9 @@ export class ViewClassBuilder {
           type: props.name
         }
       ],
-      bodyText: `super(props); this.state = {${stateInit}};`
+      bodyText: `super(props); ${ReactUtils.buildStateInitializerBodyText(
+        state.fields
+      )};`
     })
     mainClass.addMethod({
       name: 'render',

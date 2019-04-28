@@ -1,5 +1,6 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
+import { StateBuilder } from './builders/state-builder'
 import { ViewBuilder } from './builders/view-builder'
 import { TaskEnum, ViewKindEnum, ViewTypeEnum } from './enums'
 import { helps } from './help'
@@ -38,7 +39,7 @@ export class ViewService {
         break
       case 'e':
       case 'state':
-        task = TaskEnum.addState
+        task = TaskEnum.addOrModifyState
     }
 
     if (options && (options.h || options.help)) {
@@ -50,7 +51,7 @@ export class ViewService {
       const choices = [
         TaskEnum.createComponent,
         TaskEnum.createScreen,
-        TaskEnum.addState
+        TaskEnum.addOrModifyState
       ]
 
       const { pickTask } = await prompt.ask([
@@ -73,6 +74,10 @@ export class ViewService {
       )
 
       await builder.build()
+    } else if (task === TaskEnum.addOrModifyState) {
+      await new StateBuilder(this.context).build()
+    } else {
+      this.showHelp()
     }
   }
 
