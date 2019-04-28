@@ -42,17 +42,6 @@ export class StateBuilder {
     const className = selectedView.info.name
     const viewClass = viewFile.getClass(className)
 
-    // selected view should have a constructor
-    const viewConstructor = ReactUtils.getConstructorFromClass(viewClass)
-    if (!viewConstructor) {
-      this.utils.exit(
-        `Aborted - class constructor for ${print.colors.magenta(
-          className
-        )} is broken or not found.`
-      )
-      return
-    }
-
     // resolving existing state
     const viewDir = path.dirname(selectedView.path)
     const statePath = path.join(viewDir, 'state.ts')
@@ -94,6 +83,14 @@ export class StateBuilder {
       stateInterface = await stateHelper.createInterface()
     } else {
       print.fancy(print.colors.yellow('• Modify existing state:'))
+    }
+
+    let viewConstructor = ReactUtils.getConstructorFromClass(viewClass)
+    if (!viewConstructor) {
+      viewConstructor = viewClass.insertConstructor(0, {
+        parameters: [{ name: 'props', type: 'any' }],
+        bodyText: 'super(props);'
+      })
     }
 
     // merge state fields with initial values
