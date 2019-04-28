@@ -66,9 +66,6 @@ export class ViewClassBuilder {
     // processing
     const spinner = print.spin('Generating...')
 
-    await propsHelper.createFile()
-    await stateHelper.createFile()
-
     // build main file
     const mainFile = this.project.createSourceFile(targetFile)
     mainFile.addImportDeclarations([
@@ -79,35 +76,61 @@ export class ViewClassBuilder {
       {
         moduleSpecifier: 'react-native',
         namedImports: ['View', 'Text']
-      },
-      {
-        moduleSpecifier: './state',
-        namedImports: [state]
-      },
-      {
-        moduleSpecifier: './props',
-        namedImports: [props]
       }
     ])
+
+    const hasProps = !!props.fields.length
+    const hasState = !!state.fields.length
+
+    let extendsStr: string = ''
+
+    // build props as required
+    if (hasProps) {
+      await propsHelper.createFile()
+      extendsStr = `<${props.name}`
+      mainFile.addImportDeclaration({
+        moduleSpecifier: './props',
+        namedImports: [props]
+      })
+    }
+
+    // build state as required
+    if (hasState) {
+      await stateHelper.createFile()
+      if (!extendsStr) {
+        extendsStr = '<any'
+      }
+
+      extendsStr += `, ${state.name}>`
+      mainFile.addImportDeclaration({
+        moduleSpecifier: './state',
+        namedImports: [state]
+      })
+    } else if (extendsStr) {
+      extendsStr += '>'
+    }
 
     // main class
     const mainClass = mainFile.addClass({
       name: this.name,
-      extends: `React.Component<${props.name}, ${state.name}>`,
+      extends: `React.Component${extendsStr}`,
       isExported: true
     })
 
-    mainClass.addConstructor({
-      parameters: [
-        {
-          name: 'props',
-          type: props.name
-        }
-      ],
-      bodyText: `super(props); ${ReactUtils.buildStateInitializerBodyText(
-        state.fields
-      )};`
-    })
+    if (hasProps || hasState) {
+      mainClass.addConstructor({
+        parameters: [
+          {
+            name: 'props',
+            type: hasProps ? props.name : 'any'
+          }
+        ],
+        bodyText: `super(props); ${
+          hasState ? ReactUtils.buildStateInitializerBodyText(state.fields) : ''
+        }`
+      })
+    }
+
     mainClass.addMethod({
       name: 'render',
       bodyText: `return <View><Text>${this.name}</Text></View>`
