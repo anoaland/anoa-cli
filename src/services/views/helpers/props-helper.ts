@@ -1,7 +1,8 @@
 import * as path from 'path'
-import Project, { PropertySignatureStructure } from 'ts-morph'
+import Project, { InterfaceDeclaration, SourceFile } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
+import { ReactUtils } from '../../core/react-utils'
 
 export class PropsHelper {
   context: RootContext
@@ -12,6 +13,8 @@ export class PropsHelper {
   fields: FieldObject[]
   source: Source
   objectBuilder: ObjectBuilder
+  file: SourceFile
+  propsInterface: InterfaceDeclaration
 
   constructor(
     context: RootContext,
@@ -29,6 +32,9 @@ export class PropsHelper {
     this.objectBuilder = new ObjectBuilder(context)
   }
 
+  /**
+   * Init props name and asking user to input props fields
+   */
   async init(): Promise<PropsFile> {
     const { print, naming } = this.context
     print.fancy(print.colors.yellow(`• Props:`))
@@ -40,24 +46,28 @@ export class PropsHelper {
     }
   }
 
+  /**
+   * Build file processing
+   */
   async createFile() {
-    const stateFile = this.project.createSourceFile(
+    this.createInterface()
+    await this.source.prettifySoureFile(this.file)
+  }
+
+  /**
+   * Create new state interface
+   */
+  createInterface() {
+    this.file = this.project.createSourceFile(
       path.join(this.location, 'props.ts')
     )
-    stateFile.addInterface({
+    this.propsInterface = this.file.addInterface({
       name: this.name,
-      isExported: true,
-      properties: this.fields.map<PropertySignatureStructure>(p => {
-        return {
-          name: p.name,
-          type: p.type,
-          optional: p.optional,
-          hasQuestionToken: p.optional
-        }
-      })
+      isExported: true
     })
 
-    await this.source.prettifySoureFile(stateFile)
+    ReactUtils.replaceStateProperties(this.propsInterface, this.fields)
+    return this.propsInterface
   }
 }
 
