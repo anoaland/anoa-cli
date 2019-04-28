@@ -56,8 +56,6 @@ export class ViewStatelessFunctionalBuilder {
     // processing
     const spinner = print.spin('Generating...')
 
-    await propsHelper.createFile()
-
     // build main file
     const mainFile = this.project.createSourceFile(targetFile)
     mainFile.addImportDeclarations([
@@ -68,12 +66,19 @@ export class ViewStatelessFunctionalBuilder {
       {
         moduleSpecifier: 'react-native',
         namedImports: ['View', 'Text']
-      },
-      {
-        moduleSpecifier: './props',
-        namedImports: [props]
       }
     ])
+
+    const hasProps = props.fields.length
+    let genericStr = ''
+    if (hasProps) {
+      await propsHelper.createFile()
+      mainFile.addImportDeclaration({
+        moduleSpecifier: './props',
+        namedImports: [props]
+      })
+      genericStr = `<${props.name}>`
+    }
 
     mainFile.addVariableStatement({
       declarationKind: VariableDeclarationKind.Const,
@@ -81,8 +86,8 @@ export class ViewStatelessFunctionalBuilder {
       declarations: [
         {
           name: this.name,
-          type: `React.SFC<${props.name}>`,
-          initializer: `props => {
+          type: `React.SFC${genericStr}`,
+          initializer: `${hasProps ? 'props' : '()'} => {
             return (<View><Text>${this.name}</Text></View>)
           }`
         }
