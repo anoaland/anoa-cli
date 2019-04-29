@@ -2,7 +2,7 @@ import * as path from 'path'
 import Project, { SourceFile } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { ViewKindEnum } from '../views/enums'
-import { ReactUtils } from './react-utils'
+import { ReactComponentInfo, ReactUtils } from './react-utils'
 import { Utils } from './utils'
 
 export class ProjectBrowser {
@@ -24,7 +24,7 @@ export class ProjectBrowser {
     const { kind } = await prompt.ask([
       {
         name: 'kind',
-        message: msg || `Select view kind:`,
+        message: msg || `Select a view kind:`,
         type: 'list',
         choices: [ViewKindEnum.component, ViewKindEnum.screen],
         initial: ViewKindEnum.component
@@ -33,11 +33,80 @@ export class ProjectBrowser {
     return kind as any
   }
 
-  browse(baseDir, dir = '/') {
+  browseReactFiles(baseDir, dir = '/'): SourceFile[] {
     const project = new Project()
-    return project.addExistingSourceFiles(
-      path.join(baseDir, dir, '**/*.ts?(x)')
-    )
+    return project.addExistingSourceFiles(path.join(baseDir, dir, '**/*.tsx'))
+  }
+
+  async browseViews(message: string, baseDir: string, dir: string = '/') {
+    const {
+      prompt,
+      print,
+      strings: { padEnd }
+    } = this.context
+    const files = this.browseReactFiles(baseDir, dir)
+      .map(f => ({
+        path: f.getFilePath(),
+        classes: f.getClasses(),
+        functions: f.getFunctions(),
+        variables: f.getVariableStatements(),
+        sourceFile: f
+      }))
+      .map(f => {
+        let info: ReactComponentInfo
+        const classes = f.classes.map(c => ReactUtils.getReactClassInfo(c))
+        info = classes.length ? classes[0] : undefined
+
+        if (!info) {
+          const functions = f.functions.map(fn =>
+            ReactUtils.getReactFunctionInfo(fn)
+          )
+          info = functions.length ? functions[0] : undefined
+        }
+
+        if (!info) {
+          const arrowFunctions = f.variables.map(v =>
+            ReactUtils.getReactArrowFunctionInfo(v)
+          )
+          info = arrowFunctions.length ? arrowFunctions[0] : undefined
+        }
+
+        return {
+          path: f.path,
+          sourceFile: f.sourceFile,
+          info
+        }
+      })
+      .filter(f => !!f.info)
+      .map(f => ({
+        ...f,
+        key: `${padEnd(f.info.name, 25)} ${print.colors.yellow(
+          `[${this.getPath(baseDir, f.sourceFile)}]`
+        )}`
+      }))
+
+    // @ts-ignore
+    const { selectedReactClass } = await prompt.ask([
+      {
+        name: 'selectedReactClass',
+        type: 'autocomplete',
+        message,
+        choices: files.map(f => ({ name: f.key, indicator: '> ' })),
+        validate(val) {
+          if (!val) {
+            return 'Please choose a view'
+          }
+          return true
+        },
+        format(val) {
+          if (val) {
+            return val.replace(/\s\s/g, '')
+          }
+        }
+      }
+    ])
+
+    return files.find(f => f.key === selectedReactClass)
   }
 
   async browseReactClasses(
@@ -45,9 +114,13 @@ export class ProjectBrowser {
     baseDir: string,
     dir: string = '/'
   ) {
-    const { prompt } = this.context
+    const {
+      prompt,
+      strings: { padEnd },
+      print
+    } = this.context
 
-    const files = this.browse(baseDir, dir)
+    const files = this.browseReactFiles(baseDir, dir)
       .map(f => ({
         path: f.getFilePath(),
         classes: f.getClasses(),
@@ -65,7 +138,9 @@ export class ProjectBrowser {
       .filter(f => !!f.info)
       .map(f => ({
         ...f,
-        key: f.info.name + ` [${this.getPath(baseDir, f.sourceFile)}]`
+        key: `${padEnd(f.info.name, 25)} ${print.colors.yellow(
+          `[${this.getPath(baseDir, f.sourceFile)}]`
+        )}`
       }))
 
     const { selectedReactClass } = await prompt.ask([
@@ -74,6 +149,11 @@ export class ProjectBrowser {
         type: 'autocomplete',
         message,
         choices: files.map(f => f.key),
+        format(val) {
+          if (val) {
+            return val.replace(/\s\s/g, '')
+          }
+        },
         validate(val) {
           if (!val) {
             return 'Please choose one class'

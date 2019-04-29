@@ -35,9 +35,9 @@ export class PropsHelper {
   /**
    * Init props name and asking user to input props fields
    */
-  async init(): Promise<PropsFile> {
+  async init(title: string = 'Props'): Promise<PropsFile> {
     const { print, naming } = this.context
-    print.fancy(print.colors.yellow(`• Props:`))
+    print.fancy(print.colors.yellow(`• ${title}:`))
     this.fields = await this.objectBuilder.queryUserInput()
     this.name = naming.props(this.name)
     return {

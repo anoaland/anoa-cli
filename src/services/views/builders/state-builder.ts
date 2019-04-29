@@ -95,10 +95,7 @@ export class StateBuilder {
 
     let viewConstructor = ReactUtils.getConstructorFromClass(viewClass)
     if (!viewConstructor) {
-      viewConstructor = viewClass.insertConstructor(0, {
-        parameters: [{ name: 'props', type: 'any' }],
-        bodyText: 'super(props);'
-      })
+      viewConstructor = ReactUtils.addConstructorToClass(viewClass)
     }
 
     // merge state fields with initial values
@@ -164,7 +161,7 @@ export class StateBuilder {
         : folder.screens()
 
     const selectedView = await this.projectBrowser.browseReactClasses(
-      `Select ${lowerCase(this.kind)}`,
+      `Select a ${lowerCase(this.kind)}`,
       rootDir
     )
 

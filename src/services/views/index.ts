@@ -1,5 +1,6 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
+import { PropsBuilder } from './builders/props-builder'
 import { StateBuilder } from './builders/state-builder'
 import { ViewBuilder } from './builders/view-builder'
 import { TaskEnum, ViewKindEnum, ViewTypeEnum } from './enums'
@@ -40,6 +41,9 @@ export class ViewService {
       case 'e':
       case 'state':
         task = TaskEnum.addOrModifyState
+      case 'p':
+      case 'props':
+        task = TaskEnum.addOrModifyProps
     }
 
     if (options && (options.h || options.help)) {
@@ -51,6 +55,7 @@ export class ViewService {
       const choices = [
         TaskEnum.createComponent,
         TaskEnum.createScreen,
+        TaskEnum.addOrModifyProps,
         TaskEnum.addOrModifyState
       ]
 
@@ -65,19 +70,27 @@ export class ViewService {
       task = pickTask
     }
 
-    if (task === TaskEnum.createComponent || task === TaskEnum.createScreen) {
-      const builder = new ViewBuilder(
-        this.context,
-        task === TaskEnum.createComponent
-          ? ViewKindEnum.component
-          : ViewKindEnum.screen
-      )
+    switch (task) {
+      case TaskEnum.createComponent:
+      case TaskEnum.createScreen:
+        await new ViewBuilder(
+          this.context,
+          task === TaskEnum.createComponent
+            ? ViewKindEnum.component
+            : ViewKindEnum.screen
+        ).build()
+        break
 
-      await builder.build()
-    } else if (task === TaskEnum.addOrModifyState) {
-      await new StateBuilder(this.context).build()
-    } else {
-      this.showHelp()
+      case TaskEnum.addOrModifyProps:
+        await new PropsBuilder(this.context).build()
+        break
+
+      case TaskEnum.addOrModifyState:
+        await new StateBuilder(this.context).build()
+        break
+
+      default:
+        this.showHelp()
     }
   }
 
