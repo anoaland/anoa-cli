@@ -17,15 +17,15 @@ export class ObjectBuilder {
     let stop = false
     const fields: FieldObject[] = []
     const template = useInitialValue
-      ? `   name: \${name}, type: \${type}, initial value: \${initial}`
-      : `   name: \${name}, type: \${type}`
+      ? ` name: \${name}, type: \${type}, initial value: \${initial}`
+      : ` name: \${name}, type: \${type}`
 
     while (!stop) {
       const { field } = await prompt.ask([
         {
           name: 'field',
           type: 'snippet',
-          message: '  new field',
+          message: print.colors.yellow('+') + ' new field',
           // @ts-ignore
           template,
           format(val) {
@@ -149,11 +149,38 @@ export class ObjectBuilder {
 
     return fields
   }
+
+  async queryFieldsToRemove(fields: FieldObject[]) {
+    const { prompt, print } = this.context
+
+    const choices = fields.map(f => ({
+      name: f.name,
+      message: `${f.name}:${f.type}`,
+      value: f,
+      indicator(_e, val) {
+        return '  ' + (val.enabled ? print.xmark : print.colors.green('+'))
+      }
+    }))
+
+    // @ts-ignore
+    const { keys } = await prompt.ask([
+      {
+        name: 'keys',
+        message: `Select field(s) you'd like to ${print.colors.red(
+          'remove'
+        )} (optional)`,
+        type: 'multiselect',
+        choices
+      }
+    ])
+
+    return choices.filter(c => keys.indexOf(c.name) < 0).map(c => c.value)
+  }
 }
 
 export interface FieldObject {
   name: string
-  type: string  
+  type: string
   optional: boolean
   initial?: string
 }

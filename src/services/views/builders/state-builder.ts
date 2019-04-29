@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { InterfaceDeclaration, SourceFile } from 'ts-morph'
+import Project, { InterfaceDeclaration } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
 import { ProjectBrowser } from '../../core/project-browser'
@@ -32,7 +32,8 @@ export class StateBuilder {
   async queryUserInput() {
     const {
       print,
-      filesystem: { exists, cwd }
+      filesystem: { exists, cwd },
+      strings: { lowerCase }
     } = this.context
 
     this.project = new Project()
@@ -57,7 +58,14 @@ export class StateBuilder {
         stateInterface = existingStateFile.getInterface(selectedView.info.state)
       } else {
         // no reference, ask user to choose
-        stateInterface = await this.pickStateInterface(existingStateFile)
+        stateInterface = await this.projectBrowser.browseInterfaces(
+          existingStateFile,
+          `The ${print.colors.bold(
+            'state.ts'
+          )} file is exists but this ${lowerCase(
+            this.kind
+          )} is not connected to any state.`
+        )
       }
 
       if (stateInterface) {
@@ -184,83 +192,6 @@ export class StateBuilder {
   }
 
   async askToRemoveStateFields(fields: FieldObject[]): Promise<FieldObject[]> {
-    const { prompt, print } = this.context
-
-    const choices = fields.map(f => ({
-      key: `${f.name}:${f.type}`,
-      value: f
-    }))
-
-    const { keys } = await prompt.ask([
-      {
-        name: 'keys',
-        message: `Select state field(s) you would like to ${print.colors.red(
-          'remove'
-        )} (optional)`,
-        type: 'multiselect',
-        choices: choices.map(c => c.key)
-      }
-    ])
-
-    return choices.filter(c => keys.indexOf(c.key) < 0).map(c => c.value)
-  }
-
-  async pickStateInterface(stateFile: SourceFile) {
-    const {
-      strings: { lowerCase },
-      prompt,
-      print
-    } = this.context
-
-    const msg = `• The ${print.colors.bold(
-      'state.ts'
-    )} file is exists but this ${lowerCase(
-      this.kind
-    )} is not connected to any state.`
-
-    print.info(print.colors.yellow(msg))
-
-    const createNew = print.colors.magenta('... or create a new one.')
-    const useThis = 'Use and modify this interface.'
-
-    const interfaces = stateFile.getInterfaces().filter(i => i.isExported())
-    if (interfaces.length === 1) {
-      const choices = [useThis, createNew]
-      const { choosen } = await prompt.ask([
-        {
-          name: 'choosen',
-          message: `Found ${print.colors.yellow(
-            interfaces[0].getName()
-          )} interface.`,
-          type: 'list',
-          choices,
-          initial: useThis
-        }
-      ])
-
-      if (choosen === useThis) {
-        return interfaces[0]
-      }
-      this.utils.exit('Aborted')
-    } else if (interfaces.length > 1) {
-      const choices = [...interfaces.map(i => i.getName()), createNew]
-      const { name } = await prompt.ask([
-        {
-          name: 'name',
-          message: `Select one interface you would like to use and modify:`,
-          type: 'list',
-          choices,
-          validate(val) {
-            if (!val) {
-              return 'Please select one interface to modify'
-            }
-            return true
-          }
-        }
-      ])
-      return interfaces.find(i => i.getName() === name)
-    } else {
-      return undefined
-    }
+    return this.objectBuilder.queryFieldsToRemove(fields)
   }
 }
