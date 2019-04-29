@@ -1,6 +1,7 @@
 import * as path from 'path'
 import Project, { SourceFile } from 'ts-morph'
 import { RootContext } from '../../libs'
+import { ViewKindEnum } from '../views/enums'
 import { ReactUtils } from './react-utils'
 import { Utils } from './utils'
 
@@ -11,6 +12,25 @@ export class ProjectBrowser {
   constructor(context: RootContext) {
     this.context = context
     this.utils = new Utils(context)
+  }
+
+  /**
+   * Select target view
+   */
+  async selectViewKind(msg?: string): Promise<ViewKindEnum> {
+    const { prompt } = this.context
+
+    // ask user for screen or component
+    const { kind } = await prompt.ask([
+      {
+        name: 'kind',
+        message: msg || `Select view kind:`,
+        type: 'list',
+        choices: [ViewKindEnum.component, ViewKindEnum.screen],
+        initial: ViewKindEnum.component
+      }
+    ])
+    return kind as any
   }
 
   browse(baseDir, dir = '/') {

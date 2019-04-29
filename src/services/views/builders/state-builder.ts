@@ -150,32 +150,24 @@ export class StateBuilder {
    */
   async selectView() {
     const {
-      prompt,
       folder,
       strings: { lowerCase },
       print
     } = this.context
 
-    // ask user for screen or component
-    const { kind } = await prompt.ask([
-      {
-        name: 'kind',
-        message: `Which view you would like to add:`,
-        type: 'list',
-        choices: [ViewKindEnum.component, ViewKindEnum.screen],
-        initial: ViewKindEnum.component
-      }
-    ])
-    this.kind = kind as any
+    this.kind = await this.projectBrowser.selectViewKind()
 
     // now select the view
     const rootDir =
-      kind === ViewKindEnum.component ? folder.components() : folder.screens()
+      this.kind === ViewKindEnum.component
+        ? folder.components()
+        : folder.screens()
 
     const selectedView = await this.projectBrowser.browseReactClasses(
-      `Select ${lowerCase(kind)}`,
+      `Select ${lowerCase(this.kind)}`,
       rootDir
     )
+
     if (!selectedView) {
       this.utils.exit(
         `Aborted - could not found ${print.colors.magenta('index.tsx')} file`
