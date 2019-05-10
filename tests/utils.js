@@ -6,6 +6,7 @@ const utils = {
   UP: '\x1B\x5B\x41',
   ENTER: '\x0D',
   SPACE: '\x20',
+  TAB: '\x09',
 
   /**
    * Execute command and returns the output.
@@ -39,20 +40,58 @@ const utils = {
    * @param {(code:number)=>void} done done callback
    */
   run(cmd, args, qaList, done) {
+    let finish = false
     const cp = spawn(cmd, args)
-    cp.stdout.on('data', data => {
+    cp.stdout.on('data', async data => {
       const question = utils.stripColorsAndPrompt(data)
       const qa = qaList.find(
         o => question.indexOf(utils.stripColorsAndPrompt(o.q)) > -1
       )
+
       if (qa) {
+        // remove processed qa
         qaList.splice(qaList.indexOf(qa), 1)
-        cp.stdin.write(qa.a + this.ENTER)
+
+        // process qa TAB by TAB
+        const answers = qa.a.split(this.TAB)
+        const ansLen = answers.length
+        for (let i = 0; i < ansLen; i++) {
+          const ans = answers[i]
+          await this.cpWriteAsync(cp, ans)
+          if (ansLen > 1 && i < ansLen - 1) {
+            await this.cpWriteAsync(cp, this.TAB)
+          }
+        }
+
+        // give some delay to flush garbage data
+        setTimeout(async () => {
+          if (!finish) {
+            await this.cpWriteAsync(cp, this.ENTER)
+          }
+        }, 1500)
       }
     })
 
     cp.on('exit', code => {
+      finish = true
       done(code)
+    })
+  },
+
+  /**
+   * Write chunk to child process asyncronously
+   * @param {ChildProcess} cp Child Process
+   * @param {any} chunk Chunk
+   */
+  async cpWriteAsync(cp, chunk) {
+    return new Promise((resolve, reject) => {
+      cp.stdin.write(chunk, 'utf-8', err => {
+        if (!err) {
+          resolve()
+        } else {
+          reject(err)
+        }
+      })
     })
   }
 }

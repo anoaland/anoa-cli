@@ -23,7 +23,9 @@
     "test:boilerplate": "jest tests/integration/boilerplate",
     "test:boilerplate:expo": "jest tests/integration/boilerplate/expo",
     "test:boilerplate:react-native-init": "jest tests/integration/boilerplate/react-native-init",
+    "test:generators": "jest tests/integration/generators",
     "test:version": "jest tests/integration/version",
+    "test:all": "jest tests",
     "format": "prettier --write **/*.{js,ts,tsx,json}",
     "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
   },
@@ -45,12 +47,14 @@
     "typescript": "^3.3.3"
   },
   "devDependencies": {
+    "@types/fs-extra": "^5.1.0",
     "@types/lodash": "^4.14.123",
     "@types/node": "^11.9.4",
     "@types/prettier": "^1.16.1",
     "@types/semver": "^5.5.0",
     "concat-stream": "^2.0.0",
     "cross-spawn": "^6.0.5",
+    "fs-extra": "^7.0.1",
     "jest": "^24.1.0",
     "jest-mock-process": "^1.1.0",
     "node-buffertrim": "^1.0.0",
