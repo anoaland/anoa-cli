@@ -99,7 +99,7 @@ export class Utils {
       message: message + colors.gray(' (Y/n)'),
       default: 'Y',
       initial: 'true',
-      format: (res: boolean) => (res ? 'Yes' : 'No')      
+      format: (res: boolean) => (res ? 'Yes' : 'No')
     })
 
     return confirm as any
@@ -226,6 +226,13 @@ export class Utils {
     iterate(-1, tree)
 
     return res.map(p => p.parent + p.name)
+  }
+
+  formatReduxActionTypeName(name: string) {
+    const {
+      strings: { upperCase, snakeCase }
+    } = this.context
+    return upperCase(snakeCase(name)).replace(/\s/g, '_')
   }
 }
 

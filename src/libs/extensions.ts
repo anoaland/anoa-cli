@@ -11,7 +11,9 @@ export function config(_context: RootContext) {
       source: 'src',
       components: 'views/components',
       screens: 'views/screens',
-      assets: 'assets'
+      assets: 'assets',
+      store: 'store',
+      reducers: 'store/reducers'
     },
     naming: {
       screen: {
@@ -43,6 +45,12 @@ export function folder({ config: { folders } }: RootContext) {
     },
     assets: (pathOrFilename: string = '') => {
       return path.join(folders.assets, pathOrFilename)
+    },
+    reducers: (pathOrFilename: string = '') => {
+      return path.join(folders.source, folders.reducers, pathOrFilename)
+    },
+    store: (pathOrFilename: string = '') => {
+      return path.join(folders.source, folders.store, pathOrFilename)
     }
   }
 }
@@ -73,6 +81,26 @@ export function naming({
     },
     props: (name: string) => {
       return pascalCase(trim(name)) + 'Props'
+    },
+    store: (name: string = '') => {
+      const baseName = pascalCase(trim(name))
+      return {
+        rootState() {
+          return 'AppRootState'
+        },
+        rootActions() {
+          return 'AppRootActions'
+        },
+        reducer() {
+          return baseName + 'Reducer'
+        },
+        state() {
+          return baseName + 'State'
+        },
+        action() {
+          return baseName + 'Action'
+        }
+      }
     }
   }
 }
