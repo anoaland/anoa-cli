@@ -227,13 +227,6 @@ export class Utils {
 
     return res.map(p => p.parent + p.name)
   }
-
-  formatReduxActionTypeName(name: string) {
-    const {
-      strings: { upperCase, snakeCase }
-    } = this.context
-    return upperCase(snakeCase(name)).replace(/\s/g, '_')
-  }
 }
 
 export interface DirectoryInfo {

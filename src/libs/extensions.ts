@@ -59,7 +59,7 @@ export function naming({
   config: {
     naming: { screen, component }
   },
-  strings: { pascalCase, trim }
+  strings: { pascalCase, trim, upperCase, snakeCase }
 }: RootContext) {
   return {
     screen: (name: string) => {
@@ -99,6 +99,9 @@ export function naming({
         },
         action() {
           return baseName + 'Action'
+        },
+        actionTypeName() {
+          return upperCase(snakeCase(name)).replace(/\s/g, '_')
         }
       }
     }

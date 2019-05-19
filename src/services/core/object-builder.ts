@@ -180,11 +180,66 @@ export class ObjectBuilder {
     return choices.filter(c => keys.indexOf(c.name) < 0).map(c => c.value)
   }
 
-  async queryReduxActionTypesInput(reducerName: string) {
-    const { prompt, print } = this.context
-    const self = this
+  async queryReduxActionsBasedOnState(
+    reduxName: string,
+    stateFields: FieldObject[]
+  ): Promise<FieldObject[]> {
+    if (!stateFields || !stateFields.length) {
+      return []
+    }
 
-    reducerName = this.utils.formatReduxActionTypeName(reducerName)
+    const {
+      print: { colors },
+      prompt,
+      naming
+    } = this.context
+
+    const choices = stateFields
+      .map(s => {
+        const name = `${naming
+          .store(reduxName)
+          .actionTypeName()}/SET_${naming.store(s.name).actionTypeName()}`
+        return {
+          name: `${colors.blue('type')}: ${colors.cyan(name)}, ${colors.blue(
+            'paylod'
+          )}: ${colors.cyan(s.type)}`,
+          value: {
+            name,
+            type: s.type,
+            optional: s.optional,
+            data: s
+          }
+        }
+      })
+      .reduce((acc, val) => {
+        acc[val.name] = val.value
+        return acc
+      }, {})
+
+    const { actionFields } = await prompt.ask({
+      name: 'actionFields',
+      message: `Select action type(s) generated from state that you would like to include:`,
+      type: 'select',
+      choices: Object.keys(choices),
+      multiple: true,
+      format(e) {
+        if (!e || !e.length) {
+          return ''
+        }
+        return e.map(a => colors.yellow('\r\n  + ') + a).join('')
+      }
+    })
+
+    // @ts-ignore
+    return actionFields.map(a => choices[a])
+  }
+
+  async queryReduxActionTypesInput(
+    reducerName: string
+  ): Promise<FieldObject[]> {
+    const { prompt, print, naming } = this.context
+
+    reducerName = naming.store(reducerName).actionTypeName()
     let stop = false
     const fields: FieldObject[] = []
     const template = ` type: ${print.colors.cyan(
@@ -228,7 +283,7 @@ export class ObjectBuilder {
                 return (
                   keyStr +
                   `: ${reducerName}/` +
-                  print.colors.cyan(self.utils.formatReduxActionTypeName(val))
+                  print.colors.cyan(naming.store(val).actionTypeName())
                 )
               }
               return keyStr + ': ' + print.colors.cyan(val)
@@ -239,7 +294,7 @@ export class ObjectBuilder {
             if (val.values.type) {
               val.values.type =
                 `${reducerName}/` +
-                self.utils.formatReduxActionTypeName(val.values.type)
+                naming.store(val.values.type).actionTypeName()
             }
 
             const keys = Object.keys(val.values)
@@ -251,21 +306,6 @@ export class ObjectBuilder {
               .join(', ')
           },
           fields: [
-            // {
-            //   name: 'name',
-            //   validate(val, { values }) {
-            //     if (!val && !values.type) {
-            //       stop = true
-            //       return true
-            //     }
-
-            //     if (!val) {
-            //       return 'name is required'
-            //     }
-
-            //     return true
-            //   }
-            // },
             {
               name: 'type',
               validate(val, { values }) {
@@ -290,7 +330,7 @@ export class ObjectBuilder {
         let { type, payload } = field.values
 
         fields.push({
-          name: `${reducerName}/${this.utils.formatReduxActionTypeName(type)}`,
+          name: type,
           type: payload,
           optional: false
         })

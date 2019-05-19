@@ -76,53 +76,10 @@ export class ReducerQA implements ReducerProps {
   }
 
   private async queryGenerateActionsBasedOnState() {
-    if (!this.stateFields.length) {
-      return
-    }
-
-    const {
-      print: { colors },
-      prompt
-    } = this.context
-
-    const choices = this.stateFields
-      .map(s => {
-        const name = `${this.utils.formatReduxActionTypeName(
-          this.name
-        )}/SET_${this.utils.formatReduxActionTypeName(s.name)}`
-        return {
-          name: `${colors.blue('type')}: ${colors.cyan(name)}, ${colors.blue(
-            'paylod'
-          )}: ${colors.cyan(s.type)}`,
-          value: {
-            name,
-            type: s.type,
-            optional: s.optional,
-            data: s
-          }
-        }
-      })
-      .reduce((acc, val) => {
-        acc[val.name] = val.value
-        return acc
-      }, {})
-
-    const { actionFields } = await prompt.ask({
-      name: 'actionFields',
-      message: `Select action type(s) generated from state that you would like to include:`,
-      type: 'select',
-      choices: Object.keys(choices),
-      multiple: true,
-      format(e) {
-        if (!e || !e.length) {
-          return ''
-        }
-        return e.map(a => colors.yellow('\r\n  + ') + a).join('')
-      }
-    })
-
-    // @ts-ignore
-    this.stateActionTypes = actionFields.map(a => choices[a])
+    this.stateActionTypes = await this.objectBuilder.queryReduxActionsBasedOnState(
+      this.name,
+      this.stateFields
+    )
   }
 
   private async queryNewActionTypes() {
