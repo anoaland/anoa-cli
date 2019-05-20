@@ -1,6 +1,7 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
 import { ReducerBuilder } from './builders/reducer'
+import { ReducerStateBuilder } from './builders/state'
 import { TaskEnum } from './enums'
 import { helps } from './help'
 
@@ -30,6 +31,11 @@ export class StoreService {
       case 'reducer':
         task = TaskEnum.createReducer
         break
+
+      case 's':
+      case 'state':
+        task = TaskEnum.addNewReducerState
+        break
     }
 
     if (options && (options.h || options.help)) {
@@ -38,7 +44,7 @@ export class StoreService {
     }
 
     if (!task) {
-      const choices = [TaskEnum.createReducer]
+      const choices = [TaskEnum.createReducer, TaskEnum.addNewReducerState]
 
       const { pickTask } = await prompt.ask([
         {
@@ -54,6 +60,10 @@ export class StoreService {
     switch (task) {
       case TaskEnum.createReducer:
         await new ReducerBuilder(this.context).build()
+        break
+
+      case TaskEnum.addNewReducerState:
+        await new ReducerStateBuilder(this.context).build()
         break
 
       default:

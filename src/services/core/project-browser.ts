@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { SourceFile } from 'ts-morph'
+import Project, { SourceFile, SyntaxKind } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { ViewKindEnum } from '../views/enums'
 import { ReactComponentInfo, ReactUtils } from './react-utils'
@@ -31,11 +31,6 @@ export class ProjectBrowser {
       }
     ])
     return kind as any
-  }
-
-  browseReactFiles(baseDir, dir = '/'): SourceFile[] {
-    const project = new Project()
-    return project.addExistingSourceFiles(path.join(baseDir, dir, '**/*.tsx'))
   }
 
   async browseViews(message: string, baseDir: string, dir: string = '/') {
@@ -166,6 +161,79 @@ export class ProjectBrowser {
     return files.find(f => f.key === selectedReactClass)
   }
 
+  async browseReducers(): Promise<BrowseReducerInfo> {
+    const {
+      folder,
+      prompt,
+      print: { colors },
+      strings: { padEnd }
+    } = this.context
+    const project = new Project()
+    const files = project.addExistingSourceFiles(
+      path.join(folder.reducers('*/index.ts'))
+    )
+
+    const choices = files
+      .map(f => {
+        const variables = f.getVariableStatements().filter(v => {
+          const typeRef = v.getFirstDescendantByKind(SyntaxKind.TypeReference)
+          return (
+            typeRef &&
+            typeRef.getText().startsWith('Reducer<') &&
+            v.isExported()
+          )
+        })
+
+        if (!variables || !variables.length) {
+          return false
+        }
+
+        const name = variables[0]
+          .getFirstDescendantByKind(SyntaxKind.Identifier)
+          .getText()
+        const baseDir = folder.reducers()
+
+        return {
+          key: `${padEnd(name, 25)} ${colors.yellow(
+            `[${this.getPath(baseDir, f)}]`
+          )}`,
+          name,
+          path: f.getFilePath(),
+          sourceFile: f
+        }
+      })
+      // .filter(f => !!f)
+      .reduce((acc, curr) => {
+        if (curr) {
+          acc[curr.key] = curr
+        }
+        return acc
+      }, {})
+
+    // @ts-ignore
+    const { selectedReducer } = await prompt.ask([
+      {
+        name: 'selectedReducer',
+        type: 'autocomplete',
+        message: 'Please select reducer',
+        choices: Object.keys(choices), // .map(f => ({ name: f.key, indicator: '> ' })),
+        validate(val) {
+          if (!val) {
+            return 'Please choose a reducer'
+          }
+          return true
+        },
+        format(val) {
+          if (val) {
+            return val.replace(/\s\s/g, '')
+          }
+        }
+      }
+    ])
+
+    return choices[selectedReducer]
+  }
+
   async browseInterfaces(sourceFile: SourceFile, msg: string) {
     const { prompt, print } = this.context
 
@@ -217,7 +285,18 @@ export class ProjectBrowser {
     }
   }
 
-  getPath(baseDir: string, sourceFile: SourceFile) {
+  private getPath(baseDir: string, sourceFile: SourceFile) {
     return path.relative(baseDir, sourceFile.getFilePath()).replace(/\\/g, '/')
   }
+
+  private browseReactFiles(baseDir, dir = '/'): SourceFile[] {
+    const project = new Project()
+    return project.addExistingSourceFiles(path.join(baseDir, dir, '**/*.tsx'))
+  }
+}
+
+export interface BrowseReducerInfo {
+  name: string
+  path: string
+  sourceFile: SourceFile
 }

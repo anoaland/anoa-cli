@@ -1,3 +1,4 @@
 export enum TaskEnum {
-  createReducer = 'Create new reducer'
+  createReducer = 'Create new reducer',
+  addNewReducerState = 'Add new state'
 }
