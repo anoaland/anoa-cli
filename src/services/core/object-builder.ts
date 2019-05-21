@@ -181,11 +181,15 @@ export class ObjectBuilder {
   }
 
   async queryReduxActionsBasedOnState(
-    reduxName: string,
+    reducerName: string,
     stateFields: FieldObject[]
   ): Promise<FieldObject[]> {
     if (!stateFields || !stateFields.length) {
       return []
+    }
+
+    if (reducerName.toLocaleLowerCase().endsWith('reducer')) {
+      reducerName = reducerName.substr(0, reducerName.length - 7)
     }
 
     const {
@@ -194,10 +198,18 @@ export class ObjectBuilder {
       naming
     } = this.context
 
+    if (
+      !(await this.utils.confirm(
+        'Do you want to generate action types from these new fields?'
+      ))
+    ) {
+      return []
+    }
+
     const choices = stateFields
       .map(s => {
         const name = `${naming
-          .store(reduxName)
+          .store(reducerName)
           .actionTypeName()}/SET_${naming.store(s.name).actionTypeName()}`
         return {
           name: `${colors.blue('type')}: ${colors.cyan(name)}, ${colors.blue(
@@ -218,7 +230,7 @@ export class ObjectBuilder {
 
     const { actionFields } = await prompt.ask({
       name: 'actionFields',
-      message: `Select action type(s) generated from state that you would like to include:`,
+      message: `Select action type(s) you would like to include:`,
       type: 'select',
       choices: Object.keys(choices),
       multiple: true,

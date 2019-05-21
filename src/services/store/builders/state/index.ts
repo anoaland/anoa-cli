@@ -5,7 +5,8 @@ import Project, {
   SyntaxKind
 } from 'ts-morph'
 import { RootContext } from '../../../../libs'
-import { Source } from '../../../core'
+import { ObjectBuilder, Source } from '../../../core'
+import { ReduxUtils } from '../../../core/redux-utils'
 import { ReducerStateQA } from './qa'
 
 export class ReducerStateBuilder {
@@ -14,22 +15,26 @@ export class ReducerStateBuilder {
   project: Project
   source: Source
   initializerModified: boolean
+  objectBuilder: ObjectBuilder
 
   constructor(context: RootContext) {
     this.context = context
     this.project = new Project()
     this.qa = new ReducerStateQA(context, this.project)
     this.source = new Source(context)
+    this.objectBuilder = new ObjectBuilder(context)
     this.initializerModified = false
   }
 
   async build() {
     await this.qa.run()
-    await this.addNewStateFields()
+    await this.generateNewStateFields()
+    await this.generateNewActionTypes()
+    await this.generateActionTypeClauses()
     await this.saveChanges()
   }
 
-  async addNewStateFields() {
+  private async generateNewStateFields() {
     const { newFields, stateInterface, reducerSourceFile } = this.qa
     if (!newFields.length) {
       return
@@ -46,6 +51,7 @@ export class ReducerStateBuilder {
 
     // set fields initializer
     const initializerFields = newFields.filter(f => !f.optional && f.initial)
+
     if (initializerFields.length) {
       this.initializerModified = true
       const stateInitializer = reducerSourceFile
@@ -54,7 +60,7 @@ export class ReducerStateBuilder {
         .getFirstDescendantByKind(SyntaxKind.ObjectLiteralExpression)
 
       stateInitializer.addPropertyAssignments(
-        newFields.map<PropertyAssignmentStructure>(f => ({
+        initializerFields.map<PropertyAssignmentStructure>(f => ({
           name: f.name,
           initializer: f.initial
         }))
@@ -62,13 +68,28 @@ export class ReducerStateBuilder {
     }
   }
 
-  async saveChanges() {
+  private async generateNewActionTypes() {
+    const { actionTypesAlias, stateActionTypes } = this.qa
+    ReduxUtils.generateNewActionTypes(actionTypesAlias, stateActionTypes)
+  }
+
+  private async generateActionTypeClauses() {
+    const { stateActionTypes, reducerSourceFile } = this.qa
+    await ReduxUtils.addActionTypeClauses(reducerSourceFile, stateActionTypes)
+  }
+
+  private async saveChanges() {
     const {
       print: { colors, fancy, checkmark, spin },
       filesystem: { cwd }
     } = this.context
 
-    const { newFields, reducerSourceFile, stateSourceFile } = this.qa
+    const {
+      newFields,
+      reducerSourceFile,
+      stateSourceFile,
+      actionTypesSourceFile
+    } = this.qa
 
     if (!newFields.length) {
       fancy(`${checkmark}  No changes have been made.`)
@@ -79,6 +100,7 @@ export class ReducerStateBuilder {
 
     await this.source.prettifySoureFile(reducerSourceFile)
     await this.source.prettifySoureFile(stateSourceFile)
+    await this.source.prettifySoureFile(actionTypesSourceFile)
     await this.project.save()
 
     const stateFilePath = path.relative(

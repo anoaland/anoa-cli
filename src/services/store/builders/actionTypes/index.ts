@@ -1,7 +1,8 @@
 import * as path from 'path'
-import Project, { SyntaxKind } from 'ts-morph'
+import Project from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
+import { ReduxUtils } from '../../../core/redux-utils'
 import { ReducerActionTypesQA } from './qa'
 
 export class ReducerActionTypesBuilder {
@@ -20,63 +21,18 @@ export class ReducerActionTypesBuilder {
   async build() {
     await this.qa.run()
     await this.generateNewActionTypes()
-    await this.generateSwitchStatement()
+    await this.generateActionTypeClauses()
     await this.saveChanges()
   }
 
   async generateNewActionTypes() {
-    const { actionTypesAlias, newActionTypes, actionTypesAliasType } = this.qa
-    if (!newActionTypes || !newActionTypes.length) {
-      return
-    }
-
-    let actionTypes = actionTypesAliasType
-    if (actionTypes === 'any') {
-      actionTypes = ''
-    } else {
-      actionTypes += ' | '
-    }
-
-    actionTypes += newActionTypes
-      .map(
-        a => `{
-      type: '${a.name}'
-      ${a.type ? ', payload: ' + a.type : ''}
-    }`
-      )
-      .join(' | ')
-
-    actionTypesAlias.setType(actionTypes)
+    const { actionTypesAlias, newActionTypes } = this.qa
+    ReduxUtils.generateNewActionTypes(actionTypesAlias, newActionTypes)
   }
 
-  async generateSwitchStatement() {
+  async generateActionTypeClauses() {
     const { reducerSourceFile, newActionTypes } = this.qa
-    if (!newActionTypes || !newActionTypes.length) {
-      return
-    }
-
-    const caseBlock = reducerSourceFile.getFirstDescendantByKind(
-      SyntaxKind.CaseBlock
-    )
-    const clauses = caseBlock.getClauses()
-
-    const updatedClauses = clauses
-      .filter(c => c.getKindName() !== 'DefaultClause')
-      .map(c => c.getText() + '\r\n')
-
-    updatedClauses.push(
-      ...newActionTypes.map(
-        a => `case '${a.name}':
-          return { ...state }
-        `
-      )
-    )
-
-    updatedClauses.push(
-      clauses.find(c => c.getKindName() === 'DefaultClause').getText()
-    )
-
-    caseBlock.replaceWithText(`{ ${updatedClauses.join('')} }`)
+    await ReduxUtils.addActionTypeClauses(reducerSourceFile, newActionTypes)
   }
 
   async saveChanges() {
