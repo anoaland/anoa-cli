@@ -161,7 +161,12 @@ export class ProjectBrowser {
     return files.find(f => f.key === selectedReactClass)
   }
 
-  async browseReducers(): Promise<BrowseReducerInfo> {
+  async browseReducers(
+    validate?: (
+      value: BrowseReducerInfo,
+      values: { [key: string]: BrowseReducerInfo }
+    ) => Promise<boolean | string>
+  ): Promise<BrowseReducerInfo> {
     const {
       folder,
       prompt,
@@ -217,10 +222,15 @@ export class ProjectBrowser {
         type: 'autocomplete',
         message: 'Please select reducer',
         choices: Object.keys(choices), // .map(f => ({ name: f.key, indicator: '> ' })),
-        validate(val) {
+        validate: async val => {
           if (!val) {
             return 'Please choose a reducer'
           }
+
+          if (validate) {
+            return await validate(choices[val], choices)
+          }
+
           return true
         },
         format(val) {

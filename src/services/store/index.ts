@@ -3,6 +3,7 @@ import { Utils } from '../core'
 import { ReducerActionTypesBuilder } from './builders/actionTypes'
 import { ReducerBuilder } from './builders/reducer'
 import { ReducerStateBuilder } from './builders/state'
+import { ReduxThunkBuilder } from './builders/thunk'
 import { TaskEnum } from './enums'
 import { helps } from './help'
 
@@ -42,6 +43,11 @@ export class StoreService {
       case 'action':
         task = TaskEnum.addNewActionType
         break
+
+      case 't':
+      case 'thunk':
+        task = TaskEnum.addNewThunk
+        break
     }
 
     if (options && (options.h || options.help)) {
@@ -53,7 +59,8 @@ export class StoreService {
       const choices = [
         TaskEnum.createReducer,
         TaskEnum.addNewReducerState,
-        TaskEnum.addNewActionType
+        TaskEnum.addNewActionType,
+        TaskEnum.addNewThunk
       ]
 
       const { pickTask } = await prompt.ask([
@@ -78,6 +85,10 @@ export class StoreService {
 
       case TaskEnum.addNewActionType:
         await new ReducerActionTypesBuilder(this.context).build()
+        break
+
+      case TaskEnum.addNewThunk:
+        await new ReduxThunkBuilder(this.context).build()
         break
 
       default:

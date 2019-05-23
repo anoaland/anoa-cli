@@ -1,8 +1,8 @@
-import * as path from 'path'
-import Project, { SourceFile, SyntaxKind, TypeAliasDeclaration } from 'ts-morph'
+import Project, { SourceFile, TypeAliasDeclaration } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { FieldObject, ObjectBuilder, Utils } from '../../../core'
 import { ProjectBrowser } from '../../../core/project-browser'
+import { ReduxUtils } from '../../../core/redux-utils'
 
 export class ReducerActionTypesQA {
   context: RootContext
@@ -27,51 +27,24 @@ export class ReducerActionTypesQA {
 
   async run() {
     const {
-      filesystem: { exists },
       print: { colors, fancy }
     } = this.context
     const reducer = await this.projectBrowser.browseReducers()
-    const actionTypesPath = path.join(path.dirname(reducer.path), 'actions.ts')
-    if (!exists(actionTypesPath)) {
-      this.utils.exit(`Can't find actions.ts file.`)
-      return
-    }
-
-    const actionImport = reducer.sourceFile.getImportDeclaration(
-      i =>
-        !!i
-          .getModuleSpecifier()
-          .getText()
-          .match(/.\/actions/g)
-    )
-
     this.reducerSourceFile = this.project.addExistingSourceFile(reducer.path)
     this.reducerName = reducer.name
 
-    this.actionTypesSourceFile = this.project.addExistingSourceFile(
-      actionTypesPath
-    )
+    const {
+      sourceFile,
+      typeAlias,
+      actionTypeChoices
+    } = ReduxUtils.resolveActionTypes(this.context, this.project, reducer)
 
-    this.actionTypesAlias = this.actionTypesSourceFile.getTypeAlias(
-      actionImport.getNamedImports()[0].getText()
-    )
-
+    this.actionTypesSourceFile = sourceFile
+    this.actionTypesAlias = typeAlias
     this.actionTypesAliasType = this.actionTypesAlias.getTypeNode().getText()
     if (this.actionTypesAliasType !== 'any') {
-      const actionTypes = this.actionTypesAlias
-        .getDescendantsOfKind(SyntaxKind.TypeLiteral)
-        .map(p => {
-          return (
-            '  ' +
-            p
-              .getMembers()
-              .map(m => {
-                const pm = m.getText().split(':')
-                return colors.blue(pm[0]) + ':' + colors.yellow(pm[1])
-              })
-              .join(', ')
-          )
-        })
+      const actionTypes = Object.keys(actionTypeChoices())
+        .map(s => '  ' + s)
         .join('\r\n')
       fancy(colors.bold('  Existing action types:'))
       fancy(actionTypes)

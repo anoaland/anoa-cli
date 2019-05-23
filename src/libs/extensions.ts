@@ -13,7 +13,8 @@ export function config(_context: RootContext) {
       screens: 'views/screens',
       assets: 'assets',
       store: 'store',
-      reducers: 'store/reducers'
+      reducers: 'store/reducers',
+      thunks: 'store/actions'
     },
     naming: {
       screen: {
@@ -23,6 +24,10 @@ export function config(_context: RootContext) {
       component: {
         prefix: '',
         suffix: ''
+      },
+      thunk: {
+        prefix: '',
+        suffix: 'Action'
       }
     }
   }
@@ -51,15 +56,18 @@ export function folder({ config: { folders } }: RootContext) {
     },
     store: (pathOrFilename: string = '') => {
       return path.join(folders.source, folders.store, pathOrFilename)
+    },
+    thunks: (pathOrFilename: string = '') => {
+      return path.join(folders.source, folders.thunks, pathOrFilename)
     }
   }
 }
 
 export function naming({
   config: {
-    naming: { screen, component }
+    naming: { screen, component, thunk }
   },
-  strings: { pascalCase, trim, upperCase, snakeCase }
+  strings: { pascalCase, trim, upperCase, snakeCase, camelCase }
 }: RootContext) {
   return {
     screen: (name: string) => {
@@ -104,6 +112,9 @@ export function naming({
           return upperCase(snakeCase(name)).replace(/\s/g, '_')
         }
       }
+    },
+    thunk: (name: string) => {
+      return thunk.prefix + camelCase(trim(name)) + thunk.suffix
     }
   }
 }

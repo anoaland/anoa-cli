@@ -213,7 +213,7 @@ export class ObjectBuilder {
           .actionTypeName()}/SET_${naming.store(s.name).actionTypeName()}`
         return {
           name: `${colors.blue('type')}: ${colors.cyan(name)}, ${colors.blue(
-            'paylod'
+            'payload'
           )}: ${colors.cyan(s.type)}`,
           value: {
             name,
