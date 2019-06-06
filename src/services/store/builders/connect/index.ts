@@ -164,19 +164,32 @@ export class ReduxConnectBuilder {
     // ensure AppStore is imported
     ReactUtils.addNamedImport(viewFile, folder.store(), 'AppStore')
 
-    if (view.info.type === ViewTypeEnum.classBased) {
-      const viewClass = viewFile.getClass(view.info.name)
+    switch (view.info.type) {
+      case ViewTypeEnum.classBased:
+        const viewClass = viewFile.getClass(view.info.name)
 
-      // set class decorator
-      ReduxUtils.setAppStoreDecorator(
-        viewClass,
-        typeArgs,
-        statesMap,
-        actionsMap
-      )
+        // set class decorator
+        ReduxUtils.setAppStoreDecorator(
+          viewClass,
+          typeArgs,
+          statesMap,
+          actionsMap
+        )
 
-      // ensure props is referenced
-      ReactUtils.addPropsReferenceToClassView(viewClass, propsInterface)
+        // ensure props is referenced
+        ReactUtils.addPropsReferenceToClassView(viewClass, propsInterface)
+        break
+
+      case ViewTypeEnum.statelessFunctional:
+        const viewVar = viewFile.getVariableDeclaration(view.info.name)
+        ReduxUtils.setAppStoreHoc(
+          viewVar,
+          propsName,
+          typeArgs,
+          statesMap,
+          actionsMap
+        )
+        break
     }
 
     await this.source.prettifySoureFile(propsFile)

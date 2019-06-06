@@ -1,11 +1,14 @@
 import * as path from 'path'
 import {
+  CallExpression,
   ClassDeclaration,
+  Decorator,
   Node,
   Project,
   SourceFile,
   SyntaxKind,
-  TypeAliasDeclaration
+  TypeAliasDeclaration,
+  VariableDeclaration
 } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { FieldObject } from './object-builder'
@@ -266,54 +269,135 @@ export class ReduxUtils {
       }, {})
   }
 
+  static setAppStoreHoc(
+    viewVar: VariableDeclaration,
+    propsName: string,
+    typeArgs: string[],
+    statesMap: NameValue[],
+    actionsMap: NameValue[]
+  ) {
+    let callExp: CallExpression
+    const identifier = viewVar.getChildAtIndex(2)
+    if (
+      identifier &&
+      identifier.getKind() === SyntaxKind.CallExpression &&
+      identifier.getText().startsWith('AppStore.withStore')
+    ) {
+      callExp = identifier.getFirstChildByKind(SyntaxKind.CallExpression)
+    }
+
+    const connectionArgs: string[] = ReduxUtils.resolveConnectionArgs(
+      callExp,
+      statesMap,
+      actionsMap,
+      typeArgs
+    )
+
+    const connectionArgsStr = `AppStore.withStore<${typeArgs.join(
+      ','
+    )}>(${connectionArgs.join(',')})`
+
+    if (callExp) {
+      callExp.replaceWithText(connectionArgsStr)
+    } else {
+      const arrowFn = viewVar.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
+      const arrowFnParams = arrowFn.getParameters()
+      if (!arrowFnParams.length) {
+        arrowFn.addParameter({
+          name: 'props',
+          type: propsName
+        })
+      } else if (arrowFnParams.length === 1) {
+        if (!arrowFnParams[0].getTypeNode()) {
+          arrowFnParams[0].setType(propsName)
+        }
+      }
+      viewVar.replaceWithText(
+        `${viewVar.getName()} = ${connectionArgsStr}(${arrowFn.getText()})`
+      )
+    }
+  }
+
   static setAppStoreDecorator(
     viewClass: ClassDeclaration,
     typeArgs: string[],
     statesMap: NameValue[],
     actionsMap: NameValue[]
   ) {
-    const dec = viewClass.getDecorator(d =>
+    const decorator = viewClass.getDecorator(d =>
       d.getFullName().startsWith('AppStore.withStoreClass')
     )
 
-    let stateInfo: StoreDecoratorArgInfo
-    let actionInfo: StoreDecoratorArgInfo
+    const connectionArgs: string[] = ReduxUtils.resolveConnectionArgs(
+      decorator,
+      statesMap,
+      actionsMap,
+      typeArgs
+    )
 
-    if (!dec) {
-      if (statesMap.length) {
-        stateInfo = {
-          name: 'state',
-          args: statesMap.map(a => ({
-            name: a.name,
-            value: a.value.replace('#state', 'state')
-          }))
-        }
-      }
-
-      if (actionsMap.length) {
-        actionInfo = {
-          name: 'dispatch',
-          args: actionsMap.map(a => ({
-            name: a.name,
-            value: a.value.replace('#dispatch', 'dispatch')
-          }))
-        }
-      }
-    } else {
-      const existingTypeArgs = dec.getTypeArguments().map(a => a.getText())
-      typeArgs =
-        existingTypeArgs.length >= typeArgs.length ? existingTypeArgs : typeArgs
-      const args = dec.getArguments()
-      if (args.length) {
-        stateInfo = this.mergeDecoratorArgs(args[0], statesMap, '#state')
-
-        if (args.length > 1) {
-          actionInfo = this.mergeDecoratorArgs(args[1], actionsMap, '#dispatch')
-        }
-      }
-      dec.remove()
+    if (decorator) {
+      decorator.remove()
     }
 
+    viewClass.addDecorator({
+      name: `AppStore.withStoreClass<${typeArgs.join(',')}>`,
+      arguments: connectionArgs
+    })
+  }
+
+  static resolveConnectionArgs(
+    dec: Decorator | CallExpression,
+    statesMap: NameValue[],
+    actionsMap: NameValue[],
+    typeArgs: string[]
+  ) {
+    let stateInfo: StoreDecoratorArgInfo
+    let actionInfo: StoreDecoratorArgInfo
+    if (!dec) {
+      ;({ stateInfo, actionInfo } = ReduxUtils.initConnection(
+        statesMap,
+        actionsMap
+      ))
+    } else {
+      ;({ typeArgs, stateInfo, actionInfo } = ReduxUtils.mergeConnectionArgs(
+        dec,
+        typeArgs,
+        statesMap,
+        actionsMap
+      ))
+    }
+    const decoratorArgs: string[] = ReduxUtils.buildConnectionArgs(
+      stateInfo,
+      actionInfo
+    )
+    return decoratorArgs
+  }
+
+  static mergeConnectionArgs(
+    dec: Decorator | CallExpression,
+    typeArgs: string[],
+    statesMap: NameValue[],
+    actionsMap: NameValue[]
+  ) {
+    let stateInfo: StoreDecoratorArgInfo
+    let actionInfo: StoreDecoratorArgInfo
+    const existingTypeArgs = dec.getTypeArguments().map(a => a.getText())
+    typeArgs =
+      existingTypeArgs.length >= typeArgs.length ? existingTypeArgs : typeArgs
+    const args = dec.getArguments()
+    if (args.length) {
+      stateInfo = this.mergeDecoratorArgs(args[0], statesMap, '#state')
+      if (args.length > 1) {
+        actionInfo = this.mergeDecoratorArgs(args[1], actionsMap, '#dispatch')
+      }
+    }
+    return { typeArgs, stateInfo, actionInfo }
+  }
+
+  static buildConnectionArgs(
+    stateInfo: StoreDecoratorArgInfo,
+    actionInfo: StoreDecoratorArgInfo
+  ) {
     const decoratorArgs: string[] = []
     if (stateInfo) {
       decoratorArgs.push(
@@ -322,7 +406,6 @@ export class ReduxUtils {
           .join(',')} })`
       )
     }
-
     if (actionInfo) {
       if (!decoratorArgs.length) {
         decoratorArgs.push('null')
@@ -333,11 +416,32 @@ export class ReduxUtils {
           .join(',')} })`
       )
     }
+    return decoratorArgs
+  }
 
-    viewClass.addDecorator({
-      name: `AppStore.withStoreClass<${typeArgs.join(',')}>`,
-      arguments: decoratorArgs
-    })
+  static initConnection(statesMap: NameValue[], actionsMap: NameValue[]) {
+    let stateInfo: StoreDecoratorArgInfo
+    let actionInfo: StoreDecoratorArgInfo
+
+    if (statesMap.length) {
+      stateInfo = {
+        name: 'state',
+        args: statesMap.map(a => ({
+          name: a.name,
+          value: a.value.replace('#state', 'state')
+        }))
+      }
+    }
+    if (actionsMap.length) {
+      actionInfo = {
+        name: 'dispatch',
+        args: actionsMap.map(a => ({
+          name: a.name,
+          value: a.value.replace('#dispatch', 'dispatch')
+        }))
+      }
+    }
+    return { stateInfo, actionInfo }
   }
 
   static getDecoratorInfo(node: Node): StoreDecoratorArgInfo {
