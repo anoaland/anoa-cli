@@ -1,6 +1,7 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
 import { ReducerActionTypesBuilder } from './builders/actionTypes'
+import { ReduxConnectBuilder } from './builders/connect'
 import { ReducerBuilder } from './builders/reducer'
 import { ReducerStateBuilder } from './builders/state'
 import { ReduxThunkBuilder } from './builders/thunk'
@@ -48,6 +49,11 @@ export class StoreService {
       case 'thunk':
         task = TaskEnum.addNewThunk
         break
+
+      case 'c':
+      case 'connect':
+        task = TaskEnum.connectToView
+        break
     }
 
     if (options && (options.h || options.help)) {
@@ -60,7 +66,8 @@ export class StoreService {
         TaskEnum.createReducer,
         TaskEnum.addNewReducerState,
         TaskEnum.addNewActionType,
-        TaskEnum.addNewThunk
+        TaskEnum.addNewThunk,
+        TaskEnum.connectToView
       ]
 
       const { pickTask } = await prompt.ask([
@@ -89,6 +96,10 @@ export class StoreService {
 
       case TaskEnum.addNewThunk:
         await new ReduxThunkBuilder(this.context).build()
+        break
+
+      case TaskEnum.connectToView:
+        await new ReduxConnectBuilder(this.context).build()
         break
 
       default:

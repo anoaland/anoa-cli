@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project from 'ts-morph'
+import { Project } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
 import { ReducerProps } from './qa'

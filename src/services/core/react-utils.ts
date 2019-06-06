@@ -6,11 +6,14 @@ import {
   FunctionDeclaration,
   InterfaceDeclaration,
   ParameterDeclaration,
+  Project,
   PropertySignatureStructure,
   SourceFile,
+  StructureKind,
   SyntaxKind,
   VariableStatement
 } from 'ts-morph'
+import { RootContext } from '../../libs'
 import { ViewTypeEnum } from '../views/enums'
 import { FieldObject } from './object-builder'
 
@@ -31,7 +34,7 @@ export class ReactUtils {
   ) {
     return clazz.insertConstructor(0, {
       parameters: [{ name: 'props', type: propsType }],
-      bodyText: 'super(props);'
+      statements: 'super(props);'
     })
   }
 
@@ -80,7 +83,8 @@ export class ReactUtils {
         name: p.name,
         type: p.type,
         optional: p.optional,
-        hasQuestionToken: p.optional
+        hasQuestionToken: p.optional,
+        kind: StructureKind.PropertySignature
       }
     })
 
@@ -255,7 +259,7 @@ export class ReactUtils {
 
     // ensure props is imported
     const viewFile = viewClass.getSourceFile()
-    this.addImportPropsDeclaration(viewFile, propsInterface)
+    this.addImportInterfaceDeclaration(viewFile, propsInterface)
   }
 
   static getReactExtends(viewClass: ClassDeclaration) {
@@ -287,7 +291,7 @@ export class ReactUtils {
 
     // ensure props is imported
     const viewFile = viewFunction.getSourceFile()
-    this.addImportPropsDeclaration(viewFile, propsInterface)
+    this.addImportInterfaceDeclaration(viewFile, propsInterface)
   }
 
   static addPropsReferenceToStatelessFunctionalView(
@@ -310,29 +314,126 @@ export class ReactUtils {
     this.addPropsReferenceToStatelessView(viewFunction, propsInterface)
   }
 
-  static addImportPropsDeclaration(
+  static addClassDecorator(
+    viewClass: ClassDeclaration,
+    name: string,
+    args: string[]
+  ) {
+    const existingDecorator = viewClass.getDecorator(name)
+    if (existingDecorator) {
+      // replace arguments
+      const existingArgs = existingDecorator.getArguments()
+      for (const arg of existingArgs) {
+        existingDecorator.removeArgument(arg)
+      }
+      existingDecorator.addArguments(args)
+    } else {
+      // add new decorator
+      viewClass.addDecorator({
+        name,
+        arguments: args
+      })
+    }
+  }
+
+  /**
+   * Add interface import declaration if not exists.
+   * @param viewFile view source file
+   * @param intrfc interface declaration
+   */
+  static addImportInterfaceDeclaration(
     viewFile: SourceFile,
-    propsInterface: InterfaceDeclaration
+    intrfc: InterfaceDeclaration
+  ) {
+    const modulePath = intrfc.getSourceFile().getFilePath()
+    const namedImport = intrfc.getName()
+
+    ReactUtils.addNamedImport(viewFile, modulePath, namedImport)
+  }
+
+  /**
+   * Add named import if not exists.
+   * @param viewFile view source file
+   * @param modulePath module path
+   * @param namedImport named import
+   */
+  static addNamedImport(
+    viewFile: SourceFile,
+    modulePath: string,
+    namedImport: string
   ) {
     const moduleSpecifier = this.fixImportPath(
-      path.relative(
-        viewFile.getFilePath(),
-        propsInterface.getSourceFile().getFilePath()
-      )
+      path.relative(path.dirname(viewFile.getFilePath()), modulePath)
     )
-
-    viewFile.addImportDeclaration({
-      namedImports: [propsInterface.getName()],
-      moduleSpecifier
-    })
+    const existingImport = viewFile
+      .getImportDeclarations()
+      .find(i => i.getModuleSpecifierValue() === moduleSpecifier)
+    if (existingImport) {
+      if (
+        !existingImport.getNamedImports().find(n => n.getText() === namedImport)
+      ) {
+        existingImport.addNamedImport(namedImport)
+      }
+    } else {
+      viewFile.addImportDeclaration({
+        namedImports: [namedImport],
+        moduleSpecifier
+      })
+    }
   }
 
   static fixImportPath(modulePath: string) {
-    if (modulePath.startsWith('..')) {
-      modulePath = modulePath.replace('..', '.')
+    if (!modulePath.startsWith('.')) {
+      modulePath = './' + modulePath
     }
 
     return modulePath.replace(/\\/g, '/').replace(/\.ts|.tsx/g, '')
+  }
+
+  static getNamedImport(sourceFile: SourceFile, match: any) {
+    const actionImport = sourceFile.getImportDeclaration(
+      i =>
+        !!i
+          .getModuleSpecifier()
+          .getText()
+          .match(match)
+    )
+
+    return actionImport.getNamedImports()[0].getText()
+  }
+
+  static getSourceFileInSameFolder(
+    context: RootContext,
+    project: Project,
+    folder: string,
+    fileName: string
+  ): SourceFile | undefined {
+    const {
+      filesystem: { exists }
+    } = context
+    const actionTypesPath = path.join(folder, fileName)
+    if (!exists(actionTypesPath)) {
+      return undefined
+    }
+
+    return project.addExistingSourceFile(actionTypesPath)
+  }
+
+  static getOrAddInterface(
+    sourceFile: SourceFile,
+    interfaceName: string,
+    isExported: boolean = true
+  ) {
+    return (
+      sourceFile.getInterface(interfaceName) ||
+      sourceFile.addInterface({ name: interfaceName, isExported })
+    )
+  }
+
+  static extendsInterface(intrfc: InterfaceDeclaration, extendsTo: string) {
+    if (!intrfc.getExtends().find(e => e.getText() === extendsTo)) {
+      intrfc.addExtends(extendsTo)
+    }
   }
 }
 

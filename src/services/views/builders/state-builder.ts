@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { InterfaceDeclaration } from 'ts-morph'
+import { InterfaceDeclaration, Project } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
 import { ProjectBrowser } from '../../core/project-browser'

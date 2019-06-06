@@ -1,6 +1,7 @@
 import * as path from 'path'
-import Project, {
+import {
   InterfaceDeclaration,
+  Project,
   SourceFile,
   TypeAliasDeclaration
 } from 'ts-morph'

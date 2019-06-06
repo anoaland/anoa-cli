@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { VariableDeclarationKind } from 'ts-morph'
+import { Project, VariableDeclarationKind } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { Source, Utils } from '../../core'
 import { ViewKindEnum } from '../enums'

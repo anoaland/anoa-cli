@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { InterfaceDeclaration } from 'ts-morph'
+import { InterfaceDeclaration, Project } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
 import { ProjectBrowser } from '../../core/project-browser'
@@ -33,24 +33,13 @@ export class PropsBuilder {
    */
   async selectView() {
     const {
-      folder,
       strings: { lowerCase },
       filesystem: { exists, cwd },
       print
     } = this.context
 
-    this.kind = await this.projectBrowser.selectViewKind()
-
-    // now select the view
-    const rootDir =
-      this.kind === ViewKindEnum.component
-        ? folder.components()
-        : folder.screens()
-
-    const selectedView = await this.projectBrowser.browseViews(
-      `Select a ${lowerCase(this.kind)}`,
-      rootDir
-    )
+    const selectedView = await this.projectBrowser.browseViews()
+    this.kind = selectedView.kind
 
     const project = new Project()
     const viewFile = project.addExistingSourceFile(selectedView.path)

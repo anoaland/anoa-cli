@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { InterfaceDeclaration, SourceFile } from 'ts-morph'
+import { InterfaceDeclaration, Project, SourceFile } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { FieldObject, ObjectBuilder, Source, Utils } from '../../core'
 import { ReactUtils } from '../../core/react-utils'

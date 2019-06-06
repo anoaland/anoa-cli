@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { SyntaxKind, VariableDeclarationKind } from 'ts-morph'
+import { Project, SyntaxKind, VariableDeclarationKind } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Npm, Source } from '../../../core'
 import { ReducerQA } from './qa'

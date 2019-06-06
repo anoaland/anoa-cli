@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { SourceFile } from 'ts-morph'
+import { Project, SourceFile } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
 import { ReduxThunkQA } from './qa'
@@ -52,7 +52,7 @@ export class ReduxThunkBuilder {
             ]
           : undefined,
       returnType: 'AppThunkAction',
-      bodyText: `return async dispatch => {        
+      statements: `return async dispatch => {        
             ${dispatch}
           }`,
       isExported: true

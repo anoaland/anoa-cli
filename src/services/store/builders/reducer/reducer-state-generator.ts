@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { PropertySignatureStructure } from 'ts-morph'
+import { Project, PropertySignatureStructure, StructureKind } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
 import { ReducerProps } from './qa'
@@ -31,7 +31,8 @@ export class ReducerStateGenerator {
       properties: stateFields.map<PropertySignatureStructure>(s => ({
         name: s.name,
         type: s.type,
-        hasQuestionToken: s.optional
+        hasQuestionToken: s.optional,
+        kind: StructureKind.PropertySignature
       }))
     })
 

@@ -1,7 +1,9 @@
 import * as path from 'path'
-import Project, {
+import {
+  Project,
   PropertyAssignmentStructure,
   PropertySignatureStructure,
+  StructureKind,
   SyntaxKind
 } from 'ts-morph'
 import { RootContext } from '../../../../libs'
@@ -45,7 +47,8 @@ export class ReducerStateBuilder {
       newFields.map<PropertySignatureStructure>(f => ({
         name: f.name,
         hasQuestionToken: f.optional,
-        type: f.type
+        type: f.type,
+        kind: StructureKind.PropertySignature
       }))
     )
 
@@ -62,7 +65,8 @@ export class ReducerStateBuilder {
       stateInitializer.addPropertyAssignments(
         initializerFields.map<PropertyAssignmentStructure>(f => ({
           name: f.name,
-          initializer: f.initial
+          initializer: f.initial,
+          kind: StructureKind.PropertyAssignment
         }))
       )
     }

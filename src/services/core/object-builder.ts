@@ -353,10 +353,10 @@ export class ObjectBuilder {
   }
 }
 
-export interface FieldObject {
+export interface FieldObject<T = any> {
   name: string
   type: string
   optional: boolean
   initial?: string
-  data?: any
+  data?: T
 }

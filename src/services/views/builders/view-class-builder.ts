@@ -125,7 +125,7 @@ export class ViewClassBuilder {
             type: hasProps ? props.name : 'any'
           }
         ],
-        bodyText: `super(props); ${
+        statements: `super(props); ${
           hasState ? ReactUtils.buildStateInitializerBodyText(state.fields) : ''
         }`
       })
@@ -133,7 +133,7 @@ export class ViewClassBuilder {
 
     mainClass.addMethod({
       name: 'render',
-      bodyText: `return <View><Text>${this.name}</Text></View>`
+      statements: `return <View><Text>${this.name}</Text></View>`
     })
 
     await this.source.prettifySoureFile(mainFile)

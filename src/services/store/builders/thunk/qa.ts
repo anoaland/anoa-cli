@@ -1,11 +1,8 @@
 import * as path from 'path'
-import Project from 'ts-morph'
+import { Project } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Utils } from '../../../core'
-import {
-  BrowseReducerInfo,
-  ProjectBrowser
-} from '../../../core/project-browser'
+import { NamePathInfo, ProjectBrowser } from '../../../core/project-browser'
 import { ActionTypeInfo, ReduxUtils } from '../../../core/redux-utils'
 
 export class ReduxThunkQA {
@@ -126,7 +123,7 @@ export class ReduxThunkQA {
     this.actionType = actionTypes[actionTypeKey]
   }
 
-  private async getActionTypeChoices(reducer: BrowseReducerInfo) {
+  private async getActionTypeChoices(reducer: NamePathInfo) {
     const { actionTypeChoices } = ReduxUtils.resolveActionTypes(
       this.context,
       this.project,

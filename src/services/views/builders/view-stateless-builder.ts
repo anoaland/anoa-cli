@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project from 'ts-morph'
+import { Project } from 'ts-morph'
 import { RootContext } from '../../../libs'
 import { Source, Utils } from '../../core'
 import { ViewKindEnum } from '../enums'
@@ -89,7 +89,7 @@ export class ViewStatelessBuilder {
           ]
         : undefined,
       isExported: true,
-      bodyText: `return <View><Text>${this.name}</Text></View>`
+      statements: `return <View><Text>${this.name}</Text></View>`
     })
 
     await this.source.prettifySoureFile(mainFile)

@@ -1,4 +1,4 @@
-import Project, { SourceFile, TypeAliasDeclaration } from 'ts-morph'
+import { Project, SourceFile, TypeAliasDeclaration } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { FieldObject, ObjectBuilder, Utils } from '../../../core'
 import { ProjectBrowser } from '../../../core/project-browser'

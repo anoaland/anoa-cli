@@ -1,13 +1,17 @@
+import * as _ from 'lodash'
 import * as path from 'path'
-import Project, { SourceFile, SyntaxKind } from 'ts-morph'
+import { Project, SourceFile, SyntaxKind } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { ViewKindEnum } from '../views/enums'
+import { FieldObject } from './object-builder'
 import { ReactComponentInfo, ReactUtils } from './react-utils'
+import { ReduxUtils, ThunkInfo } from './redux-utils'
 import { Utils } from './utils'
 
 export class ProjectBrowser {
   context: RootContext
   utils: Utils
+  reducerList: NamePathInfo[]
 
   constructor(context: RootContext) {
     this.context = context
@@ -33,12 +37,26 @@ export class ProjectBrowser {
     return kind as any
   }
 
-  async browseViews(message: string, baseDir: string, dir: string = '/') {
+  async browseViews(
+    selectKindMessage: string = '',
+    selectViewMessage: string = '',
+    dir: string = '/'
+  ): Promise<BrowseViewInfo> {
     const {
       prompt,
       print,
-      strings: { padEnd }
+      strings: { padEnd, isBlank },
+      folder
     } = this.context
+
+    const kind = await this.selectViewKind(selectKindMessage)
+    const baseDir =
+      kind === ViewKindEnum.component ? folder.components() : folder.screens()
+
+    if (isBlank(selectViewMessage)) {
+      selectViewMessage = `Select a ${kind}`
+    }
+
     const files = this.browseReactFiles(baseDir, dir)
       .map(f => ({
         path: f.getFilePath(),
@@ -69,13 +87,14 @@ export class ProjectBrowser {
         return {
           path: f.path,
           sourceFile: f.sourceFile,
-          info
+          info,
+          kind
         }
       })
       .filter(f => !!f.info)
       .map(f => ({
         ...f,
-        key: `${padEnd(f.info.name, 25)} ${print.colors.yellow(
+        key: `  ${padEnd(f.info.name, 25)} ${print.colors.yellow(
           `[${this.getPath(baseDir, f.sourceFile)}]`
         )}`
       }))
@@ -85,7 +104,7 @@ export class ProjectBrowser {
       {
         name: 'selectedReactClass',
         type: 'autocomplete',
-        message,
+        message: selectViewMessage,
         choices: files.map(f => ({ name: f.key, indicator: '> ' })),
         validate(val) {
           if (!val) {
@@ -163,57 +182,28 @@ export class ProjectBrowser {
 
   async browseReducers(
     validate?: (
-      value: BrowseReducerInfo,
-      values: { [key: string]: BrowseReducerInfo }
+      value: NamePathInfo,
+      values: { [key: string]: NamePathInfo }
     ) => Promise<boolean | string>
-  ): Promise<BrowseReducerInfo> {
+  ): Promise<NamePathInfo> {
     const {
       folder,
-      prompt,
       print: { colors },
-      strings: { padEnd }
+      strings: { padEnd },
+      prompt
     } = this.context
-    const project = new Project()
-    const files = project.addExistingSourceFiles(
-      path.join(folder.reducers('*/index.ts'))
-    )
 
-    const choices = files
-      .map(f => {
-        const variables = f.getVariableStatements().filter(v => {
-          const typeRef = v.getFirstDescendantByKind(SyntaxKind.TypeReference)
-          return (
-            typeRef &&
-            typeRef.getText().startsWith('Reducer<') &&
-            v.isExported()
-          )
-        })
+    const baseDir = folder.reducers()
 
-        if (!variables || !variables.length) {
-          return false
-        }
-
-        const name = variables[0]
-          .getFirstDescendantByKind(SyntaxKind.Identifier)
-          .getText()
-        const baseDir = folder.reducers()
-
-        return {
-          key: `${padEnd(name, 25)} ${colors.yellow(
-            `[${this.getPath(baseDir, f)}]`
-          )}`,
-          name,
-          path: f.getFilePath(),
-          sourceFile: f
-        }
-      })
-      // .filter(f => !!f)
-      .reduce((acc, curr) => {
-        if (curr) {
-          acc[curr.key] = curr
-        }
-        return acc
-      }, {})
+    const choices = this.getReducerList().reduce((acc, curr) => {
+      if (curr) {
+        const key = `${padEnd(curr.name, 25)} ${colors.yellow(
+          `[${this.getPath(baseDir, curr.sourceFile)}]`
+        )}`
+        acc[key] = curr
+      }
+      return acc
+    }, {})
 
     // @ts-ignore
     const { selectedReducer } = await prompt.ask([
@@ -242,6 +232,263 @@ export class ProjectBrowser {
     ])
 
     return choices[selectedReducer]
+  }
+
+  async browseReducerStates(): Promise<Array<FieldObject<NamePathInfo>>> {
+    const reducers = this.getReducerList()
+    const project = new Project()
+    const choices = []
+    let allActChoices: { [key: string]: FieldObject<NamePathInfo> } = {}
+    reducers.map(r => {
+      const { stateChoices, state, reducer } = ReduxUtils.resolveStates(
+        this.context,
+        project,
+        r,
+        false
+      )
+
+      const actChoices = stateChoices()
+      const actTypes = Object.keys(actChoices)
+      if (actTypes.length) {
+        for (const k of actTypes) {
+          actChoices[k].data = reducer
+        }
+
+        choices.push({
+          name: state.name,
+          choices: actTypes
+        })
+        allActChoices = { ...allActChoices, ...actChoices }
+      }
+    })
+
+    const {
+      prompt,
+      print: { colors }
+    } = this.context
+
+    const { states } = await prompt.ask([
+      {
+        name: 'states',
+        type: 'autocomplete',
+        message: 'Select state(s) you want to map:',
+        choices,
+        multiple: true,
+
+        format(vals) {
+          if (!vals || !vals.map) {
+            return vals
+          }
+
+          const data = vals
+            .map(v => {
+              const ch = allActChoices[v]
+              if (ch) {
+                return {
+                  state: ch.data.name,
+                  field: v
+                }
+              }
+
+              return false
+            })
+            .filter(v => !!v)
+
+          if (!data.length) {
+            return colors.magenta('No state were selected.')
+          }
+
+          return (
+            '\r\n' +
+            _(data)
+              .groupBy(x => x.state)
+              .map((value, key) => {
+                return (
+                  '  ' +
+                  key +
+                  ':\r\n' +
+                  value.map(v => '    ' + v.field).join('\r\n')
+                )
+              })
+              .value()
+              .join('\r\n')
+          )
+        },
+
+        result(vals) {
+          if (!vals || !vals.map) {
+            return []
+          }
+
+          return vals.map(s => allActChoices[s]).filter(s => !!s)
+        }
+      }
+    ])
+
+    return states as any
+  }
+
+  async browseReducerActionTypes() {
+    const reducers = this.getReducerList()
+    const project = new Project()
+    const choices = []
+    let allActChoices = {}
+    reducers.map(r => {
+      const { actionTypeChoices } = ReduxUtils.resolveActionTypes(
+        this.context,
+        project,
+        r,
+        false
+      )
+
+      const actChoices = actionTypeChoices()
+      const actTypes = Object.keys(actChoices)
+      if (actTypes.length) {
+        choices.push({
+          name: r.name,
+          choices: actTypes
+        })
+        allActChoices = { ...allActChoices, ...actChoices }
+      }
+    })
+
+    const { prompt } = this.context
+
+    const { actionTypes } = await prompt.ask([
+      {
+        name: 'actionTypes',
+        type: 'multiselect',
+        message: 'Select action type(s) you want to map:',
+        choices,
+
+        format(vals) {
+          if (!vals) {
+            return vals
+          }
+
+          return '\r\n' + vals.map(v => '  ' + v).join('\r\n')
+        },
+
+        result(vals) {
+          if (!vals) {
+            return []
+          }
+
+          return vals.map(s => allActChoices[s])
+        }
+      }
+    ])
+
+    return actionTypes
+  }
+
+  async browseReduxThunks(): Promise<ThunkInfo[]> {
+    const {
+      filesystem: { cwd },
+      folder,
+      prompt,
+      print: { colors }
+    } = this.context
+
+    const project = new Project()
+    const files = project.addExistingSourceFiles(
+      path.join(cwd(), folder.thunks('*.ts'))
+    )
+
+    let allThunks = {}
+    const choices = []
+    for (const f of files) {
+      const thunks = ReduxUtils.getThunksFromSourceFile(f)
+      const thunkChoices = thunks
+        .map(t => ({
+          key: `${colors.yellow(t.name)}(${t.parameters.map(
+            p => `${p.name}: ${p.type}`
+          )}): ${colors.blue(t.returnType)}`,
+          value: t
+        }))
+        .reduce((acc, curr) => {
+          acc[curr.key] = curr.value
+          return acc
+        }, {})
+
+      allThunks = { ...allThunks, ...thunkChoices }
+
+      choices.push({
+        name: f.getBaseName(),
+        choices: Object.keys(thunkChoices)
+      })
+    }
+
+    const { selectedThunks } = await prompt.ask({
+      name: 'selectedThunks',
+      type: 'autocomplete',
+      message: 'Select thunk(s) you want to map:',
+      choices,
+      multiple: true,
+      format(vals) {
+        if (!vals || !vals.map) {
+          return vals
+        }
+        if (!vals.length) {
+          return colors.magenta('No thunk were selected.')
+        }
+
+        return '\r\n' + vals.map(v => `  ${v}`).join('\r\n')
+      },
+      result(vals) {
+        if (!vals || !vals.map) {
+          return vals
+        }
+
+        return vals
+          .map(v => {
+            return allThunks[v] || false
+          })
+          .filter(v => !!v)
+      }
+    })
+
+    return selectedThunks as any
+  }
+
+  getReducerList() {
+    if (this.reducerList) {
+      return this.reducerList
+    }
+
+    const { folder } = this.context
+
+    const project = new Project()
+    const files = project.addExistingSourceFiles(
+      path.join(folder.reducers('*/index.ts'))
+    )
+
+    this.reducerList = files
+      .map<NamePathInfo | false>(f => {
+        const variables = f.getVariableStatements().filter(v => {
+          const typeRef = v.getFirstDescendantByKind(SyntaxKind.TypeReference)
+          return (
+            typeRef &&
+            typeRef.getText().startsWith('Reducer<') &&
+            v.isExported()
+          )
+        })
+        if (!variables || !variables.length) {
+          return false
+        }
+        const name = variables[0]
+          .getFirstDescendantByKind(SyntaxKind.Identifier)
+          .getText()
+
+        return {
+          name,
+          path: f.getFilePath(),
+          sourceFile: f
+        }
+      })
+      .filter(r => r !== false) as NamePathInfo[]
+
+    return this.reducerList
   }
 
   async browseInterfaces(sourceFile: SourceFile, msg: string) {
@@ -305,8 +552,25 @@ export class ProjectBrowser {
   }
 }
 
-export interface BrowseReducerInfo {
+export interface NamePathInfo {
+  /**
+   * Name of class / interface
+   */
   name: string
+  /**
+   * path of file
+   */
+  path: string
+  /**
+   * source file
+   */
+  sourceFile: SourceFile
+}
+
+export interface BrowseViewInfo {
+  key: string
   path: string
   sourceFile: SourceFile
+  info: ReactComponentInfo
+  kind: ViewKindEnum
 }

@@ -1,5 +1,5 @@
 import * as path from 'path'
-import Project, { VariableDeclarationKind } from 'ts-morph'
+import { Project, VariableDeclarationKind } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
 import { ReducerProps } from './qa'
@@ -57,7 +57,7 @@ export class ReducerGenerator {
     let body = stateActionTypes
       .map(
         a => `case '${a.name}':
-        return { ...state, ${a.data.name}: action.payload}`
+        return { ...state, ${a.data.name}: action.payload }`
       )
       .join('\r\n')
 

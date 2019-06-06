@@ -90,6 +90,12 @@ export function naming({
     props: (name: string) => {
       return pascalCase(trim(name)) + 'Props'
     },
+    stateProps: (name: string) => {
+      return pascalCase(trim(name)) + 'StateProps'
+    },
+    actionProps: (name: string) => {
+      return pascalCase(trim(name)) + 'ActionProps'
+    },
     store: (name: string = '') => {
       const baseName = pascalCase(trim(name))
       return {
