@@ -180,6 +180,17 @@ export class ReduxConnectBuilder {
         ReactUtils.addPropsReferenceToClassView(viewClass, propsInterface)
         break
 
+      case ViewTypeEnum.stateless:
+        ReduxUtils.setAppStoreHocToFunction(
+          viewFile,
+          view.info,
+          propsName,
+          typeArgs,
+          statesMap,
+          actionsMap
+        )
+        break
+
       case ViewTypeEnum.statelessFunctional:
         const viewVar = viewFile.getVariableDeclaration(view.info.name)
         ReduxUtils.setAppStoreHoc(

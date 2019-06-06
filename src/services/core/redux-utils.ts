@@ -1,19 +1,22 @@
 import * as path from 'path'
 import {
+  ArrowFunction,
   CallExpression,
   ClassDeclaration,
   Decorator,
+  FunctionDeclaration,
   Node,
   Project,
   SourceFile,
   SyntaxKind,
   TypeAliasDeclaration,
-  VariableDeclaration
+  VariableDeclaration,
+  VariableDeclarationKind
 } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { FieldObject } from './object-builder'
 import { NamePathInfo } from './project-browser'
-import { ReactUtils } from './react-utils'
+import { ReactComponentInfo, ReactUtils } from './react-utils'
 
 export class ReduxUtils {
   /***
@@ -269,6 +272,40 @@ export class ReduxUtils {
       }, {})
   }
 
+  static setAppStoreHocToFunction(
+    viewFile: SourceFile,
+    info: ReactComponentInfo,
+    propsName: string,
+    typeArgs: string[],
+    statesMap: NameValue[],
+    actionsMap: NameValue[]
+  ) {
+    let viewVar: VariableDeclaration = viewFile.getVariableDeclaration(
+      info.name
+    )
+    if (!viewVar) {
+      const viewFunction = viewFile.getFunction(info.name)
+      const newFnName = '_' + info.name
+      viewFunction.rename(newFnName)
+      viewFunction.setIsExported(false)
+      this.setFunctionPropsParams(viewFunction, propsName)
+      viewVar = viewFile
+        .addVariableStatement({
+          declarations: [
+            {
+              name: info.name,
+              initializer: newFnName
+            }
+          ],
+          declarationKind: VariableDeclarationKind.Const,
+          isExported: true
+        })
+        .getDeclarations()[0]
+    }
+
+    this.setAppStoreHoc(viewVar, propsName, typeArgs, statesMap, actionsMap)
+  }
+
   static setAppStoreHoc(
     viewVar: VariableDeclaration,
     propsName: string,
@@ -300,21 +337,30 @@ export class ReduxUtils {
     if (callExp) {
       callExp.replaceWithText(connectionArgsStr)
     } else {
-      const arrowFn = viewVar.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
-      const arrowFnParams = arrowFn.getParameters()
-      if (!arrowFnParams.length) {
-        arrowFn.addParameter({
-          name: 'props',
-          type: propsName
-        })
-      } else if (arrowFnParams.length === 1) {
-        if (!arrowFnParams[0].getTypeNode()) {
-          arrowFnParams[0].setType(propsName)
-        }
+      const arrowFn = viewVar.getInitializer() as ArrowFunction // viewVar.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
+      if (arrowFn.getParameters) {
+        ReduxUtils.setFunctionPropsParams(arrowFn, propsName)
       }
       viewVar.replaceWithText(
         `${viewVar.getName()} = ${connectionArgsStr}(${arrowFn.getText()})`
       )
+    }
+  }
+
+  static setFunctionPropsParams(
+    fn: ArrowFunction | FunctionDeclaration,
+    propsName: string
+  ) {
+    const arrowFnParams = fn.getParameters()
+    if (!arrowFnParams.length) {
+      fn.addParameter({
+        name: 'props',
+        type: propsName
+      })
+    } else if (arrowFnParams.length === 1) {
+      if (!arrowFnParams[0].getTypeNode()) {
+        arrowFnParams[0].setType(propsName)
+      }
     }
   }
 
