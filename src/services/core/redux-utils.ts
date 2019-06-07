@@ -323,12 +323,13 @@ export class ReduxUtils {
       callExp = identifier.getFirstChildByKind(SyntaxKind.CallExpression)
     }
 
-    const connectionArgs: string[] = ReduxUtils.resolveConnectionArgs(
+    let connectionArgs: string[]
+    ;({ connectionArgs, typeArgs } = ReduxUtils.resolveConnectionArgs(
       callExp,
       statesMap,
       actionsMap,
       typeArgs
-    )
+    ))
 
     const connectionArgsStr = `AppStore.withStore<${typeArgs.join(
       ','
@@ -374,12 +375,13 @@ export class ReduxUtils {
       d.getFullName().startsWith('AppStore.withStoreClass')
     )
 
-    const connectionArgs: string[] = ReduxUtils.resolveConnectionArgs(
+    let connectionArgs: string[]
+    ;({ connectionArgs, typeArgs } = ReduxUtils.resolveConnectionArgs(
       decorator,
       statesMap,
       actionsMap,
       typeArgs
-    )
+    ))
 
     if (decorator) {
       decorator.remove()
@@ -412,11 +414,11 @@ export class ReduxUtils {
         actionsMap
       ))
     }
-    const decoratorArgs: string[] = ReduxUtils.buildConnectionArgs(
+    const connectionArgs: string[] = ReduxUtils.buildConnectionArgs(
       stateInfo,
       actionInfo
     )
-    return decoratorArgs
+    return { connectionArgs, typeArgs }
   }
 
   static mergeConnectionArgs(
