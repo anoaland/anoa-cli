@@ -1,6 +1,7 @@
 import * as path from 'path'
 import {
   ArrowFunction,
+  CallExpression,
   ClassDeclaration,
   ConstructorDeclaration,
   FunctionDeclaration,
@@ -144,14 +145,19 @@ export class ReactUtils {
     })
   }
 
-  static getReactClassInfo(clazz: ClassDeclaration): ReactComponentInfo {
-    const reactExtends = clazz.getExtends()
-    const matches = reactExtends.getText().match(/React.Component|Component/g)
-    if (!matches || !matches.length) {
+  static getReactClassInfo(sourceFile: SourceFile): ReactComponentInfo {
+    let reactExtends
+    const clazz: ClassDeclaration = sourceFile.getClasses().find(c => {
+      reactExtends = c.getExtends()
+      const matches = reactExtends.getText().match(/React.Component|Component/g)
+      return matches && matches.length
+    })
+
+    if (!clazz) {
       return undefined
     }
 
-    const args = reactExtends.getNodeProperty('typeArguments')
+    const args = reactExtends.getTypeArguments()
     let props: string | undefined
     let state: string | undefined
 
@@ -173,43 +179,62 @@ export class ReactUtils {
     }
   }
 
-  static getReactFunctionInfo(func: FunctionDeclaration): ReactComponentInfo {
-    if (!func.isExported()) {
+  static getReactFunctionInfo(sourceFile: SourceFile): ReactComponentInfo {
+    let func = sourceFile.getFunctions().find(f => f.isExported())
+    if (func) {
+      return {
+        name: func.getName(),
+        type: ViewTypeEnum.stateless,
+        props: this.getPropsTypeFromParams(func.getParameters())
+      }
+    }
+
+    let fnRealName: string
+    const varStmt = sourceFile.getVariableDeclarations().find(v => {
+      if (!v.isExported()) {
+        return false
+      }
+
+      const initializer = v.getInitializer() as CallExpression
+
+      if (!initializer || !initializer.getArguments) {
+        return false
+      }
+
+      const args = initializer.getArguments()
+      if (!args.length) {
+        return false
+      }
+
+      fnRealName = args[0].getText()
+      return true
+    })
+
+    if (!varStmt) {
+      return undefined
+    }
+
+    func = sourceFile.getFunction(fnRealName)
+    if (!func) {
       return undefined
     }
 
     return {
-      name: func.getName(),
+      name: varStmt.getName(),
       type: ViewTypeEnum.stateless,
       props: this.getPropsTypeFromParams(func.getParameters())
     }
   }
 
-  static getReactArrowFunctionInfo(vs: VariableStatement): ReactComponentInfo {
-    const declarations = vs.getNodeProperty('declarationList')
-    if (!declarations) {
-      return undefined
-    }
-
-    if (!vs.isExported()) {
-      return undefined
-    }
-
-    const declaration = declarations.getFirstDescendantByKind(
-      SyntaxKind.VariableDeclaration
-    )
-
-    if (!declaration) {
-      return undefined
-    }
-
-    const arrowFn = declaration.getFirstDescendantByKind(
-      SyntaxKind.ArrowFunction
-    )
-
-    if (!arrowFn) {
-      return undefined
-    }
+  static getReactArrowFunctionInfo(sourceFile: SourceFile): ReactComponentInfo {
+    let arrowFn: ArrowFunction
+    const declaration = sourceFile.getVariableDeclarations().find(v => {
+      if (!v.isExported()) {
+        return false
+      }
+      arrowFn = v.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
+      return !!arrowFn
+    })
 
     return {
       name: declaration.getName(),

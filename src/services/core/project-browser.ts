@@ -58,35 +58,21 @@ export class ProjectBrowser {
     }
 
     const files = this.browseReactFiles(baseDir, dir)
-      .map(f => ({
-        path: f.getFilePath(),
-        classes: f.getClasses(),
-        functions: f.getFunctions(),
-        variables: f.getVariableStatements(),
-        sourceFile: f
-      }))
       .map(f => {
         let info: ReactComponentInfo
-        const classes = f.classes.map(c => ReactUtils.getReactClassInfo(c))
-        info = classes.length ? classes[0] : undefined
+        info = ReactUtils.getReactClassInfo(f)
 
         if (!info) {
-          const functions = f.functions.map(fn =>
-            ReactUtils.getReactFunctionInfo(fn)
-          )
-          info = functions.length ? functions[0] : undefined
+          info = ReactUtils.getReactFunctionInfo(f)
         }
 
         if (!info) {
-          const arrowFunctions = f.variables.map(v =>
-            ReactUtils.getReactArrowFunctionInfo(v)
-          )
-          info = arrowFunctions.length ? arrowFunctions[0] : undefined
+          info = ReactUtils.getReactArrowFunctionInfo(f)
         }
 
         return {
-          path: f.path,
-          sourceFile: f.sourceFile,
+          path: f.getFilePath(),
+          sourceFile: f,
           info,
           kind
         }
@@ -141,8 +127,7 @@ export class ProjectBrowser {
         sourceFile: f
       }))
       .map(f => {
-        const classes = f.classes.map(c => ReactUtils.getReactClassInfo(c))
-        const info = classes.length ? classes[0] : undefined
+        const info = ReactUtils.getReactClassInfo(f.sourceFile)
         return {
           path: f.path,
           sourceFile: f.sourceFile,
