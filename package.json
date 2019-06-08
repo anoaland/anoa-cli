@@ -25,7 +25,6 @@
     "test:boilerplate:react-native-init": "jest tests/integration/boilerplate/react-native-init",
     "test:generators": "jest tests/integration/generators",
     "test:version": "jest tests/integration/version",
-    "test:reducer": "jest tests/integration/generators/views",
     "test:all": "jest tests",
     "format": "prettier --write **/*.{js,ts,tsx,json}",
     "build": "rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
