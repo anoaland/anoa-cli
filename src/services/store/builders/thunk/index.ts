@@ -1,5 +1,10 @@
 import * as path from 'path'
-import { Project, SourceFile } from 'ts-morph'
+import {
+  OptionalKind,
+  ParameterDeclarationStructure,
+  Project,
+  SourceFile
+} from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
 import { ReduxThunkQA } from './qa'
@@ -28,13 +33,13 @@ export class ReduxThunkBuilder {
     const {
       filesystem: { exists }
     } = this.context
-    const { filePath, name, actionType } = this.qa
+    const { filePath, name, actionType, returnPromise } = this.qa
 
     const dispatch = actionType
       ? `dispatch({ type: ${actionType.type} ${
           actionType.payload ? ', payload' : ''
         } })`
-      : ''
+      : `throw new Error('not implemented')`
 
     const sourceFile = exists(filePath)
       ? this.project.addExistingSourceFile(filePath)
@@ -42,17 +47,9 @@ export class ReduxThunkBuilder {
 
     sourceFile.addFunction({
       name,
-      parameters:
-        actionType && actionType.payload
-          ? [
-              {
-                name: 'payload',
-                type: actionType.payload
-              }
-            ]
-          : undefined,
-      returnType: 'AppThunkAction',
-      statements: `return async dispatch => {        
+      parameters: this.resolveParameters(),
+      returnType: this.resolveReturnType(),
+      statements: `return ${returnPromise ? 'async ' : ''}dispatch => {
             ${dispatch}
           }`,
       isExported: true
@@ -88,5 +85,43 @@ export class ReduxThunkBuilder {
     spinner.succeed(
       `New thunk were successfully generated on ${colors.bold(targetFile)}`
     )
+  }
+
+  private resolveReturnType(): string {
+    const { returnType, returnPromise } = this.qa
+    if (returnPromise) {
+      return `AppThunkAction<Promise<${returnType || 'void'}>>`
+    }
+
+    if (returnType) {
+      return `AppThunkAction<${returnType}>`
+    }
+
+    return 'AppThunkAction'
+  }
+
+  private resolveParameters(): Array<
+    OptionalKind<ParameterDeclarationStructure>
+  > {
+    const { actionType, parameters } = this.qa
+    if (actionType && actionType.payload) {
+      return [
+        {
+          name: 'payload',
+          type: actionType.payload
+        }
+      ]
+    }
+
+    if (parameters && parameters.length) {
+      return parameters.map<OptionalKind<ParameterDeclarationStructure>>(p => ({
+        name: p.name,
+        type: p.type,
+        hasQuestionToken: p.optional,
+        initializer: p.initial
+      }))
+    }
+
+    return []
   }
 }

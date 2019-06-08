@@ -282,7 +282,10 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 
         // Select an action type
         DOWN,
-        ENTER
+        ENTER,
+
+        // Should returns Promise? / YES
+        'y'
       ]
     )
 
@@ -303,7 +306,9 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
     expect(thunkFile.getText()).toEqual(
       `import { AppThunkAction } from '..'
 
-export function setStateTwoAction(payload: number): AppThunkAction {
+export function setStateTwoAction(
+  payload: number
+): AppThunkAction<Promise<void>> {
   return async dispatch => {
     dispatch({ type: 'TASK/SET_STATE_2', payload })
   }

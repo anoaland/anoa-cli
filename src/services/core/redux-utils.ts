@@ -222,14 +222,10 @@ export class ReduxUtils {
 
     const filePath = sourceFile.getFilePath()
     return thunks.map<ThunkInfo>(t => {
-      const rtMatch = t
-        .getReturnTypeNode()
-        .getText()
-        .match(/<(.*?)>$/g)
-
-      const returnType = rtMatch
-        ? rtMatch[0].substr(1, rtMatch[0].length - 1)
-        : 'void'
+      const rtMatch = /AppThunkAction<(.*?)>$/g.exec(
+        t.getReturnTypeNode().getText()
+      )
+      const returnType = rtMatch && rtMatch.length === 2 ? rtMatch[1] : 'void'
 
       return {
         name: t.getName(),

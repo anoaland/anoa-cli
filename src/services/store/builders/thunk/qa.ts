@@ -1,22 +1,27 @@
 import * as path from 'path'
 import { Project } from 'ts-morph'
 import { RootContext } from '../../../../libs'
-import { Utils } from '../../../core'
+import { FieldObject, ObjectBuilder, Utils } from '../../../core'
 import { NamePathInfo, ProjectBrowser } from '../../../core/project-browser'
 import { ActionTypeInfo, ReduxUtils } from '../../../core/redux-utils'
 
 export class ReduxThunkQA {
   context: RootContext
   projectBrowser: ProjectBrowser
+  objectBuilder: ObjectBuilder
   project: Project
   utils: Utils
   actionType?: ActionTypeInfo
   filePath: string
   name: string
+  returnPromise: boolean
+  returnType: string
+  parameters: Array<FieldObject<any>>
 
   constructor(context: RootContext, project: Project) {
     this.context = context
     this.projectBrowser = new ProjectBrowser(context)
+    this.objectBuilder = new ObjectBuilder(context)
     this.project = project
     this.utils = new Utils(context)
   }
@@ -31,7 +36,7 @@ export class ReduxThunkQA {
 
     const {
       filesystem: { exists, list, cwd },
-      // print: { colors, fancy },
+      print: { colors, fancy },
       prompt,
       folder,
       naming
@@ -91,12 +96,34 @@ export class ReduxThunkQA {
       await this.selectReducer()
     }
 
+    this.returnPromise = await this.utils.confirm('Should returns Promise?')
+
+    let returnType: string
+    if (!isFromReducer) {
+      ;({ returnType } = await prompt.ask({
+        type: 'input',
+        name: 'returnType',
+        message: 'Specify the return type (optional)',
+        format: val => {
+          if (!val || !this.returnPromise) {
+            return val
+          }
+
+          return colors.bold(`Promise<${colors.cyan(val)}>`)
+        }
+      }))
+
+      fancy(colors.bold('  Specify function parameter(s):'))
+      this.parameters = await this.objectBuilder.queryUserInput(true, true)
+    }
+
     if (!filePath.endsWith('.ts')) {
       filePath += '.ts'
     }
 
     this.filePath = path.join(cwd(), folder.thunks(filePath))
     this.name = naming.thunk(thunkName)
+    this.returnType = returnType
   }
 
   private isStoreExists() {

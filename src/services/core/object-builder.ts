@@ -10,7 +10,10 @@ export class ObjectBuilder {
     this.utils = new Utils(this.context)
   }
 
-  async queryUserInput(useInitialValue?: boolean) {
+  async queryUserInput(
+    useInitialValue?: boolean,
+    initialValueIsOptional?: boolean
+  ) {
     const {
       prompt,
       print,
@@ -122,6 +125,10 @@ export class ObjectBuilder {
             {
               name: 'initial',
               validate(val, { values }) {
+                if (initialValueIsOptional) {
+                  return true
+                }
+
                 if (!val && values.name && !values.name.endsWith('?')) {
                   return 'required field must have initial value'
                 }
