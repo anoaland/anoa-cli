@@ -22,6 +22,13 @@ export class ReduxThunkQA {
   }
 
   async run() {
+    if (!this.isStoreExists()) {
+      this.utils.exit(
+        'Redux store is not ready. Please create at least one reducer. Action cancelled.'
+      )
+      return
+    }
+
     const {
       filesystem: { exists, list, cwd },
       // print: { colors, fancy },
@@ -90,6 +97,14 @@ export class ReduxThunkQA {
 
     this.filePath = path.join(cwd(), folder.thunks(filePath))
     this.name = naming.thunk(thunkName)
+  }
+
+  private isStoreExists() {
+    const {
+      filesystem: { cwd, exists },
+      folder
+    } = this.context
+    return exists(path.join(cwd(), folder.store('index.ts')))
   }
 
   private async selectReducer() {

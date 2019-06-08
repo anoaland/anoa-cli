@@ -221,10 +221,6 @@ export class ProjectBrowser {
 
   async browseReducerStates(): Promise<Array<FieldObject<NamePathInfo>>> {
     const reducers = this.getReducerList()
-    if (!reducers.length) {
-      this.utils.exit('No reducer found on this project. Action cancelled.')
-      return
-    }
 
     const project = new Project()
     const choices = []
@@ -481,6 +477,11 @@ export class ProjectBrowser {
         }
       })
       .filter(r => r !== false) as NamePathInfo[]
+
+    if (!this.reducerList.length) {
+      this.utils.exit('No reducer found on this project. Action cancelled.')
+      return
+    }
 
     return this.reducerList
   }
