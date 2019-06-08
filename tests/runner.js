@@ -19,10 +19,6 @@ const runner = {
   TAB: '\x09',
 
   run(args, inputs = [], timeout = 1500) {
-    // if (!timeout) {
-    //   timeout = 1500
-    // }
-
     var proc = spawn(ANOA, args, {
       stdio: [null, null, null]
     })
