@@ -221,6 +221,11 @@ export class ProjectBrowser {
 
   async browseReducerStates(): Promise<Array<FieldObject<NamePathInfo>>> {
     const reducers = this.getReducerList()
+    if (!reducers.length) {
+      this.utils.exit('No reducer found on this project. Action cancelled.')
+      return
+    }
+
     const project = new Project()
     const choices = []
     let allActChoices: { [key: string]: FieldObject<NamePathInfo> } = {}
@@ -379,6 +384,10 @@ export class ProjectBrowser {
     const files = project.addExistingSourceFiles(
       path.join(cwd(), folder.thunks('*.ts'))
     )
+
+    if (!files.length) {
+      return []
+    }
 
     let allThunks = {}
     const choices = []
