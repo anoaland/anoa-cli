@@ -8,7 +8,6 @@ const { Project } = require('ts-morph')
 jest.setTimeout(10 * 60 * 1000)
 
 describe('update reducer tests', () => {
-  // const ANOA = path.join(process.cwd(), 'bin', 'anoa')
   const FIXTURE = path.join(
     process.cwd(),
     'tests',
