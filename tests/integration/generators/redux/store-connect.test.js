@@ -204,4 +204,88 @@ export interface ComponentBActionProps {
 `
     )
   })
+
+  test('should be able to connect store to stateless functional component', async () => {
+    await run(
+      ['s', 'c'],
+      [
+        // Select states to map
+        SPACE,
+        ENTER,
+
+        // Select thunks to map
+        SPACE,
+        ENTER,
+
+        // Select view kind to connect
+        ENTER,
+
+        // Select a Component
+        DOWN,
+        DOWN,
+        ENTER
+      ]
+    )
+
+    const { exists, cwd } = filesystem
+    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
+    expect(exists(tsConfigFilePath)).toBeTruthy()
+
+    const project = new Project({
+      tsConfigFilePath
+    })
+
+    process.chdir('src/views/components/component-c')
+
+    // files are exists
+    expect(exists('index.tsx')).toBeTruthy()
+    expect(exists('props.ts')).toBeTruthy()
+
+    const mainViewFile = project.addExistingSourceFile('index.tsx')
+    expect(mainViewFile.getText()).toEqual(
+      `import React from 'react'
+import { Text, View } from 'react-native'
+import { AppStore } from '../../../store'
+import { setStateTwoAction } from '../../../store/actions/common'
+import {
+  ComponentCActionProps,
+  ComponentCProps,
+  ComponentCStateProps
+} from './props'
+
+export const ComponentC = AppStore.withStore<
+  ComponentCStateProps,
+  ComponentCActionProps
+>(
+  state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
+  dispatch => ({
+    commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
+  })
+)((props: ComponentCProps) => {
+  return (
+    <View>
+      <Text>ComponentC</Text>
+    </View>
+  )
+})
+`
+    )
+
+    const propsFile = project.addExistingSourceFile('props.ts')
+    expect(propsFile.getText()).toEqual(
+      `export interface ComponentCProps
+  extends Partial<ComponentCStateProps>,
+    Partial<ComponentCActionProps> {}
+
+export interface ComponentCStateProps {
+  taskState1: string
+  taskState2: number
+}
+
+export interface ComponentCActionProps {
+  commonSetStateTwo: (payload: number) => void
+}
+`
+    )
+  })
 })
