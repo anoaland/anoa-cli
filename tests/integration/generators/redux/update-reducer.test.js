@@ -262,4 +262,54 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 `
     )
   })
+
+  test('should be able to add new thunk', async () => {
+    await run(
+      ['s', 't'],
+      [
+        // Name of thunk
+        'setStateTwo',
+        ENTER,
+
+        // file name
+        'common',
+        ENTER,
+
+        // Do you want to generate thunk from reducer?
+        ENTER, // Y
+
+        // select reducer
+        ENTER,
+
+        // Select an action type
+        DOWN,
+        ENTER
+      ]
+    )
+
+    const { exists, cwd } = filesystem
+    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
+    expect(exists(tsConfigFilePath)).toBeTruthy()
+
+    const project = new Project({
+      tsConfigFilePath
+    })
+
+    process.chdir('src/store/actions')
+
+    // files are exists
+    expect(exists('common.ts')).toBeTruthy()
+
+    const thunkFile = project.addExistingSourceFile('common.ts')
+    expect(thunkFile.getText()).toEqual(
+      `import { AppThunkAction } from '..'
+
+export function setStateTwoAction(payload: number): AppThunkAction {
+  return async dispatch => {
+    dispatch({ type: 'TASK/SET_STATE_2', payload })
+  }
+}
+`
+    )
+  })
 })
