@@ -1,0 +1,15 @@
+{
+  "extends": ["tslint:recommended", "tslint-react", "tslint-config-prettier"],
+  "rules": {
+    "interface-name": false,
+    "no-empty-interface": false,
+    "member-access": false,
+    "jsx-no-lambda": false,
+    "object-literal-sort-keys": false,
+    "jsx-boolean-value": false,
+    "interface-over-type-literal": false,
+    "variable-name": false,
+    "no-angle-bracket-type-assertion": false,
+    "no-unused-variable": true
+  }
+}
