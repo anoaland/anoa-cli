@@ -41,6 +41,7 @@ export class ViewService {
       case 'e':
       case 'state':
         task = TaskEnum.addOrModifyState
+        break
       case 'p':
       case 'props':
         task = TaskEnum.addOrModifyProps
