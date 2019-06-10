@@ -9,12 +9,14 @@ export function config(_context: RootContext) {
   return {
     folders: {
       source: 'src',
-      components: 'views/components',
-      screens: 'views/screens',
+      views: 'views',
+      components: 'components',
+      screens: 'screens',
       assets: 'assets',
       store: 'store',
-      reducers: 'store/reducers',
-      thunks: 'store/actions'
+      reducers: 'reducers',
+      thunks: 'actions',
+      navigators: 'navigators'
     },
     naming: {
       screen: {
@@ -28,6 +30,10 @@ export function config(_context: RootContext) {
       thunk: {
         prefix: '',
         suffix: 'Action'
+      },
+      navigator: {
+        prefix: '',
+        suffix: 'Nav'
       }
     }
   }
@@ -43,29 +49,57 @@ export function folder({ config: { folders } }: RootContext) {
       return path.join(folders.source, pathOrFilename)
     },
     components: (pathOrFilename: string = '') => {
-      return path.join(folders.source, folders.components, pathOrFilename)
+      return path.join(
+        folders.source,
+        folders.views,
+        folders.components,
+        pathOrFilename
+      )
     },
     screens: (pathOrFilename: string = '') => {
-      return path.join(folders.source, folders.screens, pathOrFilename)
+      return path.join(
+        folders.source,
+        folders.views,
+        folders.screens,
+        pathOrFilename
+      )
+    },
+    navigator: (pathOrFilename: string = '') => {
+      return path.join(
+        folders.source,
+        folders.views,
+        folders.navigators,
+        pathOrFilename
+      )
     },
     assets: (pathOrFilename: string = '') => {
       return path.join(folders.assets, pathOrFilename)
     },
-    reducers: (pathOrFilename: string = '') => {
-      return path.join(folders.source, folders.reducers, pathOrFilename)
-    },
     store: (pathOrFilename: string = '') => {
       return path.join(folders.source, folders.store, pathOrFilename)
     },
+    reducers: (pathOrFilename: string = '') => {
+      return path.join(
+        folders.source,
+        folders.store,
+        folders.reducers,
+        pathOrFilename
+      )
+    },
     thunks: (pathOrFilename: string = '') => {
-      return path.join(folders.source, folders.thunks, pathOrFilename)
+      return path.join(
+        folders.source,
+        folders.store,
+        folders.thunks,
+        pathOrFilename
+      )
     }
   }
 }
 
 export function naming({
   config: {
-    naming: { screen, component, thunk }
+    naming: { screen, component, thunk, navigator }
   },
   strings: { pascalCase, trim, upperCase, snakeCase, camelCase }
 }: RootContext) {
@@ -121,6 +155,17 @@ export function naming({
     },
     thunk: (name: string) => {
       return thunk.prefix + camelCase(trim(name)) + thunk.suffix
+    },
+    navigator: (name: string) => {
+      if (
+        name
+          .trim()
+          .toLowerCase()
+          .endsWith(navigator.suffix.toLowerCase())
+      ) {
+        name = name.substr(0, name.length - navigator.suffix.length)
+      }
+      return navigator.prefix + pascalCase(trim(name)) + navigator.suffix
     }
   }
 }

@@ -12,6 +12,7 @@ export class ProjectBrowser {
   context: RootContext
   utils: Utils
   reducerList: NamePathInfo[]
+  loadedViews: { [key: string]: BrowseViewInfo[] } = {}
 
   constructor(context: RootContext) {
     this.context = context
@@ -44,54 +45,24 @@ export class ProjectBrowser {
   ): Promise<BrowseViewInfo> {
     const {
       prompt,
-      print,
-      strings: { padEnd, isBlank },
-      folder
+      strings: { isBlank }
     } = this.context
 
     const kind = await this.selectViewKind(selectKindMessage)
-    const baseDir =
-      kind === ViewKindEnum.component ? folder.components() : folder.screens()
 
     if (isBlank(selectViewMessage)) {
       selectViewMessage = `Select a ${kind}`
     }
 
-    const files = this.browseReactFiles(baseDir, dir)
-      .map(f => {
-        let info: ReactComponentInfo
-        info = ReactUtils.getReactClassInfo(f)
-
-        if (!info) {
-          info = ReactUtils.getReactFunctionInfo(f)
-        }
-
-        if (!info) {
-          info = ReactUtils.getReactArrowFunctionInfo(f)
-        }
-
-        return {
-          path: f.getFilePath(),
-          sourceFile: f,
-          info,
-          kind
-        }
-      })
-      .filter(f => !!f.info)
-      .map(f => ({
-        ...f,
-        key: `  ${padEnd(f.info.name, 25)} ${print.colors.yellow(
-          `[${this.getPath(baseDir, f.sourceFile)}]`
-        )}`
-      }))
+    const views = this.browseViewsInfo(kind, dir)
 
     // @ts-ignore
-    const { selectedReactClass } = await prompt.ask([
+    const { selectedView } = await prompt.ask([
       {
-        name: 'selectedReactClass',
+        name: 'selectedView',
         type: 'autocomplete',
         message: selectViewMessage,
-        choices: files.map(f => ({ name: f.key, indicator: '> ' })),
+        choices: views.map(f => ({ name: f.key })),
         validate(val) {
           if (!val) {
             return 'Please choose a view'
@@ -106,7 +77,7 @@ export class ProjectBrowser {
       }
     ])
 
-    return files.find(f => f.key === selectedReactClass)
+    return views.find(f => f.key === selectedView)
   }
 
   async browseReactClasses(
@@ -163,6 +134,107 @@ export class ProjectBrowser {
     ])
 
     return files.find(f => f.key === selectedReactClass)
+  }
+
+  async browseScreens(
+    multiple: boolean = false,
+    message: string = 'Select screens'
+  ): Promise<BrowseViewInfo | BrowseViewInfo[]> {
+    const {
+      prompt,
+      print: { colors }
+    } = this.context
+    const views = this.browseViewsInfo(ViewKindEnum.screen)
+    // @ts-ignore
+    const { selectedViews } = await prompt.ask([
+      {
+        name: 'selectedViews',
+        type: 'autocomplete',
+        message,
+        choices: views.map(f => {
+          if (multiple) {
+            return { name: f.key.trim(), indicator: '>' }
+          }
+
+          return { name: f.key }
+        }),
+        multiple,
+        validate(val) {
+          if (!val || (multiple && !val.length)) {
+            return 'Please choose a screen'
+          }
+
+          return true
+        },
+        format(val) {
+          if (!val) {
+            return val
+          }
+
+          if (!multiple) {
+            return val.replace(/\s\s/g, '')
+          }
+
+          return (
+            '\r\n' +
+            val
+              .map(v => '  ' + colors.green('+') + ' ' + v.replace(/\s\s/g, ''))
+              .join('\r\n')
+          )
+        }
+      }
+    ])
+
+    if (!multiple) {
+      return views.find(f => f.key === selectedViews)
+    }
+
+    return selectedViews.map(v => {
+      return views.find(f => f.key.trim() === v)
+    })
+  }
+
+  browseViewsInfo(kind: ViewKindEnum, dir: string = '/'): BrowseViewInfo[] {
+    const {
+      print,
+      strings: { padEnd },
+      folder
+    } = this.context
+
+    const vkey = kind + dir
+    if (this.loadedViews[vkey]) {
+      return this.loadedViews[vkey]
+    }
+
+    const baseDir =
+      kind === ViewKindEnum.component ? folder.components() : folder.screens()
+
+    this.loadedViews[vkey] = this.browseReactFiles(baseDir, dir)
+      .map(f => {
+        let info: ReactComponentInfo
+        info = ReactUtils.getReactClassInfo(f)
+        if (!info) {
+          info = ReactUtils.getReactFunctionInfo(f)
+        }
+        if (!info) {
+          info = ReactUtils.getReactArrowFunctionInfo(f)
+        }
+        return {
+          path: f.getFilePath(),
+          sourceFile: f,
+          info,
+          kind
+        }
+      })
+      .filter(f => !!f.info)
+      .map(f => ({
+        ...f,
+        key: `  ${padEnd(f.info.name, 25)} ${print.colors.yellow(
+          `[${this.getPath(baseDir, f.sourceFile)}]`
+        )}`
+      }))
+
+    return this.loadedViews[vkey]
   }
 
   async browseReducers(

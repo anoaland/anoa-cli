@@ -1,7 +1,7 @@
 import { InspectTreeResult } from 'fs-jetpack/types'
-import * as _ from 'lodash'
 import * as path from 'path'
 import { RootContext } from '../../libs'
+import { ProjectTypes } from '../boilerplates'
 import { Validate } from './validate'
 
 export class Utils {
@@ -226,6 +226,25 @@ export class Utils {
     iterate(-1, tree)
 
     return res.map(p => p.parent + p.name)
+  }
+
+  relativePath(fullPath: string): string {
+    const {
+      filesystem: { cwd }
+    } = this.context
+
+    return path.relative(cwd(), fullPath)
+  }
+
+  async getProjectType(): Promise<ProjectTypes> {
+    const { filesystem, print } = this.context
+    const cfg = await filesystem.read('.anoarc', 'json')
+    if (!cfg) {
+      print.error('Invalid project directory.')
+      process.exit(0)
+      return
+    }
+    return cfg.type
   }
 }
 

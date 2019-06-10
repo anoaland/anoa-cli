@@ -412,7 +412,10 @@ export class ReactUtils {
       modulePath = './' + modulePath
     }
 
-    return modulePath.replace(/\\/g, '/').replace(/\.ts|.tsx/g, '')
+    return modulePath
+      .replace(/\\/g, '/')
+      .replace(/\.ts$|.tsx$|index.tsx$|index.ts$/g, '')
+      .replace(/\/$/g, '')
   }
 
   static getNamedImport(sourceFile: SourceFile, match: any) {
