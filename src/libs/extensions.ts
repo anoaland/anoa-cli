@@ -16,7 +16,8 @@ export function config(_context: RootContext) {
       store: 'store',
       reducers: 'reducers',
       thunks: 'actions',
-      navigators: 'navigators'
+      navigators: 'navigators',
+      styles: 'styles'
     },
     naming: {
       screen: {
@@ -91,6 +92,23 @@ export function folder({ config: { folders } }: RootContext) {
         folders.source,
         folders.store,
         folders.thunks,
+        pathOrFilename
+      )
+    },
+    styles: (pathOrFilename: string = '') => {
+      return path.join(
+        folders.source,
+        folders.views,
+        folders.styles,
+        pathOrFilename
+      )
+    },
+    themes: (pathOrFilename: string = '') => {
+      return path.join(
+        folders.source,
+        folders.views,
+        folders.styles,
+        'themes',
         pathOrFilename
       )
     }
