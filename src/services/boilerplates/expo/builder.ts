@@ -1,3 +1,4 @@
+import { ProjectTypes } from '..'
 import { RootContext } from '../../../libs'
 import { Npm, Source, Utils } from '../../core'
 
@@ -42,7 +43,7 @@ export class ExpoProjectBuilder {
       '',
       ['tslint.json', 'tsconfig.json', '.jshintrc', '.prettierrc', '.anoarc'],
       {
-        projectType: 'expo'
+        projectType: ProjectTypes.EXPO
       }
     )
 
