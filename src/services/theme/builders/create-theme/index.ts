@@ -1,4 +1,5 @@
-import { Project, SyntaxKind } from 'ts-morph'
+import * as path from 'path'
+import { Project, SyntaxKind, VariableDeclarationKind } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Npm, Source, Utils } from '../../../core'
 import { CreateThemeBuilderQA } from './qa'
@@ -21,22 +22,78 @@ export class CreateThemeBuilder {
   }
 
   async build() {
-    const {
-      print: { info, colors }
-    } = this.context
     if (!this.isBaseThemeExist()) {
-      info(
-        `This action will install ${colors.yellow(
-          'anoa-react-native-theme'
-        )} package and generate base theme code for you.`
-      )
-      if (!(await this.utils.confirm('Are you sure want to do this?'))) {
-        return
-      }
       await this.initBaseTheme()
-      return
+    } else {
+      await this.buildChildTheme()
     }
+  }
+
+  async buildChildTheme() {
     await this.qa.run()
+
+    const {
+      folder,
+      filesystem: { cwd },
+      strings: { camelCase, kebabCase },
+      print: { spin, colors }
+    } = this.context
+
+    const spinner = spin('Generating...')
+
+    const { name, filePath } = this.qa.result
+
+    const themeFile = this.project.createSourceFile(filePath)
+    themeFile.addImportDeclaration({
+      namedImports: ['BaseTheme'],
+      moduleSpecifier: './base'
+    })
+    themeFile.addVariableStatement({
+      isExported: true,
+      declarationKind: VariableDeclarationKind.Const,
+      declarations: [
+        {
+          name,
+          initializer: `BaseTheme.extend(
+            {
+              // override default theme variables
+            },
+            vars => ({
+              // override default theme styles
+            })
+          )`
+        }
+      ]
+    })
+
+    const stylesFile = this.project.addExistingSourceFile(
+      path.join(cwd(), folder.styles('index.ts'))
+    )
+
+    stylesFile.addImportDeclaration({
+      namedImports: [name],
+      moduleSpecifier: `./themes/${kebabCase(name)}`
+    })
+
+    const themesInitializer = stylesFile
+      .getVariableDeclaration('themes')
+      .getInitializerIfKind(SyntaxKind.ObjectLiteralExpression)
+    themesInitializer.addPropertyAssignment({
+      name: camelCase(name.replace(/Theme$/g, '')),
+      initializer: name
+    })
+
+    await this.source.prettifySoureFile(themeFile)
+    await this.source.prettifySoureFile(stylesFile)
+    await this.project.save()
+
+    spinner.succeed(
+      `New ${colors.cyan(
+        name
+      )} theme was successfully generated on ${colors.yellow(
+        this.utils.relativePath(filePath)
+      )}`
+    )
   }
 
   async initBaseTheme() {
@@ -44,6 +101,15 @@ export class CreateThemeBuilder {
       folder,
       print: { spin, info, colors }
     } = this.context
+
+    info(
+      `This action will install ${colors.yellow(
+        'anoa-react-native-theme'
+      )} package and generate base theme code for you.`
+    )
+    if (!(await this.utils.confirm('Are you sure want to do this?'))) {
+      return
+    }
 
     const spinner = spin('Generating...')
 

@@ -35,6 +35,10 @@ export function config(_context: RootContext) {
       navigator: {
         prefix: '',
         suffix: 'Nav'
+      },
+      theme: {
+        prefix: '',
+        suffix: 'Theme'
       }
     }
   }
@@ -117,7 +121,7 @@ export function folder({ config: { folders } }: RootContext) {
 
 export function naming({
   config: {
-    naming: { screen, component, thunk, navigator }
+    naming: { screen, component, thunk, navigator, theme }
   },
   strings: { pascalCase, trim, upperCase, snakeCase, camelCase }
 }: RootContext) {
@@ -184,6 +188,9 @@ export function naming({
         name = name.substr(0, name.length - navigator.suffix.length)
       }
       return navigator.prefix + pascalCase(trim(name)) + navigator.suffix
+    },
+    theme: (name: string) => {
+      return theme.prefix + pascalCase(trim(name)) + theme.suffix
     }
   }
 }
