@@ -2,6 +2,7 @@ import * as path from 'path'
 import { Project, SyntaxKind, VariableDeclarationKind } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Npm, Source, Utils } from '../../../core'
+import { ReactUtils } from '../../../core/react-utils'
 import { CreateThemeBuilderQA } from './qa'
 
 export class CreateThemeBuilder {
@@ -41,20 +42,18 @@ export class CreateThemeBuilder {
 
     const spinner = spin('Generating...')
 
-    const { name, filePath } = this.qa.result
+    const { name, filePath, base } = this.qa.result
 
     const themeFile = this.project.createSourceFile(filePath)
-    themeFile.addImportDeclaration({
-      namedImports: ['BaseTheme'],
-      moduleSpecifier: './base'
-    })
+    ReactUtils.addNamedImport(themeFile, base.path, base.name)
+
     themeFile.addVariableStatement({
       isExported: true,
       declarationKind: VariableDeclarationKind.Const,
       declarations: [
         {
           name,
-          initializer: `BaseTheme.extend(
+          initializer: `${base.name}.extend(
             {
               // override default theme variables
             },

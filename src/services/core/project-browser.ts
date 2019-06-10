@@ -609,6 +609,72 @@ export class ProjectBrowser {
     }
   }
 
+  async browseThemes(
+    message: string = 'Select theme'
+  ): Promise<ThemeInfo | null> {
+    const project = new Project()
+    const {
+      folder,
+      filesystem: { cwd },
+      prompt
+    } = this.context
+    const stylesFile = project.addExistingSourceFile(
+      path.join(cwd(), folder.styles('index.ts'))
+    )
+
+    const themes = stylesFile
+      .getImportDeclarations()
+      .filter(i => {
+        return i
+          .getModuleSpecifier()
+          .getText()
+          .startsWith(`'./themes/`)
+      })
+      .map<ThemeInfo>(i => ({
+        name: i.getNamedImports()[0].getText(),
+        path: path.join(
+          cwd(),
+          folder.themes(
+            /'.\/themes\/(.*)'$/g.exec(i.getModuleSpecifier().getText())[1] +
+              '.ts'
+          )
+        )
+      }))
+
+    if (!themes.length) {
+      return null
+    }
+
+    if (themes.length === 1) {
+      return themes[0]
+    }
+
+    const themesMap = themes.reduce((acc, cur) => {
+      acc[cur.name] = cur
+      return acc
+    }, {})
+
+    // BaseTheme should be first
+    const choices = Object.keys(themesMap).filter(i => i !== 'BaseTheme')
+    choices.splice(0, 0, 'BaseTheme')
+
+    const { selectedTheme } = await prompt.ask({
+      name: 'selectedTheme',
+      choices,
+      type: 'select',
+      message,
+      validate(val) {
+        if (!val) {
+          return 'Please select a theme.'
+        }
+
+        return true
+      }
+    })
+
+    return themesMap[selectedTheme]
+  }
+
   private getPath(baseDir: string, sourceFile: SourceFile) {
     return path.relative(baseDir, sourceFile.getFilePath()).replace(/\\/g, '/')
   }
@@ -640,4 +706,9 @@ export interface BrowseViewInfo {
   sourceFile: SourceFile
   info: ReactComponentInfo
   kind: ViewKindEnum
+}
+
+export interface ThemeInfo {
+  name: string
+  path: string
 }

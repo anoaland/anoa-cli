@@ -1,15 +1,18 @@
 import * as path from 'path'
 import { RootContext } from '../../../../libs'
 import { Utils } from '../../../core'
+import { ProjectBrowser, ThemeInfo } from '../../../core/project-browser'
 
 export class CreateThemeBuilderQA {
   context: RootContext
   utils: Utils
   result: CreateThemeBuilderQAResult
+  projectBrowser: ProjectBrowser
 
   constructor(context: RootContext) {
     this.context = context
     this.utils = new Utils(context)
+    this.projectBrowser = new ProjectBrowser(context)
   }
 
   async run() {
@@ -46,11 +49,14 @@ export class CreateThemeBuilderQA {
         return true
       }
     })
-
     themeName = naming.theme(themeName)
+
+    const base = await this.projectBrowser.browseThemes('Select parent theme')
+
     this.result = {
       name: themeName,
-      filePath: themePath
+      filePath: themePath,
+      base
     }
   }
 }
@@ -58,4 +64,5 @@ export class CreateThemeBuilderQA {
 export interface CreateThemeBuilderQAResult {
   name: string
   filePath: string
+  base: ThemeInfo
 }
