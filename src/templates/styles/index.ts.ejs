@@ -9,6 +9,6 @@ const themes = {
   // child themes goes here  
 }
 
-export const AppStyle = new ThemeContext(BaseTheme)
+export const AppStyle = new ThemeContext(BaseTheme, themes)
 export type AppThemes = typeof themes
 export type AppStyleProps = ThemeContextProps<typeof BaseTheme, AppThemes>
