@@ -8,27 +8,27 @@ const VERSION = trim(
 
 describe('anoa version test', () => {
   test('anoa -v', async () => {
-    const stdout = await run([`-v`])
+    const stdout = await run([`-v`], [], 200)
     expect(stdout).toEqual(VERSION)
   })
 
   test('anoa --v', async () => {
-    const stdout = await run([`--v`])
+    const stdout = await run([`--v`], [], 200)
     expect(stdout).toEqual(VERSION)
   })
 
   test('anoa -version', async () => {
-    const stdout = await run([`-version`])
+    const stdout = await run([`-version`], [], 200)
     expect(stdout).toEqual(VERSION)
   })
 
   test('anoa --version', async () => {
-    const stdout = await run([`--version`])
+    const stdout = await run([`--version`], [], 200)
     expect(stdout).toEqual(VERSION)
   })
 
   test('anoa version', async () => {
-    const stdout = await run([`version`])
+    const stdout = await run([`version`], [], 200)
     expect(stdout).toEqual(VERSION)
   })
 })
