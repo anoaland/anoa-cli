@@ -1,8 +1,9 @@
 import { RootContext } from '../../libs'
 import { Utils } from '../core'
+import { ConnectThemeBuilder } from './builders/connect-theme'
+import { CreateThemeBuilder } from './builders/create-theme'
 import { TaskEnum } from './enums'
 import { helps } from './help'
-import { CreateThemeBuilder } from './builders/create-theme'
 
 export class ThemeService {
   context: RootContext
@@ -30,6 +31,11 @@ export class ThemeService {
       case 'new':
         task = TaskEnum.createTheme
         break
+
+      case 'c':
+      case 'connect':
+        task = TaskEnum.connectTheme
+        break
     }
 
     if (options && (options.h || options.help)) {
@@ -38,7 +44,7 @@ export class ThemeService {
     }
 
     if (!task) {
-      const choices = [TaskEnum.createTheme]
+      const choices = [TaskEnum.createTheme, TaskEnum.connectTheme]
 
       const { pickTask } = await prompt.ask([
         {
@@ -54,6 +60,10 @@ export class ThemeService {
     switch (task) {
       case TaskEnum.createTheme:
         await new CreateThemeBuilder(this.context).build()
+        break
+
+      case TaskEnum.connectTheme:
+        await new ConnectThemeBuilder(this.context).build()
         break
 
       default:

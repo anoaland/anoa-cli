@@ -4,14 +4,12 @@ import {
   CallExpression,
   ClassDeclaration,
   Decorator,
-  FunctionDeclaration,
   Node,
   Project,
   SourceFile,
   SyntaxKind,
   TypeAliasDeclaration,
-  VariableDeclaration,
-  VariableDeclarationKind
+  VariableDeclaration
 } from 'ts-morph'
 import { RootContext } from '../../libs'
 import { FieldObject } from './object-builder'
@@ -276,29 +274,11 @@ export class ReduxUtils {
     statesMap: NameValue[],
     actionsMap: NameValue[]
   ) {
-    let viewVar: VariableDeclaration = viewFile.getVariableDeclaration(
-      info.name
+    const viewVar: VariableDeclaration = ReactUtils.getOrCreateViewVarOfStatelessView(
+      viewFile,
+      info,
+      propsName
     )
-    if (!viewVar) {
-      const viewFunction = viewFile.getFunction(info.name)
-      const newFnName = '_' + info.name
-      viewFunction.rename(newFnName)
-      viewFunction.setIsExported(false)
-      this.setFunctionPropsParams(viewFunction, propsName)
-      viewVar = viewFile
-        .addVariableStatement({
-          declarations: [
-            {
-              name: info.name,
-              initializer: newFnName
-            }
-          ],
-          declarationKind: VariableDeclarationKind.Const,
-          isExported: true
-        })
-        .getDeclarations()[0]
-    }
-
     this.setAppStoreHoc(viewVar, propsName, typeArgs, statesMap, actionsMap)
   }
 
@@ -336,28 +316,11 @@ export class ReduxUtils {
     } else {
       const arrowFn = viewVar.getInitializer() as ArrowFunction // viewVar.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
       if (arrowFn.getParameters) {
-        ReduxUtils.setFunctionPropsParams(arrowFn, propsName)
+        ReactUtils.setFunctionPropsParams(arrowFn, propsName)
       }
       viewVar.replaceWithText(
         `${viewVar.getName()} = ${connectionArgsStr}(${arrowFn.getText()})`
       )
-    }
-  }
-
-  static setFunctionPropsParams(
-    fn: ArrowFunction | FunctionDeclaration,
-    propsName: string
-  ) {
-    const arrowFnParams = fn.getParameters()
-    if (!arrowFnParams.length) {
-      fn.addParameter({
-        name: 'props',
-        type: propsName
-      })
-    } else if (arrowFnParams.length === 1) {
-      if (!arrowFnParams[0].getTypeNode()) {
-        arrowFnParams[0].setType(propsName)
-      }
     }
   }
 

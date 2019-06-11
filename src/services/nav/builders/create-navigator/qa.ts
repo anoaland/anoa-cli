@@ -33,7 +33,7 @@ export class CreateNavigatorBuilderQA {
     let screenToAttach: BrowseViewInfo
     let navigatorName: string
     if (attachToScreen) {
-      screenToAttach = (await this.projectBrowser.browseScreens()) as BrowseViewInfo
+      screenToAttach = (await this.projectBrowser.browseAllViews()) as BrowseViewInfo
       navigatorName = screenToAttach.info.name
       const navPath = path.join(
         path.dirname(screenToAttach.sourceFile.getFilePath()),
@@ -121,7 +121,7 @@ export class CreateNavigatorBuilderQA {
       print: { colors }
     } = this.context
 
-    const screens: BrowseViewInfo[] = (await this.projectBrowser.browseScreens(
+    const screens: BrowseViewInfo[] = (await this.projectBrowser.browseAllViews(
       true,
       'Select screens to routes'
     )) as BrowseViewInfo[]

@@ -136,15 +136,16 @@ export class ProjectBrowser {
     return files.find(f => f.key === selectedReactClass)
   }
 
-  async browseScreens(
+  async browseAllViews(
     multiple: boolean = false,
-    message: string = 'Select screens'
+    message: string = 'Select screens',
+    kind: ViewKindEnum = ViewKindEnum.screen
   ): Promise<BrowseViewInfo | BrowseViewInfo[]> {
     const {
       prompt,
       print: { colors }
     } = this.context
-    const views = this.browseViewsInfo(ViewKindEnum.screen)
+    const views = this.browseViewsInfo(kind)
     // @ts-ignore
     const { selectedViews } = await prompt.ask([
       {
@@ -161,7 +162,7 @@ export class ProjectBrowser {
         multiple,
         validate(val) {
           if (!val || (multiple && !val.length)) {
-            return 'Please choose a screen'
+            return `Please choose a ${kind.toLowerCase()}`
           }
 
           return true

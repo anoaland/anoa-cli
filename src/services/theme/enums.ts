@@ -1,3 +1,4 @@
 export enum TaskEnum {
-  createTheme = 'Create new theme'
+  createTheme = 'Create new theme',
+  connectTheme = 'Connect theme to screen(s) / component(s)'
 }

@@ -12,6 +12,8 @@ import {
   SourceFile,
   StructureKind,
   SyntaxKind,
+  VariableDeclaration,
+  VariableDeclarationKind,
   VariableStatement
 } from 'ts-morph'
 import { RootContext } from '../../libs'
@@ -461,6 +463,53 @@ export class ReactUtils {
   static extendsInterface(intrfc: InterfaceDeclaration, extendsTo: string) {
     if (!intrfc.getExtends().find(e => e.getText() === extendsTo)) {
       intrfc.addExtends(extendsTo)
+    }
+  }
+
+  static getOrCreateViewVarOfStatelessView(
+    viewFile: SourceFile,
+    info: ReactComponentInfo,
+    propsName: string
+  ) {
+    let viewVar: VariableDeclaration = viewFile.getVariableDeclaration(
+      info.name
+    )
+    if (!viewVar) {
+      const viewFunction = viewFile.getFunction(info.name)
+      const newFnName = '_' + info.name
+      viewFunction.rename(newFnName)
+      viewFunction.setIsExported(false)
+      this.setFunctionPropsParams(viewFunction, propsName)
+      viewVar = viewFile
+        .addVariableStatement({
+          declarations: [
+            {
+              name: info.name,
+              initializer: newFnName
+            }
+          ],
+          declarationKind: VariableDeclarationKind.Const,
+          isExported: true
+        })
+        .getDeclarations()[0]
+    }
+    return viewVar
+  }
+
+  static setFunctionPropsParams(
+    fn: ArrowFunction | FunctionDeclaration,
+    propsName: string
+  ) {
+    const arrowFnParams = fn.getParameters()
+    if (!arrowFnParams.length) {
+      fn.addParameter({
+        name: 'props',
+        type: propsName
+      })
+    } else if (arrowFnParams.length === 1) {
+      if (!arrowFnParams[0].getTypeNode()) {
+        arrowFnParams[0].setType(propsName)
+      }
     }
   }
 }
