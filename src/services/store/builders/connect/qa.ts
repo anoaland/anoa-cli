@@ -16,7 +16,7 @@ export class ReduxConnectQA {
   result: {
     states: Array<FieldObject<NamePathInfo>>
     thunks: ThunkInfo[]
-    view: BrowseViewInfo
+    views: BrowseViewInfo[]
   }
 
   constructor(context: RootContext, project: Project) {
@@ -40,14 +40,19 @@ export class ReduxConnectQA {
       return
     }
 
-    const view = await this.projectBrowser.browseViews(
+    const kind = await this.projectBrowser.selectViewKind(
       'Select view kind to connect'
     )
+    const views = (await this.projectBrowser.browseAllViews(
+      true,
+      undefined,
+      kind
+    )) as BrowseViewInfo[]
 
     this.result = {
       states,
       thunks,
-      view
+      views
     }
   }
 }

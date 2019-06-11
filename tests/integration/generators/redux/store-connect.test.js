@@ -49,6 +49,7 @@ describe('store connect tests', () => {
         ENTER,
 
         // Select a Component
+        SPACE,
         ENTER
       ]
     )
@@ -136,6 +137,7 @@ export interface ComponentAActionProps {
 
         // Select a Component
         DOWN,
+        SPACE,
         ENTER
       ]
     )
@@ -222,6 +224,7 @@ export interface ComponentBActionProps {
         // Select a Component
         DOWN,
         DOWN,
+        SPACE,
         ENTER
       ]
     )

@@ -7,6 +7,7 @@ import {
 } from 'ts-morph'
 import { RootContext } from '../../../../libs'
 import { Source } from '../../../core'
+import { BrowseViewInfo } from '../../../core/project-browser'
 import { ReactUtils } from '../../../core/react-utils'
 import { NameValue, ReduxUtils } from '../../../core/redux-utils'
 import { ViewTypeEnum } from '../../../views/enums'
@@ -33,7 +34,26 @@ export class ReduxConnectBuilder {
 
   async generate() {
     const {
-      result: { states, view, thunks }
+      result: { views }
+    } = this.qa
+
+    const {
+      print: { spin }
+    } = this.context
+    const spinner = spin('Generating....')
+
+    for (const view of views) {
+      await this.connectToView(view)
+    }
+
+    await this.project.save()
+
+    spinner.succeed('Done')
+  }
+
+  private async connectToView(view: BrowseViewInfo) {
+    const {
+      result: { states, thunks }
     } = this.qa
     const {
       filesystem: { exists, cwd },
@@ -42,13 +62,11 @@ export class ReduxConnectBuilder {
       folder,
       print: { spin, colors }
     } = this.context
-
     const spinner = spin(
       `Connecting store to ${colors.yellow(view.info.name)} ${lowerCase(
         view.kind
       )}...`
     )
-
     // resolve props
     const propsName = view.info.props || naming.props(view.info.name)
     const propsPath = path.join(path.dirname(view.path), 'props.ts')
@@ -58,11 +76,9 @@ export class ReduxConnectBuilder {
     const propsInterface =
       propsFile.getInterface(propsName) ||
       propsFile.addInterface({ name: propsName, isExported: true })
-
     const reducerVarsMap = ReduxUtils.getReducerVariablesMap(this.context)
     const typeArgs = []
     const viewFile = this.project.addExistingSourceFile(view.path)
-
     // resolve state props
     const statesMap: NameValue[] = []
     if (states.length) {
@@ -74,17 +90,14 @@ export class ReduxConnectBuilder {
       )
       const existingProps = propsStateInterface.getProperties()
       const statesProperties: PropertySignatureStructure[] = []
-
       for (const s of states) {
         const stateVarName = reducerVarsMap[s.data.name]
         const stateMapName = camelCase(stateVarName + '-' + s.name)
-
         if (!existingProps.find(p => p.getName() === stateMapName)) {
           statesMap.push({
             name: stateMapName,
             value: `#state.${stateVarName}.${s.name}`
           })
-
           statesProperties.push({
             name: stateMapName,
             type: s.type,
@@ -93,14 +106,11 @@ export class ReduxConnectBuilder {
           })
         }
       }
-
       propsStateInterface.addProperties(statesProperties)
-
       ReactUtils.extendsInterface(propsInterface, `Partial<${propsStateName}>`)
       ReactUtils.addNamedImport(viewFile, propsPath, propsStateName)
       typeArgs.push(propsStateName)
     }
-
     // resolve thunks
     const actionsMap: NameValue[] = []
     if (thunks.length) {
@@ -111,14 +121,12 @@ export class ReduxConnectBuilder {
       )
       const existingProps = propsActionInterface.getProperties()
       const actionProperties: PropertySignatureStructure[] = []
-
       for (const t of thunks) {
         const thunkFileName = path.basename(t.path).replace(/\.(tsx?)/g, '')
         let actionName = t.name
         if (actionName.endsWith('Action')) {
           actionName = actionName.substr(0, actionName.length - 6)
         }
-
         const actionNameMap = camelCase(thunkFileName + ' ' + actionName)
         if (!existingProps.find(p => p.getName() === actionNameMap)) {
           const actionParamsMap = t.parameters.length
@@ -130,7 +138,6 @@ export class ReduxConnectBuilder {
               t.name
             }(${actionParamsMap}))`
           })
-
           const type = `(${
             t.parameters.length
               ? t.parameters
@@ -143,13 +150,10 @@ export class ReduxConnectBuilder {
             type,
             kind: StructureKind.PropertySignature
           })
-
           ReactUtils.addNamedImport(viewFile, t.path, t.name)
         }
       }
-
       propsActionInterface.addProperties(actionProperties)
-
       ReactUtils.extendsInterface(propsInterface, `Partial<${propsActionName}>`)
       ReactUtils.addNamedImport(viewFile, propsPath, propsActionName)
       if (!typeArgs.length) {
@@ -157,17 +161,13 @@ export class ReduxConnectBuilder {
       }
       typeArgs.push(propsActionName)
     }
-
     // ensure props is imported
     ReactUtils.addImportInterfaceDeclaration(viewFile, propsInterface)
-
     // ensure AppStore is imported
     ReactUtils.addNamedImport(viewFile, folder.store(), 'AppStore')
-
     switch (view.info.type) {
       case ViewTypeEnum.classBased:
         const viewClass = viewFile.getClass(view.info.name)
-
         // set class decorator
         ReduxUtils.setAppStoreDecorator(
           viewClass,
@@ -175,11 +175,9 @@ export class ReduxConnectBuilder {
           statesMap,
           actionsMap
         )
-
         // ensure props is referenced
         ReactUtils.addPropsReferenceToClassView(viewClass, propsInterface)
         break
-
       case ViewTypeEnum.stateless:
         ReduxUtils.setAppStoreHocToFunction(
           viewFile,
@@ -190,7 +188,6 @@ export class ReduxConnectBuilder {
           actionsMap
         )
         break
-
       case ViewTypeEnum.statelessFunctional:
         const viewVar = viewFile.getVariableDeclaration(view.info.name)
         ReduxUtils.setAppStoreHoc(
@@ -202,10 +199,8 @@ export class ReduxConnectBuilder {
         )
         break
     }
-
     await this.source.prettifySoureFile(propsFile)
     await this.source.prettifySoureFile(viewFile)
-    await this.project.save()
 
     spinner.succeed(
       `Store was successfully connected to ${colors.yellow(
