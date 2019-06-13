@@ -1,11 +1,9 @@
-import { RootContext } from '../libs'
-import { StoreService } from '../services/store'
-
 export default {
   name: 'store',
   alias: ['s'],
   description: 'Store (redux) generator',
-  run: async (context: RootContext) => {
+  run: async context => {
+    const { StoreService } = await import('../services/store')
     const service = new StoreService(context)
     await service.build()
   }

@@ -2,11 +2,7 @@ import { RootContext } from '../../libs'
 import { Utils } from '../core/utils'
 import { ExpoBoilerplate } from './expo'
 import { ReactNativeInitBoilerplate } from './react-native-init'
-
-export enum ProjectTypes {
-  EXPO = 'expo',
-  REACT_NATIVE_INIT = 'react-native-init'
-}
+import { ProjectTypes } from './types'
 
 export class Boilerplate {
   context: RootContext
@@ -22,7 +18,22 @@ export class Boilerplate {
    * @param type project type
    * @param dir target directory
    */
-  async init(type: ProjectTypes, dir: string) {
+  async init() {
+    const {
+      parameters: { first: dir },
+      prompt
+    } = this.context
+
+    // ask user for project type
+    const { type } = await prompt.ask([
+      {
+        name: 'type',
+        message: 'Select project type you would like to use:',
+        type: 'list',
+        choices: [ProjectTypes.REACT_NATIVE_INIT, ProjectTypes.EXPO]
+      }
+    ])
+
     switch (type) {
       case ProjectTypes.EXPO:
         await new ExpoBoilerplate(this.context).init(dir)

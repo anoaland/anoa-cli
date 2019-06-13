@@ -1,6 +1,6 @@
-import { ProjectTypes } from '..'
 import { RootContext } from '../../../libs'
 import { Npm, Source, Utils } from '../../core'
+import { ProjectTypes } from '../types'
 
 export class ExpoProjectBuilder {
   context: RootContext

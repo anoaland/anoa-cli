@@ -11,7 +11,7 @@ import {
   VariableDeclarationKind
 } from 'ts-morph'
 import { RootContext } from '../../../../libs'
-import { ProjectTypes } from '../../../boilerplates'
+import { ProjectTypes } from '../../../boilerplates/types'
 import { Npm, Source, Utils } from '../../../core'
 import { ReactUtils } from '../../../core/react-utils'
 import { ViewTypeEnum } from '../../../views/enums'
