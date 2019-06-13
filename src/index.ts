@@ -1,4 +1,4 @@
-import { build } from 'gluegun'
+import { build, print } from 'gluegun'
 import { RootContext } from './libs'
 
 async function run(argv) {
@@ -11,7 +11,7 @@ async function run(argv) {
       alias: ['-h'],
       description: 'Show list of commands',
       dashed: true,
-      run: ({ meta, print, strings: { padEnd } }: RootContext) => {
+      run: ({ meta, strings: { padEnd } }: RootContext) => {
         print.newline()
         const commands = meta.commandInfo()
         commands
@@ -20,31 +20,37 @@ async function run(argv) {
             print.info(padEnd(c[0], 25) + c[1])
           })
       }
-    })    
+    })
     .version({
       name: 'version',
       alias: ['-v'],
       description: 'Show version',
       dashed: true,
       run: (ctx: RootContext) => {
-        ctx.print.info(ctx.meta.version())
+        print.info(ctx.meta.version())
       }
     })
     .defaultCommand({
       run: (ctx: RootContext) => {
-
         // fallback '-v' command
         if (ctx.parameters.options.v) {
           ctx.runtime.run('version')
           return
         }
-        
+
         ctx.runtime.run('anoa')
       }
     })
     .create()
 
-  await cli.run(argv)
+  try {
+    await cli.run(argv)
+  } catch (error) {
+    print.info(`${print.xmark} Aborted.`)
+    if (error) {
+      print.error(error)
+    }
+  }
 }
 
 module.exports = { run }
