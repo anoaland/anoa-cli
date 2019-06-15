@@ -83,9 +83,9 @@ export class ViewBuilder {
 
     if (exists(this.location)) {
       this.utils.exit(
-        `Can't create view since ${colors.bold(
+        `Can't create view because ${colors.bold(
           this.location
-        )} is already exists.`
+        )} folder is already exists.`
       )
     }
   }
