@@ -166,7 +166,7 @@ export class ReduxConnectBuilder {
     // ensure AppStore is imported
     ReactUtils.addNamedImport(viewFile, folder.store(), 'AppStore')
     switch (view.info.type) {
-      case ViewTypeEnum.classBased:
+      case ViewTypeEnum.classComponent:
         const viewClass = viewFile.getClass(view.info.name)
         // set class decorator
         ReduxUtils.setAppStoreDecorator(
@@ -178,7 +178,7 @@ export class ReduxConnectBuilder {
         // ensure props is referenced
         ReactUtils.addPropsReferenceToClassView(viewClass, propsInterface)
         break
-      case ViewTypeEnum.stateless:
+      case ViewTypeEnum.functionComponent:
         ReduxUtils.setAppStoreHocToFunction(
           viewFile,
           view.info,
@@ -188,7 +188,7 @@ export class ReduxConnectBuilder {
           actionsMap
         )
         break
-      case ViewTypeEnum.statelessFunctional:
+      case ViewTypeEnum.arrowFunctionComponent:
         const viewVar = viewFile.getVariableDeclaration(view.info.name)
         ReduxUtils.setAppStoreHoc(
           viewVar,

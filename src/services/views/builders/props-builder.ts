@@ -107,22 +107,22 @@ export class PropsBuilder {
     const propsFile = propsInterface.getSourceFile()
 
     switch (selectedView.info.type) {
-      case ViewTypeEnum.classBased:
+      case ViewTypeEnum.classComponent:
         ReactUtils.addPropsReferenceToClassView(
           viewFile.getClass(viewInfo.name),
           propsInterface
         )
         break
 
-      case ViewTypeEnum.stateless:
-        ReactUtils.addPropsReferenceToStatelessView(
+      case ViewTypeEnum.functionComponent:
+        ReactUtils.addPropsReferenceToFunctionView(
           viewFile.getFunction(viewInfo.name),
           propsInterface
         )
         break
 
-      case ViewTypeEnum.statelessFunctional:
-        ReactUtils.addPropsReferenceToStatelessFunctionalView(
+      case ViewTypeEnum.arrowFunctionComponent:
+        ReactUtils.addPropsReferenceToArrowFunctionView(
           viewFile.getVariableStatement(viewInfo.name),
           propsInterface
         )

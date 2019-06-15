@@ -274,7 +274,7 @@ export class ReduxUtils {
     statesMap: NameValue[],
     actionsMap: NameValue[]
   ) {
-    const viewVar: VariableDeclaration = ReactUtils.getOrCreateViewVarOfStatelessView(
+    const viewVar: VariableDeclaration = ReactUtils.getOrCreateViewVarOfFunctionView(
       viewFile,
       info,
       propsName

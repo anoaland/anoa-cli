@@ -2,9 +2,9 @@ import * as path from 'path'
 import { RootContext } from '../../../libs'
 import { Utils } from '../../core'
 import { ViewKindEnum, ViewTypeEnum } from '../enums'
+import { ViewArrowFunctionBuilder } from './view-arrow-functional-builder'
 import { ViewClassBuilder } from './view-class-builder'
-import { ViewStatelessBuilder } from './view-stateless-builder'
-import { ViewStatelessFunctionalBuilder } from './view-stateless-functional-builder'
+import { ViewFunctionBuilder } from './view-function-builder'
 
 export class ViewBuilder {
   context: RootContext
@@ -68,11 +68,11 @@ export class ViewBuilder {
       message: `What ${lowerCase(this.kind)} type do you prefer:`,
       type: 'list',
       choices: [
-        ViewTypeEnum.classBased,
-        ViewTypeEnum.stateless,
-        ViewTypeEnum.statelessFunctional
+        ViewTypeEnum.classComponent,
+        ViewTypeEnum.functionComponent,
+        ViewTypeEnum.arrowFunctionComponent
       ],
-      initial: ViewTypeEnum.classBased
+      initial: ViewTypeEnum.classComponent
     })
 
     const { name, location, type } = await prompt.ask(prompts)
@@ -92,7 +92,7 @@ export class ViewBuilder {
 
   async generate() {
     switch (this.type) {
-      case ViewTypeEnum.classBased:
+      case ViewTypeEnum.classComponent:
         new ViewClassBuilder(
           this.context,
           this.name,
@@ -101,8 +101,8 @@ export class ViewBuilder {
         ).build()
         break
 
-      case ViewTypeEnum.stateless:
-        new ViewStatelessBuilder(
+      case ViewTypeEnum.functionComponent:
+        new ViewFunctionBuilder(
           this.context,
           this.name,
           this.kind,
@@ -110,8 +110,8 @@ export class ViewBuilder {
         ).build()
         break
 
-      case ViewTypeEnum.statelessFunctional:
-        new ViewStatelessFunctionalBuilder(
+      case ViewTypeEnum.arrowFunctionComponent:
+        new ViewArrowFunctionBuilder(
           this.context,
           this.name,
           this.kind,

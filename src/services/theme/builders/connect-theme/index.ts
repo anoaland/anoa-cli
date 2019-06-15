@@ -64,15 +64,15 @@ export class ConnectThemeBuilder {
     const propsName = this.getPropsName(view)
 
     switch (view.info.type) {
-      case ViewTypeEnum.classBased:
+      case ViewTypeEnum.classComponent:
         applied = this.applyThemeToClass(view, viewFile, propsName)
         break
 
-      case ViewTypeEnum.stateless:
+      case ViewTypeEnum.functionComponent:
         applied = this.applyThemeToFunction(view, viewFile, propsName)
         break
 
-      case ViewTypeEnum.statelessFunctional:
+      case ViewTypeEnum.arrowFunctionComponent:
         applied = this.applyThemeToArrowFunction(view, viewFile, propsName)
         break
     }
@@ -113,7 +113,7 @@ export class ConnectThemeBuilder {
     viewFile: SourceFile,
     propsName: string
   ): boolean {
-    const viewVar = ReactUtils.getOrCreateViewVarOfStatelessView(
+    const viewVar = ReactUtils.getOrCreateViewVarOfFunctionView(
       viewFile,
       view.info,
       propsName
@@ -215,7 +215,7 @@ export class ConnectThemeBuilder {
       'AppStyleProps'
     )
 
-    if (view.info.type === ViewTypeEnum.classBased) {
+    if (view.info.type === ViewTypeEnum.classComponent) {
       ReactUtils.addPropsReferenceToClassView(
         viewFile.getClass(view.info.name),
         propsInterface

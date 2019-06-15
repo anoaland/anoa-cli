@@ -142,11 +142,11 @@ describe('create components with props tests', () => {
     ).toEqual('string')
   })
 
-  test('should be able to create a stateless component with props', async () => {
+  test('should be able to create a function-view component with props', async () => {
     await run(
       ['v', 'c', 'foo'],
       [
-        // What component type do you prefer? stateless component
+        // What component type do you prefer? function-view component
         DOWN,
         ENTER,
 
@@ -198,11 +198,11 @@ describe('create components with props tests', () => {
     )
   })
 
-  test('should be able to create a stateless functional component with props', async () => {
+  test('should be able to create a function-view functional component with props', async () => {
     await run(
       ['v', 'c', 'foo'],
       [
-        // What component type do you prefer? stateless functional component
+        // What component type do you prefer? function-view functional component
         DOWN,
         DOWN,
         ENTER,

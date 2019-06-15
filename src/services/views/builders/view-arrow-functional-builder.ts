@@ -5,7 +5,7 @@ import { Source, Utils } from '../../core'
 import { ViewKindEnum } from '../enums'
 import { PropsHelper } from '../helpers/props-helper'
 
-export class ViewStatelessFunctionalBuilder {
+export class ViewArrowFunctionBuilder {
   context: RootContext
   kind: ViewKindEnum
   utils: Utils

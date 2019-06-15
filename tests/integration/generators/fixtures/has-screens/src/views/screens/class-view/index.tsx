@@ -1,11 +1,11 @@
 import React from 'react'
 import { Text, View } from 'react-native'
 
-export class ClassBasedScreen extends React.Component {
+export class ClassViewScreen extends React.Component {
   render() {
     return (
       <View>
-        <Text>ClassBasedScreen</Text>
+        <Text>ClassViewScreen</Text>
       </View>
     )
   }

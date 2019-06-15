@@ -120,7 +120,7 @@ export interface ComponentAActionProps {
     )
   })
 
-  test('should be able to connect store to stateless component', async () => {
+  test('should be able to connect store to function-view component', async () => {
     await run(
       ['s', 'c'],
       [
@@ -206,7 +206,7 @@ export interface ComponentBActionProps {
     )
   })
 
-  test('should be able to connect store to stateless functional component', async () => {
+  test('should be able to connect store to function-view functional component', async () => {
     await run(
       ['s', 'c'],
       [

@@ -106,7 +106,7 @@ export class ComponentA extends React.Component<ComponentAProps> {
     )
   })
 
-  test('should be able to add props to stateless component', async () => {
+  test('should be able to add props to function-view component', async () => {
     await run(
       ['v', 'p'],
       [
@@ -174,7 +174,7 @@ export function ComponentB(props: ComponentBProps) {
     )
   })
 
-  test('should be able to add props to stateless functional component', async () => {
+  test('should be able to add props to function-view functional component', async () => {
     await run(
       ['v', 'p'],
       [

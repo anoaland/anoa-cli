@@ -218,16 +218,16 @@ export class CreateNavigatorBuilder {
     )
 
     switch (screenToAttach.info.type) {
-      case ViewTypeEnum.classBased:
+      case ViewTypeEnum.classComponent:
         return this.attachToClass(
           this.screenFile.getClass(screenToAttach.info.name)
         )
 
-      case ViewTypeEnum.stateless:
-        return this.attachToStateless(screenToAttach.info.name, this.screenFile)
+      case ViewTypeEnum.functionComponent:
+        return this.attachToFunction(screenToAttach.info.name, this.screenFile)
 
-      case ViewTypeEnum.statelessFunctional:
-        return this.attachToStatelessFunctional(
+      case ViewTypeEnum.arrowFunctionComponent:
+        return this.attachToArrowFunction(
           screenToAttach.info.name,
           this.screenFile
         )
@@ -236,7 +236,7 @@ export class CreateNavigatorBuilder {
     return false
   }
 
-  private attachToStatelessFunctional(
+  private attachToArrowFunction(
     name: string,
     screenFile: SourceFile
   ): boolean {
@@ -263,7 +263,7 @@ export class CreateNavigatorBuilder {
     return true
   }
 
-  private attachToStateless(name: string, screenFile: SourceFile): boolean {
+  private attachToFunction(name: string, screenFile: SourceFile): boolean {
     let fn = screenFile.getFunction(name)
     if (!fn) {
       const vd = screenFile.getVariableDeclaration(name)

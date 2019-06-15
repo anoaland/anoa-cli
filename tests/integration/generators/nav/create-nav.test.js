@@ -41,6 +41,7 @@ describe('create nav tests', () => {
         'y',
 
         // Select screens
+        DOWN,
         ENTER, // class based
 
         // Select the type of navigator you would like to use
@@ -48,7 +49,6 @@ describe('create nav tests', () => {
 
         // Select screens to routes
         SPACE,
-        DOWN,
         DOWN,
         SPACE,
         DOWN,
@@ -59,7 +59,8 @@ describe('create nav tests', () => {
         ENTER,
 
         // Select the initial route
-        ENTER // ClassBasedScreen          [class-based/index.tsx]
+        DOWN,
+        ENTER // ClassViewScreen          [class-view/index.tsx]
       ]
     )
 
@@ -71,63 +72,63 @@ describe('create nav tests', () => {
       tsConfigFilePath
     })
 
-    process.chdir('src/views/screens/class-based')
+    process.chdir('src/views/screens/class-view')
 
     const screenFile = project.addExistingSourceFile('index.tsx')
-    expect(screenFile.getText()).toEqual(
+    expect(screenFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import React from 'react'
-import { ClassBasedScreenNav } from './nav'
+import { ClassViewScreenNav } from './nav'
 
-export class ClassBasedScreen extends React.Component {
+export class ClassViewScreen extends React.Component {
   render() {
-    return <ClassBasedScreenNav />
+    return <ClassViewScreenNav />
     /*
           return (
       <View>
-      <Text>ClassBasedScreen</Text>
+      <Text>ClassViewScreen</Text>
       </View>
       )
           */
   }
 }
-`
+`.replace(/\s+/gm, ` `)
     )
 
     const navFile = project.addExistingSourceFile('nav.ts')
-    expect(navFile.getText()).toEqual(
+    expect(navFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import { createAppContainer, createStackNavigator } from 'react-navigation'
-import { ClassBasedScreen } from '.'
-import { StatelessScreen } from '../stateless'
-import { StatelessFnScreen } from '../stateless-fn'
-
-export const ClassBasedScreenNav = createAppContainer(
-  createStackNavigator(
-    {
-      ClassBased: {
-        screen: ClassBasedScreen,
-        navigationOptions: {
-          title: 'Class Based'
-        }
-      },
-      Stateless: {
-        screen: StatelessScreen,
-        navigationOptions: {
-          title: 'Stateless'
-        }
-      },
-      StatelessFn: {
-        screen: StatelessFnScreen,
-        navigationOptions: {
-          title: 'Stateless Fn'
-        }
-      }
-    },
-    {
-      initialRouteName: 'ClassBased'
-    }
-  )
-)
-`
+      import { ClassViewScreen } from '.'
+      import { ArrowFunctionViewScreen } from '../arrow-function-view'
+      import { FunctionViewScreen } from '../function-view'
+      
+      export const ClassViewScreenNav = createAppContainer(
+        createStackNavigator(
+          {
+            ArrowFunctionView: {
+              screen: ArrowFunctionViewScreen,
+              navigationOptions: {
+                title: 'Arrow Function View'
+              }
+            },
+            ClassView: {
+              screen: ClassViewScreen,
+              navigationOptions: {
+                title: 'Class View'
+              }
+            },
+            FunctionView: {
+              screen: FunctionViewScreen,
+              navigationOptions: {
+                title: 'Function View'
+              }
+            }
+          },
+          {
+            initialRouteName: 'ClassView'
+          }
+        )
+      )
+      `.replace(/\s+/gm, ` `)
     )
   })
 })

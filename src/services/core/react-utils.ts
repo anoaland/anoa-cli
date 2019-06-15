@@ -177,7 +177,7 @@ export class ReactUtils {
       name: clazz.getName(),
       props,
       state,
-      type: ViewTypeEnum.classBased
+      type: ViewTypeEnum.classComponent
     }
   }
 
@@ -186,7 +186,7 @@ export class ReactUtils {
     if (func) {
       return {
         name: func.getName(),
-        type: ViewTypeEnum.stateless,
+        type: ViewTypeEnum.functionComponent,
         props: this.getPropsTypeFromParams(func.getParameters())
       }
     }
@@ -223,7 +223,7 @@ export class ReactUtils {
 
     return {
       name: varStmt.getName(),
-      type: ViewTypeEnum.stateless,
+      type: ViewTypeEnum.functionComponent,
       props: this.getPropsTypeFromParams(func.getParameters())
     }
   }
@@ -240,7 +240,7 @@ export class ReactUtils {
 
     return {
       name: declaration.getName(),
-      type: ViewTypeEnum.statelessFunctional,
+      type: ViewTypeEnum.arrowFunctionComponent,
       props: this.getPropsTypeFromParams(arrowFn.getParameters())
     }
   }
@@ -303,7 +303,7 @@ export class ReactUtils {
     return { react: matches[0], info, reactExtends }
   }
 
-  static addPropsReferenceToStatelessView(
+  static addPropsReferenceToFunctionView(
     viewFunction: FunctionDeclaration | ArrowFunction,
     propsInterface: InterfaceDeclaration
   ) {
@@ -321,7 +321,7 @@ export class ReactUtils {
     this.addImportInterfaceDeclaration(viewFile, propsInterface)
   }
 
-  static addPropsReferenceToStatelessFunctionalView(
+  static addPropsReferenceToArrowFunctionView(
     varStatement: VariableStatement,
     propsInterface: InterfaceDeclaration
   ) {
@@ -338,7 +338,7 @@ export class ReactUtils {
     const viewFunction = declaration.getFirstDescendantByKind(
       SyntaxKind.ArrowFunction
     )
-    this.addPropsReferenceToStatelessView(viewFunction, propsInterface)
+    this.addPropsReferenceToFunctionView(viewFunction, propsInterface)
   }
 
   static addClassDecorator(
@@ -466,7 +466,7 @@ export class ReactUtils {
     }
   }
 
-  static getOrCreateViewVarOfStatelessView(
+  static getOrCreateViewVarOfFunctionView(
     viewFile: SourceFile,
     info: ReactComponentInfo,
     propsName: string

@@ -6,9 +6,9 @@ export enum TaskEnum {
 }
 
 export enum ViewTypeEnum {
-  classBased = 'Class based',
-  stateless = 'Stateless',
-  statelessFunctional = 'Stateless Functional'
+  classComponent = 'Class',
+  functionComponent = 'Function',
+  arrowFunctionComponent = 'Arrow Function'
 }
 
 export enum ViewKindEnum {

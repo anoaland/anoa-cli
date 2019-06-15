@@ -44,7 +44,6 @@ describe('connect theme tests', () => {
         // Select screen(s) to connect
         SPACE,
         DOWN,
-        DOWN,
         SPACE,
         DOWN,
         SPACE,
@@ -63,24 +62,24 @@ describe('connect theme tests', () => {
     process.chdir('src/views/screens')
 
     const classBasedScreenFile = project.addExistingSourceFile(
-      'class-based/index.tsx'
+      'class-view/index.tsx'
     )
     expect(classBasedScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
-      import { ClassBasedScreenProps } from './props'
+      import { ClassViewScreenProps } from './props'
       
       @AppStyle.withThemeClass()
-      export class ClassBasedScreen extends React.Component<ClassBasedScreenProps> {
-        constructor(props: ClassBasedScreenProps) {
+      export class ClassViewScreen extends React.Component<ClassViewScreenProps> {
+        constructor(props: ClassViewScreenProps) {
           super(props)
         }
       
         render() {
           return (
             <View>
-              <Text>ClassBasedScreen</Text>
+              <Text>ClassViewScreen</Text>
             </View>
           )
         }
@@ -89,60 +88,60 @@ describe('connect theme tests', () => {
     )
 
     const classBasedScreenPropsFile = project.addExistingSourceFile(
-      'class-based/props.ts'
+      'class-view/props.ts'
     )
     expect(classBasedScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import { AppStyleProps } from '../../styles'
 
-      export interface ClassBasedScreenProps extends AppStyleProps {}
+      export interface ClassViewScreenProps extends AppStyleProps {}
       `.replace(/\s+/gm, ` `)
     )
 
-    const statelessScreenFile = project.addExistingSourceFile(
-      'stateless/index.tsx'
+    const functionViewScreenFile = project.addExistingSourceFile(
+      'function-view/index.tsx'
     )
-    expect(statelessScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect(functionViewScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
-      import { StatelessScreenProps } from './props'
+      import { FunctionViewScreenProps } from './props'
       
-      function _StatelessScreen(props: StatelessScreenProps) {
+      function _FunctionViewScreen(props: FunctionViewScreenProps) {
         return (
           <View>
-            <Text>StatelessScreen</Text>
+            <Text>FunctionViewScreen</Text>
           </View>
         )
       }
       
-      export const StatelessScreen = AppStyle.withTheme(_StatelessScreen)
+      export const FunctionViewScreen = AppStyle.withTheme(_FunctionViewScreen)
       `.replace(/\s+/gm, ` `)
     )
 
-    const statelessScreenPropsFile = project.addExistingSourceFile(
-      'stateless/props.ts'
+    const functionViewScreenPropsFile = project.addExistingSourceFile(
+      'function-view/props.ts'
     )
-    expect(statelessScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect(functionViewScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import { AppStyleProps } from '../../styles'
 
-      export interface StatelessScreenProps extends AppStyleProps {}
+      export interface FunctionViewScreenProps extends AppStyleProps {}
       `.replace(/\s+/gm, ` `)
     )
 
-    const statelessFnScreenFile = project.addExistingSourceFile(
-      'stateless-fn/index.tsx'
+    const arrowFunctionScreenFile = project.addExistingSourceFile(
+      'arrow-function-view/index.tsx'
     )
-    expect(statelessFnScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect(arrowFunctionScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
-      import { StatelessFnScreenProps } from './props'
+      import { ArrowFunctionViewScreenProps } from './props'
       
-      export const StatelessFnScreen = AppStyle.withTheme(
-        (props: StatelessFnScreenProps) => {
+      export const ArrowFunctionViewScreen = AppStyle.withTheme(
+        (props: ArrowFunctionViewScreenProps) => {
           return (
             <View>
-              <Text>StatelessFnScreen</Text>
+              <Text>ArrowFunctionViewScreen</Text>
             </View>
           )
         }
@@ -150,13 +149,15 @@ describe('connect theme tests', () => {
       `.replace(/\s+/gm, ` `)
     )
 
-    const statelessFnScreenPropsFile = project.addExistingSourceFile(
-      'stateless-fn/props.ts'
+    const arrowFunctionViewScreenPropsFile = project.addExistingSourceFile(
+      'arrow-function-view/props.ts'
     )
-    expect(statelessFnScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect(
+      arrowFunctionViewScreenPropsFile.getText().replace(/\s+/gm, ` `)
+    ).toEqual(
       `import { AppStyleProps } from '../../styles'
 
-      export interface StatelessFnScreenProps extends AppStyleProps {}
+      export interface ArrowFunctionViewScreenProps extends AppStyleProps {}
       `.replace(/\s+/gm, ` `)
     )
   })
