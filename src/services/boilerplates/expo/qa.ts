@@ -1,14 +1,17 @@
 import { ExpoBoilerplateArgs } from '../../../generators/boilerplates/expo/types'
+import { Utils } from '../../../generators/utils'
 import { ValidateUtils } from '../../../generators/utils/validate'
 import { RootContext } from '../../../libs'
 
 export class ExpoBoilerplateServiceQA {
   context: RootContext
   validateUtils: ValidateUtils
+  utils: Utils
 
   constructor(context: RootContext) {
     this.context = context
     this.validateUtils = new ValidateUtils(context)
+    this.utils = new Utils(context)
   }
 
   async run(dir: string): Promise<ExpoBoilerplateArgs> {
@@ -19,23 +22,24 @@ export class ExpoBoilerplateServiceQA {
     } = this.context
 
     if (!dir) {
-      const { projectDir } = await prompt.ask({
-        name: 'projectDir',
+      ;({ dir } = await prompt.ask({
+        name: 'dir',
         type: 'input',
         message: 'Enter project directory',
         validate: val => this.validateUtils.dirName('Project directory', val)
-      })
-      dir = projectDir
+      }))
     }
 
     let { name, slug } = options
 
     if (!name) {
+      const defaultName = this.utils.varNameToWords(dir)
       ;({ name } = await prompt.ask({
         name: 'name',
         type: 'input',
-        message: 'Name of project visible on the home screen (eg: Cool App)',
-        validate: val => this.validateUtils.notEmpty('Project name', val)
+        message: `Name of project visible on the home screen (eg: ${defaultName})`,
+        validate: val => this.validateUtils.notEmpty('Project name', val),
+        initial: defaultName
       }))
     }
 
@@ -50,8 +54,9 @@ export class ExpoBoilerplateServiceQA {
       ;({ slug } = await prompt.ask({
         name: 'slug',
         type: 'input',
-        message: 'Slug or url friendly of your project (eg: cool-app)',
-        validate: val => this.validateUtils.dirName('Slug or url', val)
+        message: `Slug or url friendly of your project (eg: ${dir})`,
+        validate: val => this.validateUtils.dirName('Slug or url', val),
+        initial: dir
       }))
     }
 

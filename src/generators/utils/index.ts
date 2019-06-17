@@ -102,6 +102,20 @@ export class Utils {
     }
     newline()
   }
+
+  /**
+   * Convert variable name to readable title. (eg: 'awesome-todo' to 'Awesome Todo')
+   * @param varName variable name
+   */
+  varNameToWords(varName: string): string {
+    const {
+      strings: { snakeCase, upperFirst }
+    } = this.context
+    return snakeCase(varName)
+      .split('_')
+      .map(s1 => upperFirst(s1))
+      .join(' ')
+  }
 }
 
 export type Helps = { [key: string]: string | Helps }
