@@ -53,4 +53,55 @@ export class Utils {
     } = this.context
     return colors.error(error.stderr ? error.stderr : error.toString())
   }
+
+  /**
+   * Show help messages if found -h or --help parameters
+   * @param helps help messages in key value string
+   * @param pad pad between key and value
+   * @param title title
+   */
+  handlePrintHelps(helps: Helps, title?: string, pad: number = 30) {
+    const {
+      parameters: { options }
+    } = this.context
+    if (options && (options.h || options.help)) {
+      this.printHelps(helps, title, pad)
+      process.exit(0)
+    }
+  }
+
+  /**
+   * Print help messages
+   * @param helps help messages in key value string
+   * @param pad pad between key and value
+   * @param title title
+   */
+  printHelps(helps: Helps, title?: string, pad: number = 30) {
+    const {
+      print: { colors, info, newline },
+      strings: { padEnd }
+    } = this.context
+
+    if (title) {
+      newline()
+      info('  ' + title)
+    }
+    const keys = Object.keys(helps)
+    for (const key of keys) {
+      const contents = helps[key]
+      if (typeof contents === 'object') {
+        newline()
+        info(`  ${colors.bold(key)}:`)
+        newline()
+        for (const k of Object.keys(contents)) {
+          info(`    ${padEnd(k, pad)} ${contents[k]}`)
+        }
+      } else {
+        info(`    ${padEnd(key, pad)} ${helps[key]}`)
+      }
+    }
+    newline()
+  }
 }
+
+export type Helps = { [key: string]: string | Helps }

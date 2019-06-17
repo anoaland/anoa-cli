@@ -1,6 +1,7 @@
 import { Utils } from '../../generators/utils'
 import { RootContext } from '../../libs'
 import { ExpoBoilerplateService } from './expo'
+import { helps } from './helps'
 import { ReactNativeInitBoilerplate } from './react-native-init'
 import { ProjectTypes } from './types'
 
@@ -19,6 +20,8 @@ export class Boilerplate {
    * @param dir target directory
    */
   async init() {
+    this.utils.handlePrintHelps(helps, 'Generate new react native project')
+
     const {
       parameters: { first: dir, options },
       prompt
