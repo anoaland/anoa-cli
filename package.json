@@ -44,6 +44,7 @@
     "prettier": "^1.16.4",
     "remove": "^0.1.5",
     "semver": "^5.6.0",
+    "semver-regex": "^3.1.0",
     "ts-morph": "^2.3.0",
     "typescript": "^3.3.3"
   },

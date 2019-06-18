@@ -1,9 +1,9 @@
 import { Utils } from '../../generators/utils'
 import { RootContext } from '../../libs'
+import { ProjectTypes } from '../../libs/config'
 import { ExpoBoilerplateService } from './expo'
 import { helps } from './helps'
-import { ReactNativeInitBoilerplate } from './react-native-init'
-import { ProjectTypes } from './types'
+import { ReactNativeInitBoilerplateService } from './react-native-init'
 
 export class Boilerplate {
   context: RootContext
@@ -55,7 +55,7 @@ export class Boilerplate {
         break
 
       case ProjectTypes.REACT_NATIVE_INIT:
-        await new ReactNativeInitBoilerplate(this.context).init(dir)
+        await new ReactNativeInitBoilerplateService(this.context).run(dir)
         break
 
       default:

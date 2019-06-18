@@ -9,12 +9,12 @@ export class ExpoBoilerplateService {
   utils: Utils
   args: ExpoBoilerplateArgs
   qa: ExpoBoilerplateServiceQA
-  provider: ExpoBoilerplateGenerator
+  generator: ExpoBoilerplateGenerator
 
   constructor(context: RootContext) {
     this.context = context
     this.utils = new Utils(context)
-    this.provider = new ExpoBoilerplateGenerator(context)
+    this.generator = new ExpoBoilerplateGenerator(context)
     this.qa = new ExpoBoilerplateServiceQA(context)
   }
 
@@ -23,8 +23,8 @@ export class ExpoBoilerplateService {
    * @param projectDir project directory
    */
   async run(projectDir: string) {
-    await this.provider.validate()
+    await this.generator.validate()
     const args = await this.qa.run(projectDir)
-    await this.provider.generate(args)
+    await this.generator.generate(args)
   }
 }

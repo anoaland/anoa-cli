@@ -11,7 +11,7 @@ import {
   VariableDeclarationKind
 } from 'ts-morph'
 import { RootContext } from '../../../../libs'
-import { ProjectTypes } from '../../../boilerplates/types'
+import { ProjectTypes } from '../../../../libs/config'
 import { Npm, Source, Utils } from '../../../core'
 import { ReactUtils } from '../../../core/react-utils'
 import { ViewTypeEnum } from '../../../views/enums'
@@ -236,10 +236,7 @@ export class CreateNavigatorBuilder {
     return false
   }
 
-  private attachToArrowFunction(
-    name: string,
-    screenFile: SourceFile
-  ): boolean {
+  private attachToArrowFunction(name: string, screenFile: SourceFile): boolean {
     const vd = screenFile.getVariableDeclaration(name)
     if (!vd) {
       return false
