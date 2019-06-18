@@ -133,30 +133,22 @@ export class ReactNativeInitBoilerplate {
    */
   private success() {
     const {
-      print,
+      print: { colors, newline, info, success },
       filesystem: { cwd }
     } = this.context
     const { dir } = this.info
-    print.newline()
-    print.success(`Your project is ready at ${print.colors.bold(cwd())}`)
-    print.newline()
-    print.info(
-      print.colors.blue(`Run instructions for ${print.colors.bold('iOS')}:`)
-    )
-    print.info(`  • cd ${dir} && react-native run-ios`)
-    print.info(`  - or - `)
-    print.info(`  • Open ios/${dir}.xcodeproj in Xcode`)
-    print.info(`  • Hit the Run button`)
-    print.newline()
-    print.info(
-      print.colors.green(
-        `Run instructions for ${print.colors.bold('Android')}:`
-      )
-    )
-    print.info(
-      `  • Have an Android emulator running (quickest way to get started), or a device connected.`
-    )
-    print.info(`  • cd ${dir} && react-native run-android`)
-    print.newline()
+    newline()
+    success(`Your project is ready at ${colors.bold(cwd())}`)
+    newline()
+    info(colors.cyan(`Run instructions for ${colors.bold('iOS')}:`))
+    info(`  • cd ${dir} && react-native run-ios`)
+    info(`  - or - `)
+    info(`  • Open ios/${dir}.xcodeproj in Xcode`)
+    info(`  • Hit the Run button`)
+    newline()
+    info(colors.green(`Run instructions for ${colors.bold('Android')}:`))
+    info(`  • Have an Android emulator running, or a device connected.`)
+    info(`  • cd ${dir} && react-native run-android`)
+    newline()
   }
 }

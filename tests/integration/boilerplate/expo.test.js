@@ -33,7 +33,7 @@ describe('expo boilerplate tests', () => {
         // 'Slug or url friendly of your project',
         'the-cool-foo',
         ENTER,
-        // 'We found yarn installed in your system. Do you want to use yarn instead of npm',
+        // 'Use yarn instead of npm',
         'y'
       ]
     )

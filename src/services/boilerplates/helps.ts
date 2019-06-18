@@ -12,8 +12,8 @@ export const helps = {
     )} for Expo project, or ${colors.cyan(
       'react-native-init'
     )} React Native Init project`,
-    '--name (project name)': 'Set the project name',
-    '--slug (project slug)': 'Set the project slug',
-    '--yarn': 'Force use yarn if found installed'
+    '--name (project name)': 'Set the project name (expo only)',
+    '--slug (project slug)': 'Set the project slug (expo only)',
+    '--yarn': 'Force use yarn if found installed (expo only)'
   }
 }

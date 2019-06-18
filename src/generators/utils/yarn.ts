@@ -73,11 +73,9 @@ export class YarnUtils {
     }
 
     const useYarn = await this.utils.confirm(
-      `We found ${colors.yellow(
-        'yarn'
-      )} installed in your system. Do you want to use ${colors.yellow(
-        'yarn'
-      )} instead of ${colors.yellow('npm')}?`
+      colors.bold(
+        `Use ${colors.yellow('yarn')} instead of ${colors.yellow('npm')}?`
+      )
     )
 
     return useYarn

@@ -37,7 +37,7 @@ export class ExpoBoilerplateServiceQA {
       ;({ name } = await prompt.ask({
         name: 'name',
         type: 'input',
-        message: `Name of project visible on the home screen (eg: ${defaultName})`,
+        message: `Name of project visible on the home screen`,
         validate: val => this.validateUtils.notEmpty('Project name', val),
         initial: defaultName
       }))
@@ -54,7 +54,7 @@ export class ExpoBoilerplateServiceQA {
       ;({ slug } = await prompt.ask({
         name: 'slug',
         type: 'input',
-        message: `Slug or url friendly of your project (eg: ${dir})`,
+        message: `Slug or url friendly of your project`,
         validate: val => this.validateUtils.dirName('Slug or url', val),
         initial: dir
       }))
