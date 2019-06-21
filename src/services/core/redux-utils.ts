@@ -12,7 +12,7 @@ import {
   VariableDeclaration
 } from 'ts-morph'
 import { RootContext } from '../../libs'
-import { FieldObject } from './object-builder'
+import { FieldObject } from "../../generators/types";
 import { NamePathInfo } from './project-browser'
 import { ReactComponentInfo, ReactUtils } from './react-utils'
 

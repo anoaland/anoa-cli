@@ -16,9 +16,9 @@ import {
   VariableDeclarationKind,
   VariableStatement
 } from 'ts-morph'
+import { FieldObject } from '../../generators/types'
+import { ViewTypeEnum } from '../../generators/views/types'
 import { RootContext } from '../../libs'
-import { ViewTypeEnum } from '../views/enums'
-import { FieldObject } from './object-builder'
 
 export class ReactUtils {
   static getConstructorFromClass(clazz: ClassDeclaration) {

@@ -1,3 +1,4 @@
+import * as path from 'path'
 import { RootContext } from '../../libs'
 
 export class Utils {
@@ -115,6 +116,14 @@ export class Utils {
       .split('_')
       .map(s1 => upperFirst(s1))
       .join(' ')
+  }
+
+  relativePath(fullPath: string): string {
+    const {
+      filesystem: { cwd }
+    } = this.context
+
+    return path.relative(cwd(), fullPath)
   }
 }
 

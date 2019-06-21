@@ -1,6 +1,7 @@
 import { Project, SourceFile, TypeAliasDeclaration } from 'ts-morph'
+import { FieldObject } from '../../../../generators/types'
 import { RootContext } from '../../../../libs'
-import { FieldObject, ObjectBuilder, Utils } from '../../../core'
+import { ObjectBuilder, Utils } from '../../../core'
 import { ProjectBrowser } from '../../../core/project-browser'
 import { ReduxUtils } from '../../../core/redux-utils'
 

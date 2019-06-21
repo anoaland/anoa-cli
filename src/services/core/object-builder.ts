@@ -1,5 +1,6 @@
 import { RootContext } from '../../libs'
 import { Utils } from './utils'
+import { FieldObject } from '../../generators/types';
 
 export class ObjectBuilder {
   context: RootContext
@@ -360,10 +361,4 @@ export class ObjectBuilder {
   }
 }
 
-export interface FieldObject<T = any> {
-  name: string
-  type: string
-  optional: boolean
-  initial?: string
-  data?: T
-}
+

@@ -1,5 +1,6 @@
+import { FieldObject } from '../../../../generators/types'
 import { RootContext } from '../../../../libs'
-import { FieldObject, ObjectBuilder, Utils } from '../../../core'
+import { ObjectBuilder, Utils } from '../../../core'
 
 export class ReducerQA implements ReducerProps {
   context: RootContext

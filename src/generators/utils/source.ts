@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { format, resolveConfig } from 'prettier'
-import { SourceFile } from 'ts-morph'
+import { Project, SourceFile } from 'ts-morph'
 import { RootContext } from '../../libs'
 
 export class SourceUtils {
@@ -93,6 +93,12 @@ export class SourceUtils {
         parser: 'typescript'
       })
     )
+  }
+
+  async prettifyProjectFiles(project: Project) {
+    for (const sourceFile of project.getSourceFiles('**/*.ts?(x)')) {
+      await this.prettifySoureFile(sourceFile)
+    }
   }
 }
 

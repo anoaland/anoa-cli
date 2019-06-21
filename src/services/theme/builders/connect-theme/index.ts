@@ -11,7 +11,7 @@ import { RootContext } from '../../../../libs'
 import { Npm, Source, Utils } from '../../../core'
 import { BrowseViewInfo } from '../../../core/project-browser'
 import { ReactUtils } from '../../../core/react-utils'
-import { ViewTypeEnum } from '../../../views/enums'
+import { ViewTypeEnum } from '../../../../generators/views/types'
 import { ConnectThemeBuilderQA } from './qa'
 
 export class ConnectThemeBuilder {

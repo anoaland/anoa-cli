@@ -1,7 +1,7 @@
 import { RootContext } from '../../../../libs'
 import { Utils } from '../../../core'
 import { BrowseViewInfo, ProjectBrowser } from '../../../core/project-browser'
-import { ViewKindEnum } from '../../../views/enums'
+import { ViewKindEnum } from '../../../../generators/views/types'
 
 export class ConnectThemeBuilderQA {
   context: RootContext

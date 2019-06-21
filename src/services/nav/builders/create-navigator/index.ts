@@ -14,7 +14,7 @@ import { RootContext } from '../../../../libs'
 import { ProjectTypes } from '../../../../libs/config'
 import { Npm, Source, Utils } from '../../../core'
 import { ReactUtils } from '../../../core/react-utils'
-import { ViewTypeEnum } from '../../../views/enums'
+import { ViewTypeEnum } from '../../../../generators/views/types'
 import { NavigatorTypeEnum } from './nav-types'
 import { CreateNavigatorBuilderQA } from './qa'
 
