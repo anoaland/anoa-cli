@@ -3,7 +3,6 @@ const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
 const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -60,53 +59,37 @@ describe('update views tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-a')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
+    expect('index.tsx').existsAndPrettySame(`
+    import React from 'react'
+    import { Text, View } from 'react-native'
+    import { ComponentAProps } from './props'
+    
+    export class ComponentA extends React.Component<ComponentAProps> {
+      constructor(props: ComponentAProps) {
+        super(props)
+      }
+    
+      render() {
+        return (
+          <View>
+            <Text>ComponentA</Text>
+          </View>
+        )
+      }
+    }    
+    `)
 
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
-      `import React from 'react'
-import { Text, View } from 'react-native'
-import { ComponentAProps } from './props'
-
-export class ComponentA extends React.Component<ComponentAProps> {
-  constructor(props: ComponentAProps) {
-    super(props)
-  }
-
-  render() {
-    return (
-      <View>
-        <Text>ComponentA</Text>
-      </View>
-    )
-  }
-}
-`
-    )
-
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
-      `export interface ComponentAProps {
-  props1: string
-  props2: number
-}
-`
-    )
+    expect('props.ts').existsAndPrettySame(`
+    export interface ComponentAProps {
+      props1: string
+      props2: number
+    }
+    `)
   })
 
-  test('should be able to add props to function-view component', async () => {
+  test('should be able to add props to function component', async () => {
     await run(
       ['v', 'p'],
       [
@@ -133,48 +116,32 @@ export class ComponentA extends React.Component<ComponentAProps> {
         ENTER
       ]
     )
-
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
 
     process.chdir('src/views/components/component-b')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
+    expect('index.tsx').existsAndPrettySame(`
+    import React from 'react'
+    import { Text, View } from 'react-native'
+    import { ComponentBProps } from './props'
+    
+    export function ComponentB(props: ComponentBProps) {
+      return (
+        <View>
+          <Text>ComponentB</Text>
+        </View>
+      )
+    }    
+    `)
 
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
-      `import React from 'react'
-import { Text, View } from 'react-native'
-import { ComponentBProps } from './props'
-
-export function ComponentB(props: ComponentBProps) {
-  return (
-    <View>
-      <Text>ComponentB</Text>
-    </View>
-  )
-}
-`
-    )
-
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
-      `export interface ComponentBProps {
-  props1: string
-  props2: number
-}
-`
-    )
+    expect('props.ts').existsAndPrettySame(`
+    export interface ComponentBProps {
+      props1: string
+      props2: number
+    }
+    `)
   })
 
-  test('should be able to add props to function-view functional component', async () => {
+  test('should be able to add props to arrow function component', async () => {
     await run(
       ['v', 'p'],
       [
@@ -203,51 +170,35 @@ export function ComponentB(props: ComponentBProps) {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-c')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
+    expect('index.tsx').existsAndPrettySame(`
+    import React from 'react'
+    import { Text, View } from 'react-native'
+    import { ComponentCProps } from './props'
+    
+    export const ComponentC: React.FC<ComponentCProps> = (
+      props: ComponentCProps
+    ) => {
+      return (
+        <View>
+          <Text>ComponentC</Text>
+        </View>
+      )
+    }    
+    `)
 
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
-      `import React from 'react'
-import { Text, View } from 'react-native'
-import { ComponentCProps } from './props'
-
-export const ComponentC: React.SFC<ComponentCProps> = (
-  props: ComponentCProps
-) => {
-  return (
-    <View>
-      <Text>ComponentC</Text>
-    </View>
-  )
-}
-`
-    )
-
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
-      `export interface ComponentCProps {
-  props1: string
-  props2: number
-}
-`
-    )
+    expect('props.ts').existsAndPrettySame(`
+    export interface ComponentCProps {
+      props1: string
+      props2: number
+    }
+    `)
   })
 
   test('should be able to add state to class based component', async () => {
     await run(
-      ['v', 'e'],
+      ['v', 't'],
       [
         // Select a view kind
         ENTER,
@@ -276,50 +227,129 @@ export const ComponentC: React.SFC<ComponentCProps> = (
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-a')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('state.ts')).toBeTruthy()
+    expect('index.tsx').existsAndPrettySame(`
+    import React from 'react'
+    import { Text, View } from 'react-native'
+    import { ComponentAState } from './state'
+    
+    export class ComponentA extends React.Component<any, ComponentAState> {
+      constructor(props: any) {
+        super(props)
+        this.state = { state1: '', state2: 0 }
+      }
+    
+      render() {
+        return (
+          <View>
+            <Text>ComponentA</Text>
+          </View>
+        )
+      }
+    }    
+    `)
 
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
-      `import React from 'react'
-import { Text, View } from 'react-native'
-import { ComponentAState } from './state'
+    expect('state.ts').existsAndPrettySame(`
+    export interface ComponentAState {
+      state1: string
+      state2: number
+    }
+    `)
+  })
 
-export class ComponentA extends React.Component<any, ComponentAState> {
-  constructor(props: any) {
-    super(props)
-    this.state = { state1: '', state2: 0 }
-  }
+  test('should be able to add hooks to function component', async () => {
+    await run(
+      ['v', 't'],
+      [
+        // Select a view kind
+        ENTER,
 
-  render() {
-    return (
-      <View>
-        <Text>ComponentA</Text>
-      </View>
+        // Select a Component
+        DOWN,
+        ENTER,
+
+        // Add new state
+        'state1',
+        TAB,
+        `''`,
+        ENTER,
+
+        // Add more state
+        'state2',
+        TAB,
+        '0',
+        ENTER,
+
+        // Stop adding state
+        ENTER
+      ]
     )
-  }
-}
-`
+
+    process.chdir('src/views/components/component-b')
+
+    expect('index.tsx').existsAndPrettySame(`
+    import React, { useState } from 'react'
+    import { Text, View } from 'react-native'
+    
+    export function ComponentB() {
+      const [state1, setState1] = useState('')
+      const [state2, setState2] = useState(0)
+    
+      return (
+        <View>
+          <Text>ComponentB</Text>
+        </View>
+      )
+    }    
+    `)
+  })
+
+  test('should be able to add hooks to arrow function component', async () => {
+    await run(
+      ['v', 't'],
+      [
+        // Select a view kind
+        ENTER,
+
+        // Select a Component
+        DOWN,
+        DOWN,
+        ENTER,
+
+        // Add new state
+        'state1',
+        TAB,
+        `''`,
+        ENTER,
+
+        // Add more state
+        'state2',
+        TAB,
+        '0',
+        ENTER,
+
+        // Stop adding state
+        ENTER
+      ]
     )
 
-    const stateFile = project.addExistingSourceFile('state.ts')
-    expect(stateFile.getText()).toEqual(
-      `export interface ComponentAState {
-  state1: string
-  state2: number
-}
-`
-    )
+    process.chdir('src/views/components/component-c')
+
+    expect('index.tsx').existsAndPrettySame(`
+    import React, { useState } from 'react'
+    import { Text, View } from 'react-native'
+    
+    export const ComponentC: React.FC = () => {
+      const [state1, setState1] = useState('')
+      const [state2, setState2] = useState(0)
+    
+      return (
+        <View>
+          <Text>ComponentC</Text>
+        </View>
+      )
+    }
+    `)
   })
 })
