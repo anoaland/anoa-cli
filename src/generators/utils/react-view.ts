@@ -197,29 +197,7 @@ export class ReactView {
 
       const fields: FieldObject[] = []
 
-      // for (const s of fn.getVariableDeclarations()) {
-      // const ce = s.getFirstDescendantByKind(SyntaxKind.CallExpression)
-      // if (ce && ce.getText().startsWith('useState(')) {
       for (const { name, initial } of this.reactUtils.getHooks(fn)) {
-        // const stateArgs = ce.getArguments()
-        // let initial = ''
-        // if (stateArgs && stateArgs.length) {
-        //   initial = stateArgs[0].getText()
-        // }
-
-        // let name = ''
-
-        // const arrayBindings = ce
-        //   .getFirstAncestor()
-        //   .getChildAtIndex(0) as ArrayBindingElement
-        // if (arrayBindings) {
-        //   name = arrayBindings
-        //     .getChildAtIndex(1)
-        //     .getText()
-        //     .split(',')[0]
-        //     .trim()
-        // }
-
         fields.push({
           name,
           initial,
@@ -227,8 +205,6 @@ export class ReactView {
           type: ''
         })
       }
-      // }
-      // }
 
       if (!fields.length) {
         return undefined
