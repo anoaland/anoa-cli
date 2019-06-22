@@ -4,7 +4,7 @@ import {
   ViewKindEnum,
   ViewTypeEnum
 } from '../../../generators/views/types'
-import { RootContext } from '../../../libs'
+import { RootContext } from '../../../tools/context'
 import { ViewServiceQA } from './qa'
 
 export class ViewService {

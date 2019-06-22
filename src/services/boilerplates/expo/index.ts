@@ -1,6 +1,6 @@
 import { ExpoBoilerplateGenerator } from '../../../generators/boilerplates/expo'
 import { ExpoBoilerplateArgs } from '../../../generators/boilerplates/expo/types'
-import { RootContext } from '../../../libs'
+import { RootContext } from '../../../tools/context'
 import { Utils } from '../../core'
 import { ExpoBoilerplateServiceQA } from './qa'
 

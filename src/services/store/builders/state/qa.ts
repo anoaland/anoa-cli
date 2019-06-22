@@ -6,7 +6,7 @@ import {
   TypeAliasDeclaration
 } from 'ts-morph'
 import { FieldObject } from '../../../../generators/types'
-import { RootContext } from '../../../../libs'
+import { RootContext } from '../../../../tools/context'
 import { ObjectBuilder, Utils } from '../../../core'
 import { ProjectBrowser } from '../../../core/project-browser'
 

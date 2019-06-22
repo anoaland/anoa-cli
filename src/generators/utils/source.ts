@@ -1,7 +1,7 @@
 import * as path from 'path'
 import { format, resolveConfig } from 'prettier'
 import { Project, SourceFile } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 
 export class SourceUtils {
   context: RootContext

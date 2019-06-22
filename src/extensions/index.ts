@@ -1,4 +1,4 @@
-import { extensions, RootContext } from '../libs'
+import { extensions, RootContext } from '../tools/context'
 
 /**
  * Initialize all extensions

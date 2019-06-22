@@ -1,4 +1,4 @@
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { Utils } from '../core'
 import { ReducerActionTypesBuilder } from './builders/actionTypes'
 import { ReduxConnectBuilder } from './builders/connect'

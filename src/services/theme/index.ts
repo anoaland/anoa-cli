@@ -1,4 +1,4 @@
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { Utils } from '../core'
 import { ConnectThemeBuilder } from './builders/connect-theme'
 import { CreateThemeBuilder } from './builders/create-theme'

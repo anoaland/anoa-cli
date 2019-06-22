@@ -6,7 +6,7 @@ import {
   SourceFile,
   StructureKind
 } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { FieldObject } from '../types'
 
 export class TsUtils {

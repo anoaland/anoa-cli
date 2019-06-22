@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { InterfaceDeclaration, Project, SourceFile } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { Utils } from '../utils'
 import { ReactUtils } from '../utils/react'
 import { SourceUtils } from '../utils/source'

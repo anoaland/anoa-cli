@@ -1,4 +1,4 @@
-import { RootContext } from '../../libs'
+import { RootContext } from '../context'
 
 export function printCommandChooser(context: RootContext) {
   return async () => {

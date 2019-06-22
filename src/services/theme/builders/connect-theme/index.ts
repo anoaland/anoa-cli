@@ -7,11 +7,11 @@ import {
   SyntaxKind,
   VariableDeclaration
 } from 'ts-morph'
-import { RootContext } from '../../../../libs'
+import { ViewTypeEnum } from '../../../../generators/views/types'
+import { RootContext } from '../../../../tools/context'
 import { Npm, Source, Utils } from '../../../core'
 import { BrowseViewInfo } from '../../../core/project-browser'
 import { ReactUtils } from '../../../core/react-utils'
-import { ViewTypeEnum } from '../../../../generators/views/types'
 import { ConnectThemeBuilderQA } from './qa'
 
 export class ConnectThemeBuilder {

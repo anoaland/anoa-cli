@@ -1,5 +1,5 @@
 import { GluegunRunContext } from 'gluegun'
-import * as extensions from '../tools/extensions'
+import * as extensions from './extensions'
 type Extensions = typeof extensions
 
 type RootContext = GluegunRunContext &

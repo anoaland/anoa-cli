@@ -14,7 +14,7 @@ import {
   SyntaxKind,
   VariableStatement
 } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { FieldObject, KeyValue, NameValue } from '../types'
 import { ViewTypeEnum } from '../views/types'
 import { TsUtils } from './ts'

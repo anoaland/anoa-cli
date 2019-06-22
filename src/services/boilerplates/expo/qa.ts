@@ -1,7 +1,7 @@
 import { ExpoBoilerplateArgs } from '../../../generators/boilerplates/expo/types'
 import { Utils } from '../../../generators/utils'
 import { ValidateUtils } from '../../../generators/utils/validate'
-import { RootContext } from '../../../libs'
+import { RootContext } from '../../../tools/context'
 
 export class ExpoBoilerplateServiceQA {
   context: RootContext

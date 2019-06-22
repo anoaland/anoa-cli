@@ -6,7 +6,7 @@ import {
   StructureKind,
   SyntaxKind
 } from 'ts-morph'
-import { RootContext } from '../../../../libs'
+import { RootContext } from '../../../../tools/context'
 import { ObjectBuilder, Source } from '../../../core'
 import { ReduxUtils } from '../../../core/redux-utils'
 import { ReducerStateQA } from './qa'

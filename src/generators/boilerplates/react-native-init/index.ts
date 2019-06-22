@@ -1,8 +1,5 @@
-import { RootContext } from '../../../libs'
-import {
-  MIN_REACT_NATIVE_INIT_VERSION,
-  ProjectTypes
-} from '../../../libs/config'
+import { MIN_REACT_NATIVE_INIT_VERSION, ProjectTypes } from '../../../config'
+import { RootContext } from '../../../tools/context'
 import { Utils } from '../../utils'
 import { NpmUtils } from '../../utils/npm'
 import { ProjectUtils } from '../../utils/project'

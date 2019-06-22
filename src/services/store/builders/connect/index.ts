@@ -5,12 +5,12 @@ import {
   SourceFile,
   StructureKind
 } from 'ts-morph'
-import { RootContext } from '../../../../libs'
+import { ViewTypeEnum } from '../../../../generators/views/types'
+import { RootContext } from '../../../../tools/context'
 import { Source } from '../../../core'
 import { BrowseViewInfo } from '../../../core/project-browser'
 import { ReactUtils } from '../../../core/react-utils'
 import { NameValue, ReduxUtils } from '../../../core/redux-utils'
-import { ViewTypeEnum } from '../../../../generators/views/types'
 import { ReduxConnectQA } from './qa'
 
 export class ReduxConnectBuilder {

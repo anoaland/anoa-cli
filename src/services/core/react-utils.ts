@@ -18,7 +18,7 @@ import {
 } from 'ts-morph'
 import { FieldObject } from '../../generators/types'
 import { ViewTypeEnum } from '../../generators/views/types'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 
 export class ReactUtils {
   static getConstructorFromClass(clazz: ClassDeclaration) {

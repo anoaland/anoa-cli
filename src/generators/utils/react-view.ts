@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Project, SourceFile, SyntaxKind } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { FieldObject } from '../types'
 import { ViewKindEnum, ViewTypeEnum } from '../views/types'
 import { ReactComponentInfo, ReactUtils } from './react'

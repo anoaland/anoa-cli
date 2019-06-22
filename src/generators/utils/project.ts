@@ -1,7 +1,7 @@
 import { InspectTreeResult } from 'fs-jetpack/types'
 import * as path from 'path'
 import { Project, SourceFile } from 'ts-morph'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { ViewKindEnum } from '../views/types'
 import { ReactComponentInfo, ReactUtils } from './react'
 import { ReactView } from './react-view'

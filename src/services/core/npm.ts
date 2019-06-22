@@ -1,4 +1,4 @@
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 
 export class Npm {
   context: RootContext

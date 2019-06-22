@@ -1,5 +1,5 @@
 import { ViewKindEnum } from '../../generators/views/types'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 
 export default {
   name: 'component',

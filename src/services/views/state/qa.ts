@@ -2,7 +2,7 @@ import { FieldObject } from '../../../generators/types'
 import { CliUtils } from '../../../generators/utils/cli'
 import { ReactView } from '../../../generators/utils/react-view'
 import { SetStateArgs, ViewTypeEnum } from '../../../generators/views/types'
-import { RootContext } from '../../../libs'
+import { RootContext } from '../../../tools/context'
 
 export class StateServiceQA {
   context: RootContext

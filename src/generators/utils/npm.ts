@@ -1,4 +1,4 @@
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 import { YarnUtils } from './yarn'
 
 export class NpmUtils {

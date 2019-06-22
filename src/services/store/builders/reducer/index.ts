@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Project, SyntaxKind, VariableDeclarationKind } from 'ts-morph'
-import { RootContext } from '../../../../libs'
+import { RootContext } from '../../../../tools/context'
 import { Npm, Source } from '../../../core'
 import { ReducerQA } from './qa'
 import { ReducerActionTypesGenerator } from './reducer-action-types-generator'

@@ -10,11 +10,11 @@ import {
   SyntaxKind,
   VariableDeclarationKind
 } from 'ts-morph'
-import { RootContext } from '../../../../libs'
-import { ProjectTypes } from '../../../../libs/config'
+import { ProjectTypes } from '../../../../config'
+import { ViewTypeEnum } from '../../../../generators/views/types'
+import { RootContext } from '../../../../tools/context'
 import { Npm, Source, Utils } from '../../../core'
 import { ReactUtils } from '../../../core/react-utils'
-import { ViewTypeEnum } from '../../../../generators/views/types'
 import { NavigatorTypeEnum } from './nav-types'
 import { CreateNavigatorBuilderQA } from './qa'
 

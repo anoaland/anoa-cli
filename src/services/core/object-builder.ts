@@ -1,6 +1,6 @@
-import { RootContext } from '../../libs'
+import { FieldObject } from '../../generators/types'
+import { RootContext } from '../../tools/context'
 import { Utils } from './utils'
-import { FieldObject } from '../../generators/types';
 
 export class ObjectBuilder {
   context: RootContext
@@ -360,5 +360,3 @@ export class ObjectBuilder {
     return fields
   }
 }
-
-

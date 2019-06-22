@@ -1,7 +1,7 @@
 import * as path from 'path'
 import { Project } from 'ts-morph'
 import { FieldObject } from '../../../../generators/types'
-import { RootContext } from '../../../../libs'
+import { RootContext } from '../../../../tools/context'
 import { ObjectBuilder, Utils } from '../../../core'
 import { NamePathInfo, ProjectBrowser } from '../../../core/project-browser'
 import { ActionTypeInfo, ReduxUtils } from '../../../core/redux-utils'

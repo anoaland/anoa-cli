@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { RootContext } from '../../libs'
+import { RootContext } from '../context'
 
 /**
  * Get folder path

@@ -11,8 +11,8 @@ import {
   TypeAliasDeclaration,
   VariableDeclaration
 } from 'ts-morph'
-import { RootContext } from '../../libs'
-import { FieldObject } from "../../generators/types";
+import { FieldObject } from '../../generators/types'
+import { RootContext } from '../../tools/context'
 import { NamePathInfo } from './project-browser'
 import { ReactComponentInfo, ReactUtils } from './react-utils'
 

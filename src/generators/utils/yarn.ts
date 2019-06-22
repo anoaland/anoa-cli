@@ -1,5 +1,5 @@
 import { Utils } from '.'
-import { RootContext } from '../../libs'
+import { RootContext } from '../../tools/context'
 
 export class YarnUtils {
   private static cache = {

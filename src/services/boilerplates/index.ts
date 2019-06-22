@@ -1,9 +1,9 @@
-import { Utils } from '../../generators/utils'
-import { RootContext } from '../../libs'
-import { ProjectTypes } from '../../libs/config'
-import { ExpoBoilerplateService } from './expo'
-import { helps } from './helps'
-import { ReactNativeInitBoilerplateService } from './react-native-init'
+import { ProjectTypes } from '../../config';
+import { Utils } from '../../generators/utils';
+import { RootContext } from '../../tools/context';
+import { ExpoBoilerplateService } from './expo';
+import { helps } from './helps';
+import { ReactNativeInitBoilerplateService } from './react-native-init';
 
 export class Boilerplate {
   context: RootContext
