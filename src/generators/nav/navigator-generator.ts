@@ -10,52 +10,41 @@ import {
   SyntaxKind,
   VariableDeclarationKind
 } from 'ts-morph'
-import { ProjectTypes } from '../../../../config'
-import { RootContext } from '../../../../core/types'
-import { ViewTypeEnum } from '../../../../core/types'
-import { Npm, Source, Utils } from '../../../core'
-import { ReactUtils } from '../../../core/react-utils'
-import { NavigatorTypeEnum } from './nav-types'
-import { CreateNavigatorBuilderQA } from './qa'
+import { ProjectTypes } from '../../config'
+import {
+  CreateNavigatorArgs,
+  NavigatorTypeEnum,
+  RootContext,
+  ViewTypeEnum
+} from '../../core/types'
 
-export class CreateNavigatorBuilder {
-  context: RootContext
-  qa: CreateNavigatorBuilderQA
-  project: Project
-  source: Source
-  npm: Npm
-  sourceFile: SourceFile
-  navigatorFn: string
-  screenFile: SourceFile
-  utils: Utils
-  gestureHandlerInstalled: boolean
+export class NavigatorGenerator {
+  private context: RootContext
+  private args: CreateNavigatorArgs
+  private project: Project
+  private sourceFile: SourceFile
+  private screenFile: SourceFile
+  private gestureHandlerInstalled: boolean
+  private navigatorFn: string
 
   constructor(context: RootContext) {
     this.context = context
-    this.qa = new CreateNavigatorBuilderQA(this.context)
-    this.project = new Project()
-    this.source = new Source(context)
-    this.npm = new Npm(context)
-    this.utils = new Utils(context)
   }
 
-  async build() {
-    await this.qa.run()
-    this.navigatorFn = this.getNavigatorFn()
-    await this.generate()
-  }
-
-  async generate() {
-    const {
-      result: { name, screenToAttach }
-    } = this.qa
-
+  async generate(args: CreateNavigatorArgs) {
     const {
       strings: { kebabCase },
-      print: { info, colors, warning, spin, checkmark }
+      print: { info, colors, warning, spin, checkmark },
+      tools
     } = this.context
 
+    this.args = args
+
+    const { name, screenToAttach } = args
+
     const spinner = spin('Generating...')
+
+    this.navigatorFn = this.getNavigatorFn()
 
     const { folder } = this.context
     const filePath = screenToAttach
@@ -65,6 +54,7 @@ export class CreateNavigatorBuilder {
         )
       : folder.navigator(kebabCase(name) + '.ts')
 
+    this.project = new Project()
     this.sourceFile = this.project.createSourceFile(filePath)
 
     this.sourceFile.addImportDeclaration({
@@ -85,24 +75,27 @@ export class CreateNavigatorBuilder {
 
     const screenAttached = this.attachToScreen()
 
-    await this.source.prettifySoureFile(this.sourceFile)
+    const source = tools.source()
+
+    await source.prettifySoureFile(this.sourceFile)
     if (screenToAttach) {
-      await this.source.prettifySoureFile(this.screenFile)
+      await source.prettifySoureFile(this.screenFile)
     }
 
     await this.installNpmPackages()
 
     await this.project.save()
 
+    const utils = tools.utils()
     spinner.succeed(
       `Navigator successfully created on ${colors.yellow(
-        this.utils.relativePath(filePath)
+        utils.relativePath(filePath)
       )}`
     )
 
     if (screenToAttach) {
       const screenPath = colors.yellow(
-        this.utils.relativePath(this.screenFile.getFilePath())
+        utils.relativePath(this.screenFile.getFilePath())
       )
       if (screenAttached) {
         info(`${checkmark} Navigator successfully attached to ${screenPath}`)
@@ -129,32 +122,32 @@ export class CreateNavigatorBuilder {
   }
 
   async installNpmPackages() {
+    const { tools } = this.context
     const packages = ['react-navigation']
-    const projectType = await this.utils.getProjectType()
+    const projectType = await tools.project().getProjectType()
 
     if (projectType === ProjectTypes.REACT_NATIVE_INIT) {
       packages.push('react-native-gesture-handler')
     }
 
-    const installedPkgs = await this.npm.installPackagesIfNotExists(
-      packages,
-      false
-    )
+    const installedPkgs = await tools
+      .npm()
+      .installPackagesIfNotExists(packages, false)
     if (installedPkgs.indexOf('react-native-gesture-handler') > -1) {
       this.gestureHandlerInstalled = true
     }
   }
 
   private generateNavigator() {
-    const {
-      result: { routes, initialRoute }
-    } = this.qa
+    const { routes, initialRoute } = this.args
+    const { tools } = this.context
+    const ts = tools.ts()
 
     for (const r of routes) {
-      ReactUtils.addNamedImport(
+      ts.addNamedImport(
         this.sourceFile,
-        r.screen.path,
-        r.screen.info.name
+        r.screen.sourceFile.getFilePath(),
+        r.screen.name
       )
     }
 
@@ -163,7 +156,7 @@ export class CreateNavigatorBuilder {
         .map(
           r => `
         ${r.routeName}: {
-          screen: ${r.screen.info.name},
+          screen: ${r.screen.name},
             navigationOptions: {
               title: '${r.title}'
             }
@@ -177,9 +170,7 @@ export class CreateNavigatorBuilder {
   }
 
   private getNavigatorFn() {
-    const {
-      result: { type }
-    } = this.qa
+    const { type } = this.args
 
     switch (type) {
       case NavigatorTypeEnum.switch:
@@ -200,9 +191,7 @@ export class CreateNavigatorBuilder {
   }
 
   private attachToScreen(): boolean {
-    const {
-      result: { screenToAttach, name }
-    } = this.qa
+    const { screenToAttach, name } = this.args
     if (!screenToAttach) {
       return false
     }
@@ -211,26 +200,21 @@ export class CreateNavigatorBuilder {
       screenToAttach.sourceFile.getFilePath()
     )
 
-    ReactUtils.addNamedImport(
-      this.screenFile,
-      this.sourceFile.getFilePath(),
-      name
-    )
+    const {
+      tools: { ts }
+    } = this.context
 
-    switch (screenToAttach.info.type) {
+    ts().addNamedImport(this.screenFile, this.sourceFile.getFilePath(), name)
+
+    switch (screenToAttach.type) {
       case ViewTypeEnum.classComponent:
-        return this.attachToClass(
-          this.screenFile.getClass(screenToAttach.info.name)
-        )
+        return this.attachToClass(this.screenFile.getClass(screenToAttach.name))
 
       case ViewTypeEnum.functionComponent:
-        return this.attachToFunction(screenToAttach.info.name, this.screenFile)
+        return this.attachToFunction(screenToAttach.name, this.screenFile)
 
       case ViewTypeEnum.arrowFunctionComponent:
-        return this.attachToArrowFunction(
-          screenToAttach.info.name,
-          this.screenFile
-        )
+        return this.attachToArrowFunction(screenToAttach.name, this.screenFile)
     }
 
     return false
@@ -305,7 +289,7 @@ export class CreateNavigatorBuilder {
   ) {
     const originalBody = fn.getBodyText()
     fn.setBodyText(`
-    return <${this.qa.result.name}/>
+    return <${this.args.name}/>
     /*
     ${originalBody}
     */`)

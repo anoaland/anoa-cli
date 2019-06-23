@@ -3,8 +3,8 @@ export default {
   alias: ['n'],
   description: 'React navigator generator',
   run: async context => {
-    const { NavigationService } = await import('../services/nav')
-    const service = new NavigationService(context)
-    await service.build()
+    const { CreateNavigatorService } = await import('../services/nav')
+    const service = new CreateNavigatorService(context)
+    await service.run()
   }
 }

@@ -35,7 +35,7 @@ describe('create nav tests', () => {
 
   test('should be able to create nav for the first time', async () => {
     await run(
-      ['n', 'n'],
+      ['n'],
       [
         // Attach this navigator to particular screen?
         'y',

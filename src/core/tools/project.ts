@@ -1,6 +1,7 @@
 import { InspectTreeResult } from 'fs-jetpack/types'
 import * as path from 'path'
 import { Project, SourceFile } from 'ts-morph'
+import { ProjectTypes } from '../../config'
 import { ReactView } from '../libs/react-view'
 import { RootContext, ViewKindEnum } from '../types'
 import { ReactComponentInfo } from './react'
@@ -135,6 +136,20 @@ export class ProjectTools {
       .map(f => new ReactView(this.context, f.sourceFile, f.kind, f.info))
 
     return this.cachedViews[vkey]
+  }
+
+  /**
+   * Read configuration to get the project type.
+   */
+  async getProjectType(): Promise<ProjectTypes> {
+    const { filesystem, print } = this.context
+    const cfg = await filesystem.read('.anoarc', 'json')
+    if (!cfg) {
+      print.error('Invalid project directory.')
+      process.exit(0)
+      return
+    }
+    return cfg.type
   }
 
   private getReactFiles(baseDir, dir = '/'): SourceFile[] {

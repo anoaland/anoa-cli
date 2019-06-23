@@ -345,4 +345,30 @@ export class CliTools {
 
     return type as ViewTypeEnum
   }
+
+  /**
+   * Show Yes or No confirmation prompt
+   * @param message Confirmation message
+   */
+  async confirm(
+    message: string,
+    defaultAnswer: 'Y' | 'N' = 'Y'
+  ): Promise<boolean> {
+    const {
+      print: { colors },
+      prompt
+    } = this.context
+
+    const { confirm } = await prompt.ask({
+      type: 'confirm',
+      name: 'confirm',
+      message:
+        message + colors.gray(defaultAnswer === 'Y' ? ' (Y/n)' : '(y/N)'),
+      default: defaultAnswer,
+      initial: 'true',
+      format: (res: boolean) => (res ? 'Yes' : 'No')
+    })
+
+    return confirm as any
+  }
 }

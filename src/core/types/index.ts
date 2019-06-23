@@ -69,3 +69,25 @@ export interface StateInfo {
   isHook: boolean
   fields: FieldObject[]
 }
+
+export enum NavigatorTypeEnum {
+  stack = 'Stack Navigator',
+  switch = 'Switch Navigator',
+  drawer = 'Drawer Navigator',
+  materialBottomTab = 'Material Bottom Tab Navigator',
+  materialTopTab = 'Material Top Tab Navigator'
+}
+
+export interface CreateNavigatorArgs {
+  name: string
+  type: NavigatorTypeEnum
+  screenToAttach?: ReactView
+  routes: RouteViewInfo[]
+  initialRoute: RouteViewInfo
+}
+
+export interface RouteViewInfo {
+  screen: ReactView
+  title: string
+  routeName: string
+}

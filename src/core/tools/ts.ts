@@ -105,6 +105,7 @@ export class TsTools {
     const moduleSpecifier = this.fixImportPath(
       path.relative(path.dirname(sourceFile.getFilePath()), modulePath)
     )
+
     const existingImport = sourceFile
       .getImportDeclarations()
       .find(i => i.getModuleSpecifierValue() === moduleSpecifier)

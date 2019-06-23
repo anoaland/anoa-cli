@@ -164,13 +164,13 @@ export class NpmTools {
       return true
     }
 
-    const utils = tools.utils()
-
-    const useYarn = await utils.confirm(
-      colors.bold(
-        `Use ${colors.yellow('yarn')} instead of ${colors.yellow('npm')}?`
+    const useYarn = await tools
+      .cli()
+      .confirm(
+        colors.bold(
+          `Use ${colors.yellow('yarn')} instead of ${colors.yellow('npm')}?`
+        )
       )
-    )
 
     return useYarn
   }

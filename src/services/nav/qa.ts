@@ -1,48 +1,53 @@
 import * as path from 'path'
-import { RootContext } from '../../../../core/types'
-import { Utils } from '../../../core'
-import { BrowseViewInfo, ProjectBrowser } from '../../../core/project-browser'
-import { NavigatorTypeEnum } from './nav-types'
+import { ReactView } from '../../core/libs/react-view'
+import {
+  CreateNavigatorArgs,
+  NavigatorTypeEnum,
+  RootContext,
+  RouteViewInfo,
+  ViewKindEnum
+} from '../../core/types'
 
-export class CreateNavigatorBuilderQA {
+export class CreateNavigatorServiceQA {
   context: RootContext
-  projectBrowser: ProjectBrowser
-  utils: Utils
-  result: CreateNavigatorBuilderQAResult
+  result: CreateNavigatorArgs
 
   constructor(context: RootContext) {
     this.context = context
-    this.projectBrowser = new ProjectBrowser(context)
-    this.utils = new Utils(context)
   }
 
-  async run() {
+  async run(): Promise<CreateNavigatorArgs> {
     const {
       prompt,
       naming,
       filesystem: { exists },
       print: { colors },
       folder,
-      strings: { kebabCase }
+      strings: { kebabCase },
+      tools
     } = this.context
 
-    const attachToScreen = await this.utils.confirm(
+    const cli = tools.cli()
+    const utils = tools.utils()
+
+    const attachToScreen = await cli.confirm(
       'Attach this navigator to particular screen?'
     )
 
-    let screenToAttach: BrowseViewInfo
+    let screenToAttach: ReactView
     let navigatorName: string
     if (attachToScreen) {
-      screenToAttach = (await this.projectBrowser.browseAllViews()) as BrowseViewInfo
-      navigatorName = screenToAttach.info.name
+      screenToAttach = (await cli.browseViews(ViewKindEnum.screen)) as ReactView
+      navigatorName = screenToAttach.name
       const navPath = path.join(
         path.dirname(screenToAttach.sourceFile.getFilePath()),
         'nav.ts'
       )
+
       if (exists(navPath)) {
-        this.utils.exit(
+        utils.exit(
           `Aborted. The ${colors.yellow(
-            screenToAttach.info.name
+            navigatorName
           )} is already attached to navigator.`
         )
         return
@@ -105,7 +110,7 @@ export class CreateNavigatorBuilderQA {
 
     const initialRoute: RouteViewInfo = routeChoices[selectedInitialRoute]
 
-    this.result = {
+    return {
       name: navigatorName,
       type: selectedType as NavigatorTypeEnum,
       screenToAttach,
@@ -114,20 +119,24 @@ export class CreateNavigatorBuilderQA {
     }
   }
 
-  async buildRoutes(): Promise<RouteViewInfo[]> {
+  private async buildRoutes(): Promise<RouteViewInfo[]> {
     const {
       prompt,
       strings: { snakeCase, padEnd, upperFirst },
-      print: { colors }
+      print: { colors },
+      tools
     } = this.context
 
-    const screens: BrowseViewInfo[] = (await this.projectBrowser.browseAllViews(
-      true,
-      'Select screens to routes'
-    )) as BrowseViewInfo[]
+    const screens: ReactView[] = (await tools
+      .cli()
+      .browseViews(
+        ViewKindEnum.screen,
+        true,
+        'Select screens to routes'
+      )) as ReactView[]
 
     const fields = screens.map(s => {
-      const routeName = snakeCase(s.info.name)
+      const routeName = snakeCase(s.name)
         .replace(/screen$/, '')
         .split('_')
         .map(s1 => upperFirst(s1))
@@ -162,18 +171,4 @@ export class CreateNavigatorBuilderQA {
       routeName: s.routeName
     }))
   }
-}
-
-export interface CreateNavigatorBuilderQAResult {
-  name: string
-  type: NavigatorTypeEnum
-  screenToAttach?: BrowseViewInfo
-  routes: RouteViewInfo[]
-  initialRoute: RouteViewInfo
-}
-
-export interface RouteViewInfo {
-  screen: BrowseViewInfo
-  title: string
-  routeName: string
 }
