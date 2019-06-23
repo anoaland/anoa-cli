@@ -1,27 +1,12 @@
 import { MIN_EXPO_VERSION, ProjectTypes } from '../../../config'
-import { RootContext } from '../../../tools/context'
-import { Utils } from '../../utils'
-import { NpmUtils } from '../../utils/npm'
-import { ProjectUtils } from '../../utils/project'
-import { SourceUtils } from '../../utils/source'
-import { YarnUtils } from '../../utils/yarn'
+import { RootContext } from '../../../core/types'
 import { ExpoBoilerplateArgs } from './types'
 
 export class ExpoBoilerplateGenerator {
   context: RootContext
-  utils: Utils
-  projectUtils: ProjectUtils
-  yarnUtils: YarnUtils
-  sourceUtils: SourceUtils
-  npmUtils: NpmUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.utils = new Utils(context)
-    this.projectUtils = new ProjectUtils(context)
-    this.yarnUtils = new YarnUtils(context)
-    this.sourceUtils = new SourceUtils(context)
-    this.npmUtils = new NpmUtils(context)
   }
 
   /**
@@ -31,14 +16,17 @@ export class ExpoBoilerplateGenerator {
     const {
       print: { colors },
       semver,
-      system
+      system,
+      tools
     } = this.context
     let hasExpo
+
+    const utils = tools.utils()
 
     try {
       hasExpo = await system.run('expo --version')
       if (semver.gt(MIN_EXPO_VERSION, hasExpo)) {
-        this.utils.exit(
+        utils.exit(
           `This command needs ${colors.yellow(
             'expo-cli'
           )} with minimum version ${colors.yellow(
@@ -51,7 +39,7 @@ export class ExpoBoilerplateGenerator {
     }
 
     if (!hasExpo) {
-      this.utils.exit(
+      utils.exit(
         colors.error(
           `The ${colors.yellow(
             'expo-cli'
@@ -73,11 +61,15 @@ export class ExpoBoilerplateGenerator {
     const {
       print: { spin, colors, newline, info, success },
       system,
-      filesystem: { cwd }
+      filesystem: { cwd },
+      tools
     } = this.context
     const { dir, name } = args
 
-    const useYarn = await this.yarnUtils.askToUseYarn()
+    const npm = tools.npm()
+    const utils = tools.utils()
+
+    const useYarn = await npm.askToUseYarn()
     const spinner = spin(
       `Initializing ${colors.yellow(name)} project on ${colors.yellow(
         './' + dir
@@ -102,7 +94,7 @@ export class ExpoBoilerplateGenerator {
       await this.generateConfigFiles()
       await this.updateAppJson(args)
       await this.installNpmPackages()
-      await this.addAssets()
+      this.addAssets()
       await this.generateFilesFromTemplates()
 
       newline()
@@ -110,10 +102,10 @@ export class ExpoBoilerplateGenerator {
       newline()
       info('To get started, you can type:')
       info(`  cd ${dir}`)
-      info(`  ${this.npmUtils.cmd('start')}`)
+      info(`  ${npm.cmd('start')}`)
       newline()
     } catch (error) {
-      spinner.fail(this.utils.getSystemErrorMessage(error))
+      spinner.fail(utils.getSystemErrorMessage(error))
       process.exit(1)
     }
   }
@@ -123,10 +115,13 @@ export class ExpoBoilerplateGenerator {
    */
   private async generateConfigFiles() {
     const {
-      print: { spin }
+      print: { spin },
+      tools
     } = this.context
+
     const spinner = spin('Generating config files...')
-    await this.sourceUtils.generate(
+    const source = tools.source()
+    await source.generate(
       'root',
       '',
       ['tslint.json', 'tsconfig.json', '.jshintrc', '.prettierrc', '.anoarc'],
@@ -179,7 +174,8 @@ export class ExpoBoilerplateGenerator {
    * Install necessary npm packages
    */
   private async installNpmPackages() {
-    await this.npmUtils.installPackages(
+    const npm = this.context.tools.npm()
+    await npm.installPackages(
       [
         'typescript',
         'react-native-typescript-transformer',
@@ -199,20 +195,22 @@ export class ExpoBoilerplateGenerator {
   /**
    * Add asset files
    */
-  private async addAssets() {
-    this.projectUtils.copyAssetFiles(['logo.png', 'icon.png', 'splash.png'])
+  private addAssets() {
+    const project = this.context.tools.project()
+    project.copyAssetFiles(['logo.png', 'icon.png', 'splash.png'])
   }
 
   /**
    * Generate boilerplate template files
    */
   private async generateFilesFromTemplates() {
-    const { print, folder } = this.context
+    const { print, folder, tools } = this.context
+    const source = tools.source()
 
     const spinner = print.spin('Applying templates...')
 
     // generate main App.tsx file
-    await this.sourceUtils.generate('boilerplate/expo', '', [
+    await source.generate('boilerplate/expo', '', [
       {
         source: 'App.tsx',
         dest: folder.src('App.tsx')
@@ -222,7 +220,7 @@ export class ExpoBoilerplateGenerator {
 
     // generate main screen
     const dest = folder.screens('main')
-    await this.sourceUtils.generate(
+    await source.generate(
       'boilerplate/shared/main-screen',
       dest,
       ['index.tsx', 'props.ts'],

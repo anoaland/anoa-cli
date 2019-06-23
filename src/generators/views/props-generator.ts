@@ -1,34 +1,28 @@
 import * as path from 'path'
 import { InterfaceDeclaration, Project, SourceFile } from 'ts-morph'
-import { RootContext } from '../../tools/context'
-import { Utils } from '../utils'
-import { ReactUtils } from '../utils/react'
-import { SourceUtils } from '../utils/source'
-import { TsUtils } from '../utils/ts'
-import { SetPropsArgs, ViewTypeEnum } from './types'
+import { RootContext } from '../../core/types'
+import { SetPropsArgs, ViewTypeEnum } from '../../core/types'
 
 export class PropsGenerator {
   context: RootContext
-  tsUtils: TsUtils
-  reactUtils: ReactUtils
-  utils: Utils
-  sourceUtils: SourceUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.tsUtils = new TsUtils(context)
-    this.reactUtils = new ReactUtils(context)
-    this.utils = new Utils(context)
-    this.sourceUtils = new SourceUtils(context)
   }
 
   async generate(args: SetPropsArgs) {
     const {
       naming,
-      print: { spin, colors }
+      print: { spin, colors },
+      tools
     } = this.context
 
     const spinner = spin('Generating...')
+
+    const react = tools.react()
+    const ts = tools.ts()
+    const utils = tools.utils()
+    const source = tools.source()
 
     const project = new Project()
     const { view, fields, existingProps } = args
@@ -52,38 +46,38 @@ export class PropsGenerator {
       })
     }
 
-    this.tsUtils.setInterfaceProperties(propsInterface, fields)
+    ts.setInterfaceProperties(propsInterface, fields)
 
     switch (view.type) {
       case ViewTypeEnum.classComponent:
-        this.reactUtils.addPropsReferenceToClassView(
+        react.addPropsReferenceToClassView(
           viewFile.getClass(view.name),
           propsInterface
         )
         break
 
       case ViewTypeEnum.functionComponent:
-        this.reactUtils.addPropsReferenceToFunctionView(
+        react.addPropsReferenceToFunctionView(
           viewFile.getFunction(view.name),
           propsInterface
         )
         break
 
       case ViewTypeEnum.arrowFunctionComponent:
-        this.reactUtils.addPropsReferenceToArrowFunctionView(
+        react.addPropsReferenceToArrowFunctionView(
           viewFile.getVariableStatement(view.name),
           propsInterface
         )
         break
     }
 
-    await this.sourceUtils.prettifyProjectFiles(project)
+    await source.prettifyProjectFiles(project)
     await project.save()
 
     spinner.succeed(
       `Changes has been made on ${colors.bold(
-        this.utils.relativePath(viewFilePath)
-      )} and ${colors.bold(this.utils.relativePath(propsFile.getFilePath()))}`
+        utils.relativePath(viewFilePath)
+      )} and ${colors.bold(utils.relativePath(propsFile.getFilePath()))}`
     )
   }
 }

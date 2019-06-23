@@ -1,30 +1,24 @@
 import * as path from 'path'
 import { Project } from 'ts-morph'
-import { RootContext } from '../../tools/context'
-import { ReactUtils } from '../utils/react'
-import { SourceUtils } from '../utils/source'
-import { TsUtils } from '../utils/ts'
+import { RootContext } from '../../core/types'
 import {
   CreateComponentArgs,
   CreateComponentResult,
   ViewKindEnum
-} from './types'
+} from '../../core/types'
 
 export class FunctionComponentGenerator {
   context: RootContext
-  reactUtils: ReactUtils
-  sourceUtils: SourceUtils
-  tsUtils: TsUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.reactUtils = new ReactUtils(context)
-    this.sourceUtils = new SourceUtils(context)
-    this.tsUtils = new TsUtils(context)
   }
 
   async generate(args: CreateComponentArgs): Promise<CreateComponentResult> {
-    const { naming } = this.context
+    const { naming, tools } = this.context
+
+    const react = tools.react()
+    const source = tools.source()
 
     // processing
     const project = new Project()
@@ -44,7 +38,7 @@ export class FunctionComponentGenerator {
     let propsName: string
 
     if (hasProps) {
-      const propsInterface = this.reactUtils.createPropsInterface(
+      const propsInterface = react.createPropsInterface(
         project,
         name,
         location,
@@ -65,7 +59,7 @@ export class FunctionComponentGenerator {
         moduleSpecifier: 'react',
         namedImports: ['useState']
       })
-      hooks = this.reactUtils.createHooksStatements(state)
+      hooks = react.createHooksStatements(state)
     }
 
     // add common react imports
@@ -98,7 +92,7 @@ export class FunctionComponentGenerator {
       `
     })
 
-    await this.sourceUtils.prettifyProjectFiles(project)
+    await source.prettifyProjectFiles(project)
     await project.save()
 
     return {

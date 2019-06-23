@@ -1,6 +1,6 @@
-import { RootContext } from '../context'
+import { RootContext } from '../types'
 
-export function printCommandChooser(context: RootContext) {
+export function promptCommands(context: RootContext) {
   return async () => {
     const {
       commandName,

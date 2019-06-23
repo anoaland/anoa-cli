@@ -1,4 +1,4 @@
-import { RootContext } from '../context'
+import { RootContext } from '../types'
 
 export function naming(context: RootContext) {
   return {

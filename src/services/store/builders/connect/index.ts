@@ -5,8 +5,8 @@ import {
   SourceFile,
   StructureKind
 } from 'ts-morph'
-import { ViewTypeEnum } from '../../../../generators/views/types'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
+import { ViewTypeEnum } from '../../../../core/types'
 import { Source } from '../../../core'
 import { BrowseViewInfo } from '../../../core/project-browser'
 import { ReactUtils } from '../../../core/react-utils'

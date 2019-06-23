@@ -1,5 +1,5 @@
-import { ViewKindEnum } from '../../../../generators/views/types'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
+import { ViewKindEnum } from '../../../../core/types'
 import { Utils } from '../../../core'
 import { BrowseViewInfo, ProjectBrowser } from '../../../core/project-browser'
 

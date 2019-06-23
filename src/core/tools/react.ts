@@ -14,18 +14,14 @@ import {
   SyntaxKind,
   VariableStatement
 } from 'ts-morph'
-import { RootContext } from '../../tools/context'
-import { FieldObject, KeyValue, NameValue } from '../types'
-import { ViewTypeEnum } from '../views/types'
-import { TsUtils } from './ts'
+import { RootContext } from '../types'
+import { FieldObject, KeyValue, NameValue, ViewTypeEnum } from '../types'
 
-export class ReactUtils {
+export class ReactTools {
   context: RootContext
-  tsUtils: TsUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.tsUtils = new TsUtils(context)
   }
 
   /**
@@ -42,9 +38,12 @@ export class ReactUtils {
     fields: FieldObject[]
   ): InterfaceDeclaration {
     const {
-      naming: { props }
+      naming: { props },
+      tools
     } = this.context
-    return this.tsUtils.createInterface(
+
+    const ts = tools.ts()
+    return ts.createInterface(
       project,
       props(baseName),
       path.join(dir, 'props.ts'),
@@ -66,9 +65,12 @@ export class ReactUtils {
     fields: FieldObject[]
   ): InterfaceDeclaration {
     const {
-      naming: { state }
+      naming: { state },
+      tools
     } = this.context
-    return this.tsUtils.createInterface(
+
+    const ts = tools.ts()
+    return ts.createInterface(
       project,
       state(baseName),
       path.join(dir, 'state.ts'),
@@ -296,10 +298,11 @@ export class ReactUtils {
    * @param viewClass class view
    * @param propsInterface props interface declaration
    */
-  addPropsReferenceToClassView(
+  async addPropsReferenceToClassView(
     viewClass: ClassDeclaration,
     propsInterface: InterfaceDeclaration
   ) {
+    const ts = this.context.tools.ts()
     const propsName = propsInterface.getName()
 
     this.setReactExtendsGeneric(viewClass, { props: propsName, state: null })
@@ -320,7 +323,7 @@ export class ReactUtils {
 
     // ensure props is imported
     const viewFile = viewClass.getSourceFile()
-    this.tsUtils.addImportInterfaceDeclaration(viewFile, propsInterface)
+    ts.addImportInterfaceDeclaration(viewFile, propsInterface)
   }
 
   /**
@@ -328,10 +331,11 @@ export class ReactUtils {
    * @param viewFunction view function declaration
    * @param propsInterface props interface declaration
    */
-  addPropsReferenceToFunctionView(
+  async addPropsReferenceToFunctionView(
     viewFunction: FunctionDeclaration | ArrowFunction,
     propsInterface: InterfaceDeclaration
   ) {
+    const ts = this.context.tools.ts()
     const propsName = propsInterface.getName()
     const fnParams = viewFunction.getParameters()
     if (!fnParams.length) {
@@ -343,7 +347,7 @@ export class ReactUtils {
 
     // ensure props is imported
     const viewFile = viewFunction.getSourceFile()
-    this.tsUtils.addImportInterfaceDeclaration(viewFile, propsInterface)
+    ts.addImportInterfaceDeclaration(viewFile, propsInterface)
   }
 
   /**
@@ -351,7 +355,7 @@ export class ReactUtils {
    * @param varStatement view variable statement
    * @param propsInterface props interface declaration
    */
-  addPropsReferenceToArrowFunctionView(
+  async addPropsReferenceToArrowFunctionView(
     varStatement: VariableStatement,
     propsInterface: InterfaceDeclaration
   ) {
@@ -368,7 +372,7 @@ export class ReactUtils {
     const viewFunction = declaration.getFirstDescendantByKind(
       SyntaxKind.ArrowFunction
     )
-    this.addPropsReferenceToFunctionView(viewFunction, propsInterface)
+    await this.addPropsReferenceToFunctionView(viewFunction, propsInterface)
   }
 
   /**
@@ -377,7 +381,7 @@ export class ReactUtils {
    * @param stateInterface state interface declaration
    * @param fields fields to set initializer
    */
-  addStateReferenceToClassView(
+  async addStateReferenceToClassView(
     viewClass: ClassDeclaration,
     stateInterface: InterfaceDeclaration,
     fields: FieldObject[]
@@ -392,11 +396,10 @@ export class ReactUtils {
       stmt.remove()
     }
 
+    const ts = this.context.tools.ts()
+
     // add import state
-    this.tsUtils.addImportInterfaceDeclaration(
-      viewClass.getSourceFile(),
-      stateInterface
-    )
+    ts.addImportInterfaceDeclaration(viewClass.getSourceFile(), stateInterface)
 
     // set react extends generic statement
     this.setReactExtendsGeneric(viewClass, {
@@ -405,7 +408,7 @@ export class ReactUtils {
     })
 
     // set initializer
-    const stmtStr = this.tsUtils.createObjectInitializerStatement(fields)
+    const stmtStr = ts.createObjectInitializerStatement(fields)
     constr.addStatements(`this.state = ${stmtStr}`)
   }
 

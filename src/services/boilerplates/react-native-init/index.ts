@@ -1,6 +1,6 @@
+import { RootContext } from '../../../core/types'
 import { ReactNativeInitBoilerplateGenerator } from '../../../generators/boilerplates/react-native-init'
 import { ReactNativeBoilerplateArgs } from '../../../generators/boilerplates/react-native-init/types'
-import { RootContext } from '../../../tools/context'
 import { Utils } from '../../core'
 import { ReactNativeInitBoilerplateServiceQA } from './qa'
 

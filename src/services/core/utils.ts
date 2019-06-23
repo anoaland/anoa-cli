@@ -1,7 +1,7 @@
 import { InspectTreeResult } from 'fs-jetpack/types'
 import * as path from 'path'
-import { RootContext } from '../../tools/context'
 import { ProjectTypes } from '../../config'
+import { RootContext } from '../../core/types'
 import { Validate } from './validate'
 
 export class Utils {

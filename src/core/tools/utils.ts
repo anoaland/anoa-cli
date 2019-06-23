@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { RootContext } from '../../tools/context'
+import { RootContext } from '../types'
 
 export class Utils {
   context: RootContext

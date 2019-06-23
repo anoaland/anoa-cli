@@ -6,10 +6,10 @@ import {
   SourceFile,
   StructureKind
 } from 'ts-morph'
-import { RootContext } from '../../tools/context'
+import { RootContext } from '../types'
 import { FieldObject } from '../types'
 
-export class TsUtils {
+export class TsTools {
   context: RootContext
   constructor(context: RootContext) {
     this.context = context

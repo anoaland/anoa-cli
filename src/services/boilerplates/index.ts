@@ -1,17 +1,14 @@
-import { ProjectTypes } from '../../config';
-import { Utils } from '../../generators/utils';
-import { RootContext } from '../../tools/context';
-import { ExpoBoilerplateService } from './expo';
-import { helps } from './helps';
-import { ReactNativeInitBoilerplateService } from './react-native-init';
+import { ProjectTypes } from '../../config'
+import { RootContext } from '../../core/types'
+import { ExpoBoilerplateService } from './expo'
+import { helps } from './helps'
+import { ReactNativeInitBoilerplateService } from './react-native-init'
 
 export class Boilerplate {
   context: RootContext
-  utils: Utils
 
   constructor(context: RootContext) {
     this.context = context
-    this.utils = new Utils(context)
   }
 
   /**
@@ -20,7 +17,8 @@ export class Boilerplate {
    * @param dir target directory
    */
   async init() {
-    this.utils.handlePrintHelps(helps, 'Generate new react native project')
+    const utils = this.context.tools.utils()
+    utils.handlePrintHelps(helps, 'Generate new react native project')
 
     const {
       parameters: { first: dir, options },
@@ -59,7 +57,7 @@ export class Boilerplate {
         break
 
       default:
-        this.utils.exit('Invalid project type.')
+        utils.exit('Invalid project type.')
     }
   }
 }

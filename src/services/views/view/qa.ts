@@ -1,24 +1,18 @@
 import * as path from 'path'
-import { CliUtils } from '../../../generators/utils/cli'
-import { ProjectUtils } from '../../../generators/utils/project'
+import { RootContext } from '../../../core/types'
 import {
   CreateComponentArgs,
   ViewKindEnum,
   ViewTypeEnum
-} from '../../../generators/views/types'
-import { RootContext } from '../../../tools/context'
+} from '../../../core/types'
 
 export class ViewServiceQA {
   context: RootContext
   kind: ViewKindEnum
-  projectUtils: ProjectUtils
-  cliUtils: CliUtils
 
   constructor(context: RootContext, kind: ViewKindEnum) {
     this.context = context
     this.kind = kind
-    this.projectUtils = new ProjectUtils(context)
-    this.cliUtils = new CliUtils(context)
   }
 
   async run(): Promise<CreateComponentArgs> {
@@ -26,7 +20,8 @@ export class ViewServiceQA {
       prompt,
       parameters,
       strings: { pascalCase, isBlank, lowerCase, kebabCase },
-      folder
+      folder,
+      tools
     } = this.context
 
     // resolve name
@@ -47,7 +42,8 @@ export class ViewServiceQA {
     const rootDir =
       this.kind === ViewKindEnum.screen ? folder.screens() : folder.components()
     let location = '/'
-    const dirs = this.projectUtils.dirListDeep(rootDir)
+    const project = tools.project()
+    const dirs = project.dirListDeep(rootDir)
 
     if (dirs && dirs.length > 0) {
       dirs.splice(0, 0, '/')
@@ -76,12 +72,14 @@ export class ViewServiceQA {
       initial: ViewTypeEnum.classComponent
     }))
 
+    const cli = tools.cli()
+
     // resolve props
-    const props = await this.cliUtils.askFieldObjects('Props')
+    const props = await cli.askFieldObjects('Props')
 
     const isClass = type === ViewTypeEnum.classComponent
     // resolve state
-    const state = await this.cliUtils.askFieldObjects(
+    const state = await cli.askFieldObjects(
       isClass ? 'State' : 'Hooks',
       isClass,
       true

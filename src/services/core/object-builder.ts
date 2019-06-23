@@ -1,5 +1,5 @@
-import { FieldObject } from '../../generators/types'
-import { RootContext } from '../../tools/context'
+import { RootContext } from '../../core/types'
+import { FieldObject } from '../../core/types'
 import { Utils } from './utils'
 
 export class ObjectBuilder {

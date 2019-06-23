@@ -5,7 +5,7 @@ import {
   Project,
   SourceFile
 } from 'ts-morph'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
 import { Source } from '../../../core'
 import { ReduxThunkQA } from './qa'
 

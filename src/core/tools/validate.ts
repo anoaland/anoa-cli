@@ -1,6 +1,6 @@
-import { RootContext } from '../../tools/context'
+import { RootContext } from '../types'
 
-export class ValidateUtils {
+export class ValidateTools {
   context: RootContext
 
   constructor(context: RootContext) {

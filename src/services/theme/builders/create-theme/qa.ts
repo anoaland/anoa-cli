@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
 import { Utils } from '../../../core'
 import { ProjectBrowser, ThemeInfo } from '../../../core/project-browser'
 

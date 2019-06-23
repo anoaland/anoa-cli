@@ -1,31 +1,32 @@
-import { FieldObject } from '../../../generators/types'
-import { CliUtils } from '../../../generators/utils/cli'
-import { ReactView } from '../../../generators/utils/react-view'
-import { SetStateArgs, ViewTypeEnum } from '../../../generators/views/types'
-import { RootContext } from '../../../tools/context'
+import { ReactView } from '../../../core/libs/react-view'
+import {
+  FieldObject,
+  RootContext,
+  SetStateArgs,
+  ViewTypeEnum
+} from '../../../core/types'
 
 export class StateServiceQA {
   context: RootContext
-  cliUtils: CliUtils
   constructor(context: RootContext) {
     this.context = context
-    this.cliUtils = new CliUtils(context)
   }
 
   async run(): Promise<SetStateArgs> {
-    const selectedView = (await this.cliUtils.browseViews()) as ReactView
+    const cli = this.context.tools.cli()
+    const selectedView = (await cli.browseViews()) as ReactView
     const existingState = selectedView.getState()
     const isHook = selectedView.type !== ViewTypeEnum.classComponent
 
     let fields: FieldObject[] = []
     if (existingState && existingState.fields.length) {
-      fields = await this.cliUtils.askFieldObjectsToBeRemoved(
+      fields = await cli.askFieldObjectsToBeRemoved(
         existingState.fields,
         isHook ? 'Select hooks to remove' : 'Select state fields to remove'
       )
     }
 
-    const newFields = await this.cliUtils.askFieldObjects(
+    const newFields = await cli.askFieldObjects(
       isHook ? 'Add new hooks' : 'Add new state',
       !isHook,
       true

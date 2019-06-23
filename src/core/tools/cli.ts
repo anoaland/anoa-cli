@@ -1,16 +1,11 @@
-import { RootContext } from '../../tools/context'
-import { FieldObject } from '../types'
-import { ViewKindEnum } from '../views/types'
-import { ProjectUtils } from './project'
-import { ReactView } from './react-view'
+import { ReactView } from '../libs/react-view'
+import { FieldObject, RootContext, ViewKindEnum } from '../types'
 
-export class CliUtils {
+export class CliTools {
   context: RootContext
-  projectUtils: ProjectUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.projectUtils = new ProjectUtils(context)
   }
 
   async askFieldObjects(
@@ -212,16 +207,18 @@ export class CliUtils {
     const {
       prompt,
       print: { colors, spin },
-      strings: { lowerCase, plural }
+      strings: { lowerCase, plural },
+      tools
     } = this.context
 
     if (!kind) {
       kind = await this.selectViewKind()
     }
 
+    const project = tools.project()
     const kindStr = lowerCase(plural(kind))
     const spinner = spin(`Browsing ${kindStr}...`)
-    const views = this.projectUtils.viewList(kind)
+    const views = project.viewList(kind)
 
     if (!message) {
       message = `Select ${kindStr}`

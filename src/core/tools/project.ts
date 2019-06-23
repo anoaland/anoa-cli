@@ -1,19 +1,16 @@
 import { InspectTreeResult } from 'fs-jetpack/types'
 import * as path from 'path'
 import { Project, SourceFile } from 'ts-morph'
-import { RootContext } from '../../tools/context'
-import { ViewKindEnum } from '../views/types'
-import { ReactComponentInfo, ReactUtils } from './react'
-import { ReactView } from './react-view'
+import { ReactView } from '../libs/react-view'
+import { RootContext, ViewKindEnum } from '../types'
+import { ReactComponentInfo } from './react'
 
-export class ProjectUtils {
+export class ProjectTools {
   context: RootContext
   cachedViews: { [key: string]: ReactView[] } = {}
-  reactUtils: ReactUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.reactUtils = new ReactUtils(context)
   }
 
   /**
@@ -115,7 +112,7 @@ export class ProjectUtils {
    * @param dir base directory relative to views folder
    */
   viewList(kind: ViewKindEnum, dir: string = '/'): ReactView[] {
-    const { folder } = this.context
+    const { folder, tools } = this.context
 
     const vkey = kind + dir
     if (this.cachedViews[vkey]) {
@@ -125,11 +122,12 @@ export class ProjectUtils {
     const baseDir =
       kind === ViewKindEnum.component ? folder.components() : folder.screens()
 
+    const react = tools.react()
     this.cachedViews[vkey] = this.getReactFiles(baseDir, dir)
       .map(f => {
         return {
           sourceFile: f,
-          info: this.reactUtils.getReactViewInfo(f),
+          info: react.getReactViewInfo(f),
           kind
         }
       })

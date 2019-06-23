@@ -1,5 +1,5 @@
 import { build, print } from 'gluegun'
-import { RootContext } from './tools/context'
+import { RootContext } from './core/types'
 
 async function run(argv) {
   const cli = build()

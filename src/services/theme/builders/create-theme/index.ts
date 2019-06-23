@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Project, SyntaxKind, VariableDeclarationKind } from 'ts-morph'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
 import { Npm, Source, Utils } from '../../../core'
 import { ReactUtils } from '../../../core/react-utils'
 import { CreateThemeBuilderQA } from './qa'

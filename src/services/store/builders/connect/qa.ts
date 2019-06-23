@@ -1,6 +1,6 @@
 import { Project } from 'ts-morph'
-import { FieldObject } from '../../../../generators/types'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
+import { FieldObject } from '../../../../core/types'
 import { Utils } from '../../../core'
 import {
   BrowseViewInfo,

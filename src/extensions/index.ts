@@ -1,9 +1,11 @@
-import { extensions, RootContext } from '../tools/context'
+import * as extensions from '../core/extensions';
+
+export type Extensions = typeof extensions
 
 /**
  * Initialize all extensions
  */
-export default (context: RootContext) => {
+export default context => {
   for (const key of Object.keys(extensions)) {
     const ext = extensions[key](context)
     if (typeof ext === 'function') {

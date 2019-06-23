@@ -1,20 +1,22 @@
 import * as path from 'path'
 import { Project, SourceFile, SyntaxKind } from 'ts-morph'
-import { RootContext } from '../../tools/context'
-import { FieldObject } from '../types'
-import { ViewKindEnum, ViewTypeEnum } from '../views/types'
-import { ReactComponentInfo, ReactUtils } from './react'
-import { TsUtils } from './ts'
+import { ReactComponentInfo } from '../tools/react'
+import {
+  FieldObject,
+  PropsInfo,
+  RootContext,
+  StateInfo,
+  ViewKindEnum,
+  ViewTypeEnum
+} from '../types'
 
 export class ReactView {
   context: RootContext
   sourceFile: SourceFile
   name: string
   type: ViewTypeEnum
-  reactUtils: ReactUtils
   kind: ViewKindEnum
   key: string
-  tsUtils: TsUtils
 
   constructor(
     context: RootContext,
@@ -28,8 +30,6 @@ export class ReactView {
     this.kind = kind
     this.type = info.type
     this.key = this.getKey()
-    this.tsUtils = new TsUtils(context)
-    this.reactUtils = new ReactUtils(context)
   }
 
   addToProject(project: Project) {
@@ -52,9 +52,12 @@ export class ReactView {
   }
 
   getPropsName() {
+    const { tools } = this.context
+    const react = tools.react()
+
     switch (this.type) {
       case ViewTypeEnum.classComponent:
-        const classPropsAndState = this.reactUtils.getViewPropsAndStateName(
+        const classPropsAndState = react.getViewPropsAndStateName(
           this.getClass()
         )
         if (!classPropsAndState) {
@@ -68,14 +71,14 @@ export class ReactView {
           return undefined
         }
 
-        return this.reactUtils.getViewPropsNameFromFunction(fn)
+        return react.getViewPropsNameFromFunction(fn)
 
       case ViewTypeEnum.arrowFunctionComponent:
         const arrowFn = this.getArrowFunction()
         if (!arrowFn) {
           return undefined
         }
-        return this.reactUtils.getViewPropsNameFromFunction(arrowFn)
+        return react.getViewPropsNameFromFunction(arrowFn)
     }
   }
 
@@ -116,7 +119,8 @@ export class ReactView {
 
   getProps(): PropsInfo {
     const {
-      filesystem: { exists }
+      filesystem: { exists },
+      tools
     } = this.context
 
     const propsName = this.getPropsName()
@@ -137,24 +141,25 @@ export class ReactView {
       return undefined
     }
 
+    const ts = tools.ts()
     return {
       name: propsName,
       sourceFile: propsFile,
-      fields: this.tsUtils.getInterfaceFields(propsInterface)
+      fields: ts.getInterfaceFields(propsInterface)
     }
   }
 
   getState(): StateInfo {
     const isHooks = this.type !== ViewTypeEnum.classComponent
     const {
-      filesystem: { exists }
+      filesystem: { exists },
+      tools
     } = this.context
 
-    if (!isHooks) {
-      const stateName = this.reactUtils.getViewPropsAndStateName(
-        this.getClass()
-      ).state
+    const react = tools.react()
 
+    if (!isHooks) {
+      const stateName = react.getViewPropsAndStateName(this.getClass()).state
       if (!stateName) {
         return undefined
       }
@@ -174,11 +179,12 @@ export class ReactView {
         return undefined
       }
 
-      const initializer = this.reactUtils.getStateInitializer(
-        this.reactUtils.getClassConstructor(this.getClass())
+      const initializer = react.getStateInitializer(
+        react.getClassConstructor(this.getClass())
       )
 
-      const fields = this.tsUtils.getInterfaceFields(stateInterface)
+      const ts = tools.ts()
+      const fields = ts.getInterfaceFields(stateInterface)
       for (const field of fields) {
         field.initial = initializer[field.name]
       }
@@ -197,7 +203,7 @@ export class ReactView {
 
       const fields: FieldObject[] = []
 
-      for (const { name, initial } of this.reactUtils.getHooks(fn)) {
+      for (const { name, initial } of react.getHooks(fn)) {
         fields.push({
           name,
           initial,
@@ -226,17 +232,4 @@ export class ReactView {
       `[${this.getFilePath()}]`
     )}`
   }
-}
-
-export interface PropsInfo {
-  name: string
-  fields: FieldObject[]
-  sourceFile: SourceFile
-}
-
-export interface StateInfo {
-  name?: string
-  sourceFile?: SourceFile
-  isHook: boolean
-  fields: FieldObject[]
 }

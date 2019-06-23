@@ -1,4 +1,4 @@
-import { RootContext } from '../../../tools/context'
+import { RootContext } from '../../../core/types'
 import { StateServiceQA } from './qa'
 
 export class StateService {

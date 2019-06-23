@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { Project, VariableDeclarationKind } from 'ts-morph'
-import { RootContext } from '../../../../tools/context'
+import { RootContext } from '../../../../core/types'
 import { Source } from '../../../core'
 import { ReducerProps } from './qa'
 

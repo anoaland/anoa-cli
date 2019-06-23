@@ -1,4 +1,4 @@
-import { RootContext } from '../../../tools/context'
+import { RootContext } from '../../../core/types'
 import { PropsServiceQA } from './qa'
 
 export class PropsService {

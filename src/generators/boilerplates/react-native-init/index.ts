@@ -1,27 +1,12 @@
 import { MIN_REACT_NATIVE_INIT_VERSION, ProjectTypes } from '../../../config'
-import { RootContext } from '../../../tools/context'
-import { Utils } from '../../utils'
-import { NpmUtils } from '../../utils/npm'
-import { ProjectUtils } from '../../utils/project'
-import { SourceUtils } from '../../utils/source'
-import { YarnUtils } from '../../utils/yarn'
+import { RootContext } from '../../../core/types'
 import { ReactNativeBoilerplateArgs } from './types'
 
 export class ReactNativeInitBoilerplateGenerator {
   context: RootContext
-  utils: Utils
-  projectUtils: ProjectUtils
-  yarnUtils: YarnUtils
-  sourceUtils: SourceUtils
-  npmUtils: NpmUtils
 
   constructor(context: RootContext) {
     this.context = context
-    this.utils = new Utils(context)
-    this.projectUtils = new ProjectUtils(context)
-    this.yarnUtils = new YarnUtils(context)
-    this.sourceUtils = new SourceUtils(context)
-    this.npmUtils = new NpmUtils(context)
   }
 
   /**
@@ -31,10 +16,12 @@ export class ReactNativeInitBoilerplateGenerator {
     const {
       system,
       semver,
-      print: { colors }
+      print: { colors },
+      tools
     } = this.context
 
     let version
+    const utils = tools.utils()
 
     try {
       const semverRegex = require('semver-regex')
@@ -47,7 +34,7 @@ export class ReactNativeInitBoilerplateGenerator {
             semverRegex().exec(version)[0]
           )
         ) {
-          this.utils.exit(
+          utils.exit(
             `This command needs ${colors.yellow(
               'expo-cli'
             )} with minimum version ${colors.yellow(
@@ -61,7 +48,7 @@ export class ReactNativeInitBoilerplateGenerator {
     }
 
     if (!version) {
-      this.utils.exit(
+      utils.exit(
         `The ${colors.yellow(
           'react-native-cli'
         )} was not found. We need this to be installed to generate the boilerplate.`
@@ -77,11 +64,12 @@ export class ReactNativeInitBoilerplateGenerator {
     const {
       print: { colors, spin, success, newline, info },
       system,
-      filesystem: { cwd }
+      filesystem: { cwd },
+      tools
     } = this.context
     const { dir } = args
 
-    // const useYarn = await this.utils.askToUseYarn()
+    // const useYarn = await utils.askToUseYarn()
 
     const spinner = spin(
       `Initializing new project on ${colors.yellow('./' + dir)} directory...`
@@ -102,7 +90,7 @@ export class ReactNativeInitBoilerplateGenerator {
       await this.generateConfigFiles()
       await this.updateMetroConfig()
       await this.installNpmPackages()
-      await this.addAssets()
+      this.addAssets()
       await this.generateTemplateFiles()
 
       newline()
@@ -119,7 +107,7 @@ export class ReactNativeInitBoilerplateGenerator {
       info(`  • cd ${dir} && react-native run-android`)
       newline()
     } catch (error) {
-      spinner.fail(this.utils.getSystemErrorMessage(error))
+      spinner.fail(tools.utils().getSystemErrorMessage(error))
       process.exit(1)
     }
   }
@@ -129,11 +117,15 @@ export class ReactNativeInitBoilerplateGenerator {
    */
   private async generateConfigFiles() {
     const {
-      print: { spin }
+      print: { spin },
+      tools
     } = this.context
 
     const spinner = spin('Applying config...')
-    await this.sourceUtils.generate(
+
+    const source = tools.source()
+
+    await source.generate(
       'root',
       '',
       ['tslint.json', 'tsconfig.json', '.jshintrc', '.prettierrc', '.anoarc'],
@@ -151,17 +143,19 @@ export class ReactNativeInitBoilerplateGenerator {
   private async updateMetroConfig() {
     const {
       print: { spin, colors },
-      patching
+      patching,
+      tools
     } = this.context
 
     const spinner = spin('Updating metro.config.js...')
+    const source = tools.source()
 
     await patching.patch('metro.config.js', {
       after: /transformer\s?:\s?{/g,
       insert: `\nbabelTransformerPath: require.resolve('react-native-typescript-transformer'),`
     })
 
-    await this.sourceUtils.prettify('metro.config.js')
+    await source.prettify('metro.config.js')
 
     spinner.succeed(
       `The ${colors.warning('metro.config.js')} successfully updated.`
@@ -172,7 +166,8 @@ export class ReactNativeInitBoilerplateGenerator {
    * Install necessary npm packages
    */
   private async installNpmPackages() {
-    await this.npmUtils.installPackages(
+    const npm = this.context.tools.npm()
+    await npm.installPackages(
       [
         'typescript',
         'react-native-typescript-transformer',
@@ -190,8 +185,9 @@ export class ReactNativeInitBoilerplateGenerator {
   /**
    * Add asset files
    */
-  private async addAssets() {
-    this.projectUtils.copyAssetFiles(['logo.png'])
+  private addAssets() {
+    const project = this.context.tools.project()
+    project.copyAssetFiles(['logo.png'])
   }
 
   /**
@@ -201,16 +197,19 @@ export class ReactNativeInitBoilerplateGenerator {
     const {
       print: { spin },
       folder,
-      filesystem
+      filesystem,
+      tools
     } = this.context
 
     const spinner = spin('Applying templates...')
+
+    const source = tools.source()
 
     // delete App.js
     await filesystem.remove('App.js')
 
     // replace App.js with src/App.tsx
-    await this.sourceUtils.generate('boilerplate/rni', '', [
+    await source.generate('boilerplate/rni', '', [
       {
         source: 'App.tsx',
         dest: folder.src('App.tsx')
@@ -220,7 +219,7 @@ export class ReactNativeInitBoilerplateGenerator {
 
     // generate main screen
     const dest = folder.screens('main')
-    await this.sourceUtils.generate(
+    await source.generate(
       'boilerplate/shared/main-screen',
       dest,
       ['index.tsx', 'props.ts'],

@@ -1,10 +1,10 @@
+import { RootContext } from '../../../core/types'
 import {
   CreateComponentArgs,
   CreateComponentResult,
   ViewKindEnum,
   ViewTypeEnum
-} from '../../../generators/views/types'
-import { RootContext } from '../../../tools/context'
+} from '../../../core/types'
 import { ViewServiceQA } from './qa'
 
 export class ViewService {

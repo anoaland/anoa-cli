@@ -1,4 +1,4 @@
-import { RootContext } from '../../tools/context'
+import { RootContext } from '../../core/types'
 import { Utils } from '../core'
 import { CreateNavigatorBuilder } from './builders/create-navigator'
 import { TaskEnum } from './enums'

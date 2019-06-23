@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { RootContext } from '../context'
+import { RootContext } from '../types'
 
 /**
  * Get folder path

@@ -1,13 +1,11 @@
-import { RootContext } from '../../tools/context'
-import { YarnUtils } from './yarn'
+import { RootContext } from '../types'
 
-export class NpmUtils {
+export class NpmTools {
   context: RootContext
-  yarn: YarnUtils
+  cache: any = {}
 
   constructor(context: RootContext) {
     this.context = context
-    this.yarn = new YarnUtils(context)
   }
 
   /**
@@ -38,7 +36,7 @@ export class NpmUtils {
    * Get package command (yarn or npm run)
    */
   cmd(args: string): string {
-    return `${this.yarn.isYarnInstalled() ? 'yarn' : 'npm run'} ${args}`
+    return `${this.isYarnInstalled() ? 'yarn' : 'npm run'} ${args}`
   }
 
   /**
@@ -106,5 +104,74 @@ export class NpmUtils {
     }
 
     return packagesToAdd
+  }
+
+  /**
+   * Detect if yarn is installed on system
+   */
+  isYarnInstalled() {
+    const { system } = this.context
+    let { yarnInstalled } = this.cache
+
+    if (yarnInstalled !== undefined) {
+      return yarnInstalled
+    }
+
+    yarnInstalled = false
+    try {
+      yarnInstalled = !!system.run('yarn -v')
+    } catch {
+      yarnInstalled = false
+    }
+
+    this.cache.yarnInstalled = yarnInstalled
+    return yarnInstalled
+  }
+
+  /**
+   * Check is yarn.lock exists
+   * @param dir path or directory
+   */
+  isYarnLockExists(dir?: string) {
+    const { filesystem } = this.context
+    const { yarnLockExists } = this.cache
+    if (yarnLockExists !== undefined) {
+      return yarnLockExists
+    }
+
+    const { cwd, exists } = filesystem
+
+    const ylock = dir ? cwd(`${dir}/yarn.lock`).cwd() : 'yarn.lock'
+    this.cache.yarnLockExists = exists(ylock) === 'file'
+    return this.cache.yarnLockExists
+  }
+
+  /**
+   * If found yarn installed on system then prompt user to use it or not.
+   */
+  async askToUseYarn() {
+    if (!this.isYarnInstalled()) {
+      return false
+    }
+
+    const {
+      print: { colors },
+      parameters: { options },
+      tools
+    } = this.context
+
+    if (options.yarn) {
+      return true
+    }
+
+    const utils = tools.utils()
+
+    const useYarn = await utils.confirm(
+      colors.bold(
+        `Use ${colors.yellow('yarn')} instead of ${colors.yellow('npm')}?`
+      )
+    )
+
+    return useYarn
   }
 }
