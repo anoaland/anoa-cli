@@ -44,7 +44,8 @@ function prettySame(received, expected, parser) {
   received = format(received, opt)
   expected = format(expected, opt)
 
-  const pass = received === expected
+  // commented code sometimes is annoying
+  const pass = received.replace(/\s+/gm, ` `) === expected.replace(/\s+/gm, ` `)
   const message = pass ? () => '' : () => diff(received, expected)
 
   return {
