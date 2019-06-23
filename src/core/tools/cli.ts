@@ -1,5 +1,6 @@
+import * as path from 'path'
 import { ReactView } from '../libs/react-view'
-import { FieldObject, RootContext, ViewKindEnum } from '../types'
+import { FieldObject, RootContext, ViewKindEnum, ViewTypeEnum } from '../types'
 
 export class CliTools {
   context: RootContext
@@ -292,5 +293,56 @@ export class CliTools {
       }
     ])
     return kind as any
+  }
+
+  /**
+   * Select a directory.
+   * Will not prompt anything if rootDir not contains any directory.
+   * @param rootDir root directory
+   * @param message prompt message
+   */
+  async selectFolder(rootDir: string, message?: string): Promise<string> {
+    const { tools, prompt } = this.context
+    let location = '/'
+    const project = tools.project()
+    const dirs = project.dirListDeep(rootDir)
+
+    if (dirs && dirs.length > 0) {
+      dirs.splice(0, 0, '/')
+      ;({ location } = await prompt.ask({
+        name: 'location',
+        message: message || `Folder/location (relative to ${rootDir}):`,
+        type: 'autocomplete',
+        choices: dirs,
+        initial: '/'
+      }))
+    }
+    return path.join(rootDir, location)
+  }
+
+  /**
+   * Select view type prompt
+   */
+  async selectViewType(
+    kind: ViewKindEnum = ViewKindEnum.component
+  ): Promise<ViewTypeEnum> {
+    const {
+      strings: { lowerCase },
+      prompt
+    } = this.context
+
+    const { type } = await prompt.ask({
+      name: 'type',
+      message: `What ${lowerCase(kind)} type do you prefer?`,
+      type: 'select',
+      choices: [
+        ViewTypeEnum.classComponent,
+        ViewTypeEnum.functionComponent,
+        ViewTypeEnum.arrowFunctionComponent
+      ],
+      initial: ViewTypeEnum.classComponent
+    })
+
+    return type as ViewTypeEnum
   }
 }

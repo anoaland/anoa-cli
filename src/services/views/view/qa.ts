@@ -19,10 +19,12 @@ export class ViewServiceQA {
     const {
       prompt,
       parameters,
-      strings: { pascalCase, isBlank, lowerCase, kebabCase },
+      strings: { pascalCase, kebabCase },
       folder,
       tools
     } = this.context
+
+    const validate = tools.validate()
 
     // resolve name
     let name = parameters.first
@@ -32,47 +34,22 @@ export class ViewServiceQA {
         name: 'name',
         message: `${pascalCase(this.kind)} name`,
         validate: val => {
-          return isBlank(val) ? 'name is required' : true
+          return validate.notEmpty('name', val)
         }
       }))
     }
 
-    // resolve location
+    const cli = tools.cli()
 
+    // resolve location
     const rootDir =
       this.kind === ViewKindEnum.screen ? folder.screens() : folder.components()
-    let location = '/'
-    const project = tools.project()
-    const dirs = project.dirListDeep(rootDir)
+    let location = await cli.selectFolder(rootDir)
 
-    if (dirs && dirs.length > 0) {
-      dirs.splice(0, 0, '/')
-      ;({ location } = await prompt.ask({
-        name: 'location',
-        message: `Folder/location (relative to ${rootDir}):`,
-        type: 'autocomplete',
-        choices: dirs,
-        initial: '/'
-      }))
-    }
-    location = path.join(rootDir, location, kebabCase(name))
+    location = path.join(location, kebabCase(name))
 
     // resolve type
-
-    let type: ViewTypeEnum | any
-    ;({ type } = await prompt.ask({
-      name: 'type',
-      message: `What ${lowerCase(this.kind)} type do you prefer?`,
-      type: 'select',
-      choices: [
-        ViewTypeEnum.classComponent,
-        ViewTypeEnum.functionComponent,
-        ViewTypeEnum.arrowFunctionComponent
-      ],
-      initial: ViewTypeEnum.classComponent
-    }))
-
-    const cli = tools.cli()
+    const type = await cli.selectViewType(this.kind)
 
     // resolve props
     const props = await cli.askFieldObjects('Props')
