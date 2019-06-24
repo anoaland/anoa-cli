@@ -12,10 +12,17 @@ import {
   SourceFile,
   Statement,
   SyntaxKind,
+  VariableDeclaration,
+  VariableDeclarationKind,
   VariableStatement
 } from 'ts-morph'
-import { RootContext } from '../types'
-import { FieldObject, KeyValue, NameValue, ViewTypeEnum } from '../types'
+import {
+  FieldObject,
+  KeyValue,
+  NameValue,
+  RootContext,
+  ViewTypeEnum
+} from '../types'
 
 export class ReactTools {
   context: RootContext
@@ -308,10 +315,7 @@ export class ReactTools {
     this.setReactExtendsGeneric(viewClass, { props: propsName, state: null })
 
     // ensure constructor is exists
-    let constr = this.getClassConstructor(viewClass)
-    if (!constr) {
-      constr = this.addClassConstructor(viewClass, propsName)
-    }
+    const constr = this.getOrCreateClassConstructor(viewClass, propsName)
 
     const constParams = constr.getParameters()
     if (!constParams.length) {
@@ -386,11 +390,7 @@ export class ReactTools {
     stateInterface: InterfaceDeclaration,
     fields: FieldObject[]
   ) {
-    let constr = this.getClassConstructor(viewClass)
-    if (!constr) {
-      constr = this.addClassConstructor(viewClass)
-    }
-
+    const constr = this.getOrCreateClassConstructor(viewClass)
     const stmt = this.getStateStatement(constr)
     if (stmt) {
       stmt.remove()
@@ -493,14 +493,27 @@ export class ReactTools {
         })
   }
 
-  addClassConstructor(
+  getOrCreateClassConstructor(
     clazz: ClassDeclaration,
     propsType: string = 'any'
   ): ConstructorDeclaration {
-    return clazz.insertConstructor(0, {
-      parameters: [{ name: 'props', type: propsType }],
-      statements: 'super(props);'
-    })
+    let constr = this.getClassConstructor(clazz)
+    const propsParam = { name: 'props', type: propsType }
+    if (!constr) {
+      // create new constructor
+      constr = clazz.insertConstructor(0, {
+        parameters: [propsParam],
+        statements: 'super(props);'
+      })
+    } else {
+      // ensure constructor has 'props' parameter
+      const parameters = constr.getParameters()
+      if (!parameters.length) {
+        constr.addParameter(propsParam)
+      }
+    }
+
+    return constr
   }
 
   getReactExtends(viewClass: ClassDeclaration) {
@@ -516,6 +529,65 @@ export class ReactTools {
       state: args.length > 1 ? args[1].getText() : undefined
     }
     return { react: matches[0], info, reactExtends }
+  }
+
+  /**
+   * Get exported variable of component/view.
+   * If not exists then translate existing function to var
+   * and return it.
+   * @param viewFile component source file
+   * @param name component name
+   * @param propsName props name
+   */
+  getOrCreateViewVarOfFunctionView(
+    viewFile: SourceFile,
+    name: string,
+    propsName: string
+  ) {
+    let viewVar: VariableDeclaration = viewFile.getVariableDeclaration(name)
+    if (!viewVar) {
+      const viewFunction = viewFile.getFunction(name)
+      const newFnName = '_' + name
+      viewFunction.rename(newFnName)
+      viewFunction.setIsExported(false)
+      this.setFunctionPropsParams(viewFunction, propsName)
+      viewVar = viewFile
+        .addVariableStatement({
+          declarations: [
+            {
+              name,
+              initializer: newFnName
+            }
+          ],
+          declarationKind: VariableDeclarationKind.Const,
+          isExported: true
+        })
+        .getDeclarations()[0]
+    }
+    return viewVar
+  }
+
+  /**
+   * Ensure this function has 'props' parameter
+   * with props name as a type.
+   * @param fn function declaration
+   * @param propsName props name
+   */
+  setFunctionPropsParams(
+    fn: ArrowFunction | FunctionDeclaration,
+    propsName: string
+  ) {
+    const fnParams = fn.getParameters()
+    if (!fnParams.length) {
+      fn.addParameter({
+        name: 'props',
+        type: propsName
+      })
+    } else if (fnParams.length === 1) {
+      if (!fnParams[0].getTypeNode()) {
+        fnParams[0].setType(propsName)
+      }
+    }
   }
 }
 

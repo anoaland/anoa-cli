@@ -68,7 +68,7 @@ export class TsTools {
     }
 
     if (!newProps.length) {
-      return
+      return intrfc
     }
 
     intrfc.addProperties(newProps)
@@ -157,5 +157,16 @@ export class TsTools {
         optional: m.hasQuestionToken()
       }
     })
+  }
+
+  /**
+   * Extends interface to other interface if not extended yet
+   * @param intrfc interface to extends
+   * @param extendsTo extends to
+   */
+  extendsInterface(intrfc: InterfaceDeclaration, extendsTo: string) {
+    if (!intrfc.getExtends().find(e => e.getText() === extendsTo)) {
+      intrfc.addExtends(extendsTo)
+    }
   }
 }

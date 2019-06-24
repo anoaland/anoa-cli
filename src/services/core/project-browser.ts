@@ -1,8 +1,12 @@
 import * as _ from 'lodash'
 import * as path from 'path'
 import { Project, SourceFile, SyntaxKind } from 'ts-morph'
-import { RootContext } from '../../core/types'
-import { FieldObject, ViewKindEnum } from '../../core/types'
+import {
+  FieldObject,
+  RootContext,
+  ThemeInfo,
+  ViewKindEnum
+} from '../../core/types'
 import { ReactComponentInfo, ReactUtils } from './react-utils'
 import { ReduxUtils, ThunkInfo } from './redux-utils'
 import { Utils } from './utils'
@@ -706,9 +710,4 @@ export interface BrowseViewInfo {
   sourceFile: SourceFile
   info: ReactComponentInfo
   kind: ViewKindEnum
-}
-
-export interface ThemeInfo {
-  name: string
-  path: string
 }

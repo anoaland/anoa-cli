@@ -5,9 +5,23 @@ import { RootContext } from '../types'
 
 export class SourceTools {
   context: RootContext
+  private globalProject: Project
 
   constructor(context: RootContext) {
     this.context = context
+  }
+
+  get project() {
+    if (this.globalProject) {
+      return this.globalProject
+    }
+
+    return (this.globalProject = new Project())
+  }
+
+  async save() {
+    await this.prettifyProjectFiles(this.globalProject)
+    await this.globalProject.save()
   }
 
   /**

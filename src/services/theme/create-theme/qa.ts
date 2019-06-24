@@ -1,29 +1,26 @@
 import * as path from 'path'
-import { RootContext } from '../../../../core/types'
-import { Utils } from '../../../core'
-import { ProjectBrowser, ThemeInfo } from '../../../core/project-browser'
+import { CreateThemeArgs, RootContext } from '../../../core/types'
 
-export class CreateThemeBuilderQA {
+export class CreateThemeServiceQA {
   context: RootContext
-  utils: Utils
-  result: CreateThemeBuilderQAResult
-  projectBrowser: ProjectBrowser
 
   constructor(context: RootContext) {
     this.context = context
-    this.utils = new Utils(context)
-    this.projectBrowser = new ProjectBrowser(context)
   }
 
-  async run() {
+  async run(): Promise<CreateThemeArgs> {
     const {
       prompt,
       filesystem: { exists, cwd },
       folder,
       strings: { kebabCase },
       print: { colors },
-      naming
+      naming,
+      tools
     } = this.context
+
+    const utils = tools.utils()
+    const theme = tools.theme()
 
     let themePath: string
     let { themeName } = await prompt.ask({
@@ -42,7 +39,7 @@ export class CreateThemeBuilderQA {
 
         if (exists(themePath)) {
           return `The ${colors.yellow(
-            this.utils.relativePath(themePath)
+            utils.relativePath(themePath)
           )} is already exists. Please try different name.`
         }
 
@@ -51,18 +48,12 @@ export class CreateThemeBuilderQA {
     })
     themeName = naming.theme(themeName)
 
-    const base = await this.projectBrowser.browseThemes('Select parent theme')
+    const base = await theme.selectTheme('Select parent theme')
 
-    this.result = {
+    return {
       name: themeName,
       filePath: themePath,
       base
     }
   }
-}
-
-export interface CreateThemeBuilderQAResult {
-  name: string
-  filePath: string
-  base: ThemeInfo
 }

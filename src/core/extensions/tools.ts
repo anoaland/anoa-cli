@@ -3,6 +3,7 @@ import { NpmTools } from '../tools/npm'
 import { ProjectTools } from '../tools/project'
 import { ReactTools } from '../tools/react'
 import { SourceTools } from '../tools/source'
+import { ThemeTools } from '../tools/theme'
 import { TsTools } from '../tools/ts'
 import { Utils } from '../tools/utils'
 import { ValidateTools } from '../tools/validate'
@@ -51,6 +52,11 @@ export function tools(context: RootContext) {
       (cachedTools.validate ||
         (cachedTools.validate = new (require('../tools/validate')).ValidateTools(
           context
-        ))) as ValidateTools
+        ))) as ValidateTools,
+    theme: () =>
+      (cachedTools.theme ||
+        (cachedTools.theme = new (require('../tools/theme')).ThemeTools(
+          context
+        ))) as ThemeTools
   }
 }

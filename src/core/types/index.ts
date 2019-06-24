@@ -91,3 +91,19 @@ export interface RouteViewInfo {
   title: string
   routeName: string
 }
+
+export interface CreateThemeArgs {
+  name: string
+  filePath: string
+  base: ThemeInfo
+}
+
+export interface ThemeInfo {
+  name: string
+  path: string
+}
+
+export interface ConnectThemeArgs {
+  views: ReactView[]
+  viewKind: ViewKindEnum
+}

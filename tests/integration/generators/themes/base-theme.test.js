@@ -1,9 +1,7 @@
 const tempy = require('tempy')
-const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
+const { run } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -42,29 +40,20 @@ describe('base theme tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/styles/themes')
 
-    const baseThemeFile = project.addExistingSourceFile('base.ts')
-    expect(baseThemeFile.getText().replace(/\s+/gm, ` `)).toEqual(
-`import { createTheme } from 'anoa-react-native-theme'
+    expect('base.ts').existsAndPrettySame(
+      `import { createTheme } from 'anoa-react-native-theme'
 
-export const BaseTheme = createTheme(
-  {
-    // define theme variables
-  },
-  vars => ({
-    // define theme styles
-  })
-)
-`.replace(/\s+/gm, ` `)
+      export const BaseTheme = createTheme(
+        {
+          // define theme variables
+        },
+        vars => ({
+          // define theme styles
+        })
+      )
+      `
     )
   })
 })

@@ -1,22 +1,33 @@
 import * as path from 'path'
-import { Project, SourceFile, SyntaxKind } from 'ts-morph'
+import {
+  ArrowFunction,
+  CallExpression,
+  DecoratorStructure,
+  InterfaceDeclaration,
+  OptionalKind,
+  Project,
+  SourceFile,
+  SyntaxKind
+} from 'ts-morph'
 import { ReactComponentInfo } from '../tools/react'
 import {
   FieldObject,
-  PropsInfo,
+  KeyValue,
   RootContext,
   StateInfo,
   ViewKindEnum,
   ViewTypeEnum
 } from '../types'
+import { Lib } from './lib'
+import { ViewProps } from './view-props'
 
-export class ReactView {
-  context: RootContext
-  sourceFile: SourceFile
+export class ReactView extends Lib {
   name: string
   type: ViewTypeEnum
   kind: ViewKindEnum
   key: string
+
+  private cache: KeyValue<any> = {}
 
   constructor(
     context: RootContext,
@@ -24,6 +35,7 @@ export class ReactView {
     kind: ViewKindEnum,
     info: ReactComponentInfo
   ) {
+    super(context)
     this.context = context
     this.sourceFile = sourceFile
     this.name = info.name
@@ -32,29 +44,51 @@ export class ReactView {
     this.key = this.getKey()
   }
 
-  addToProject(project: Project) {
-    this.sourceFile = project.addExistingSourceFile(
-      this.sourceFile.getFilePath()
-    )
-    return this.sourceFile
+  addNamedImport(modulePath: string, moduleName: string) {
+    this.context.tools
+      .ts()
+      .addNamedImport(this.sourceFile, modulePath, moduleName)
   }
 
-  getFilePath() {
+  sortFilePath(): string {
+    if (this.cache.filePath) {
+      return this.cache.filePath
+    }
     const { folder } = this.context
-    return path
+    return (this.cache.filePath = path
       .relative(
         this.kind === ViewKindEnum.component
           ? folder.components()
           : folder.screens(),
         this.sourceFile.getFilePath()
       )
-      .replace(/\\/g, '/')
+      .replace(/\\/g, '/'))
   }
 
-  getPropsName() {
-    const { tools } = this.context
-    const react = tools.react()
+  getProps(): ViewProps {
+    if (this.cache.props !== undefined) {
+      return this.cache.props
+    }
 
+    const {
+      filesystem: { exists },
+      tools,
+      naming
+    } = this.context
+
+    const propsPath = path.join(this.sourceFile.getDirectoryPath(), 'props.ts')
+    if (!exists(propsPath)) {
+      return null
+    }
+
+    const { project } = tools.source()
+    const react = tools.react()
+    const propsFile = project.addExistingSourceFile(propsPath)
+
+    let propsInterface: InterfaceDeclaration
+    let propsName = ''
+
+    // try to get props name from declared generic parameters
     switch (this.type) {
       case ViewTypeEnum.classComponent:
         const classPropsAndState = react.getViewPropsAndStateName(
@@ -63,7 +97,8 @@ export class ReactView {
         if (!classPropsAndState) {
           return undefined
         }
-        return classPropsAndState.props
+        propsName = classPropsAndState.props
+        break
 
       case ViewTypeEnum.functionComponent:
         const fn = this.getFunction()
@@ -71,82 +106,81 @@ export class ReactView {
           return undefined
         }
 
-        return react.getViewPropsNameFromFunction(fn)
+        propsName = react.getViewPropsNameFromFunction(fn)
+        break
 
       case ViewTypeEnum.arrowFunctionComponent:
         const arrowFn = this.getArrowFunction()
         if (!arrowFn) {
           return undefined
         }
-        return react.getViewPropsNameFromFunction(arrowFn)
+        propsName = react.getViewPropsNameFromFunction(arrowFn)
     }
-  }
 
-  getClass() {
-    return this.sourceFile.getClass(this.name)
-  }
-
-  getFunction() {
-    let fn = this.sourceFile.getFunction(this.name)
-    if (!fn) {
-      const varDec = this.sourceFile.getVariableDeclaration(this.name)
-      if (!varDec) {
-        return undefined
+    if (!propsName) {
+      // props name is not declared try guess it
+      propsInterface = propsFile.getInterface(naming.props(this.name))
+      if (!propsInterface) {
+        const interfaces = propsFile.getInterfaces().filter(i => i.isExported())
+        if (interfaces.length === 1) {
+          propsInterface = interfaces[0]
+        }
       }
-
-      const initializer = varDec.getInitializerIfKind(SyntaxKind.CallExpression)
-      if (!initializer) {
-        return undefined
+      if (propsInterface) {
+        propsName = propsInterface.getName()
       }
-
-      const args = initializer.getArguments()
-      if (!args.length) {
-        return undefined
-      }
-
-      fn = this.sourceFile.getFunction(args[0].getText())
+    } else {
+      propsInterface = propsFile.getInterface(propsName)
     }
-    return fn
-  }
 
-  getArrowFunction() {
-    const varDec = this.sourceFile.getVariableDeclaration(this.name)
-    if (!varDec) {
-      return undefined
+    if (!propsInterface) {
+      project.removeSourceFile(propsFile)
+      return null
     }
-    return varDec.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
+
+    const ts = tools.ts()
+    return (this.cache.props = new ViewProps(this.context, this, {
+      name: propsName,
+      sourceFile: propsFile,
+      fields: ts.getInterfaceFields(propsInterface)
+    }))
   }
 
-  getProps(): PropsInfo {
+  createProps(fields: FieldObject[] = []): ViewProps {
     const {
+      naming,
       filesystem: { exists },
       tools
     } = this.context
 
-    const propsName = this.getPropsName()
-
-    if (!propsName) {
-      return undefined
-    }
+    const propsName = naming.props(this.name)
 
     const propsPath = path.join(this.sourceFile.getDirectoryPath(), 'props.ts')
-    if (!exists(propsPath)) {
-      return undefined
-    }
-
-    const project = new Project()
-    const propsFile = project.addExistingSourceFile(propsPath)
-    const propsInterface = propsFile.getInterface(propsName)
-    if (!propsInterface) {
-      return undefined
+    if (exists(propsPath)) {
+      throw new Error(`props ${propsName} is already exists on ${propsPath}`)
     }
 
     const ts = tools.ts()
-    return {
+
+    const { project } = tools.source()
+    const propsInterface = ts.createInterface(
+      project,
+      propsName,
+      propsPath,
+      fields
+    )
+
+    ts.addImportInterfaceDeclaration(this.sourceFile, propsInterface)
+
+    return (this.cache.props = new ViewProps(this.context, this, {
       name: propsName,
-      sourceFile: propsFile,
-      fields: ts.getInterfaceFields(propsInterface)
-    }
+      sourceFile: propsInterface.getSourceFile(),
+      fields
+    }))
+  }
+
+  getOrCreateProps(fields: FieldObject[] = []): ViewProps {
+    return this.getProps() || this.createProps(fields)
   }
 
   getState(): StateInfo {
@@ -223,13 +257,158 @@ export class ReactView {
     }
   }
 
+  getClass() {
+    return this.sourceFile.getClass(this.name)
+  }
+
+  getFunction() {
+    let fn = this.sourceFile.getFunction(this.name)
+    if (!fn) {
+      const varDec = this.sourceFile.getVariableDeclaration(this.name)
+      if (!varDec) {
+        return undefined
+      }
+
+      const initializer = varDec.getInitializerIfKind(SyntaxKind.CallExpression)
+      if (!initializer) {
+        return undefined
+      }
+
+      const args = initializer.getArguments()
+      if (!args.length) {
+        return undefined
+      }
+
+      fn = this.sourceFile.getFunction(args[0].getText())
+    }
+    return fn
+  }
+
+  getArrowFunction() {
+    const varDec = this.sourceFile.getVariableDeclaration(this.name)
+    if (!varDec) {
+      return undefined
+    }
+    return varDec.getFirstDescendantByKind(SyntaxKind.ArrowFunction)
+  }
+
+  /**
+   * Set class decorator.
+   * This will looks for decorator started with 'key' statement,
+   * if found and 'force' parameter = true then replace the decortor,
+   * otherwise create a new one.
+   * This will also reference 'props' type as generic parameter for 
+   * React.Component and ensure constructor is proper.
+   * @param key decorator key to find
+   * @param decorator decorator structure
+   * @param force force to replace existing decorator
+   */
+  setDecorator(
+    key: string,
+    decorator: OptionalKind<DecoratorStructure>,
+    force: boolean = false
+  ): boolean {
+    const clazz = this.getClass()
+    if (!clazz) {
+      throw new Error('Decorator can only applied to class view.')
+    }
+
+    const existing = clazz.getDecorator(d => d.getFullName().startsWith(key))
+    if (existing) {
+      if (!force) {
+        return false
+      }
+
+      // remove existing decorator
+      existing.remove()
+    }
+
+    clazz.addDecorator(decorator)
+
+    const { tools } = this.context
+
+    const react = tools.react()
+    const propsName = this.getProps().name
+
+    // set React.Component extends generic
+    react.setReactExtendsGeneric(clazz, {
+      props: propsName,
+      state: null
+    })
+
+    // ensure constructor
+    react.getOrCreateClassConstructor(clazz, propsName)
+
+    return true
+  }
+
+  /**
+   * Set HOC to function/arrow-function component.
+   * This will looks for HOC started with 'key' statement,
+   * if found and 'force' parameter = true then replace the statement,
+   * otherwise create a new one.
+   * This will also reference 'props' parameter to function/arrow-function.
+   * @param key statement key to find
+   * @param statement statement
+   * @param force force to replace HOC if found
+   */
+  setHoc(key: string, statement: string, force: boolean = false) {
+    const react = this.context.tools.react()
+    const props = this.getProps()
+
+    if (!props) {
+      throw new Error(
+        `Could not find props for ${
+          this.name
+        } component. HOC could not be applied here.\r\nNormally you want to extends props to other interface.`
+      )
+    }
+
+    const viewVar = react.getOrCreateViewVarOfFunctionView(
+      this.sourceFile,
+      this.name,
+      props.name
+    )
+
+    const identifier = viewVar.getFirstChild(
+      c =>
+        c.getKind() === SyntaxKind.CallExpression && c.getText().startsWith(key)
+    )
+
+    let callExp: CallExpression
+    if (identifier) {
+      // if (identifier.getText().startsWith(hoc)) {
+      //   return false
+      // }
+      callExp = identifier.getFirstChildByKind(SyntaxKind.CallExpression)
+    }
+
+    if (!callExp) {
+      const fn = viewVar.getInitializer() as ArrowFunction
+      if (fn.getParameters) {
+        react.setFunctionPropsParams(fn, props.name)
+      }
+      viewVar.replaceWithText(
+        `${viewVar.getName()} = ${statement}(${fn.getText()})`
+      )
+    } else {
+      if (force) {
+        callExp.replaceWithText(statement)
+      } else {
+        return false
+      }
+    }
+
+    return true
+  }
+
   private getKey() {
     const {
       strings: { padEnd },
       print: { colors }
     } = this.context
     return `  ${padEnd(this.name, 25)} ${colors.yellow(
-      `[${this.getFilePath()}]`
+      `[${this.sortFilePath()}]`
     )}`
   }
 }

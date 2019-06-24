@@ -1,9 +1,7 @@
 const tempy = require('tempy')
-const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
+const { run, DOWN, ENTER, SPACE } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -51,20 +49,9 @@ describe('connect theme tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/screens')
 
-    const classBasedScreenFile = project.addExistingSourceFile(
-      'class-view/index.tsx'
-    )
-    expect(classBasedScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect('class-view/index.tsx').existsAndPrettySame(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
@@ -84,23 +71,17 @@ describe('connect theme tests', () => {
           )
         }
       }
-      `.replace(/\s+/gm, ` `)
+      `
     )
 
-    const classBasedScreenPropsFile = project.addExistingSourceFile(
-      'class-view/props.ts'
-    )
-    expect(classBasedScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect('class-view/props.ts').existsAndPrettySame(
       `import { AppStyleProps } from '../../styles'
 
       export interface ClassViewScreenProps extends AppStyleProps {}
-      `.replace(/\s+/gm, ` `)
+      `
     )
 
-    const functionViewScreenFile = project.addExistingSourceFile(
-      'function-view/index.tsx'
-    )
-    expect(functionViewScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect('function-view/index.tsx').existsAndPrettySame(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
@@ -115,23 +96,17 @@ describe('connect theme tests', () => {
       }
       
       export const FunctionViewScreen = AppStyle.withTheme(_FunctionViewScreen)
-      `.replace(/\s+/gm, ` `)
+      `
     )
 
-    const functionViewScreenPropsFile = project.addExistingSourceFile(
-      'function-view/props.ts'
-    )
-    expect(functionViewScreenPropsFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect('function-view/props.ts').existsAndPrettySame(
       `import { AppStyleProps } from '../../styles'
 
       export interface FunctionViewScreenProps extends AppStyleProps {}
-      `.replace(/\s+/gm, ` `)
+      `
     )
 
-    const arrowFunctionScreenFile = project.addExistingSourceFile(
-      'arrow-function-view/index.tsx'
-    )
-    expect(arrowFunctionScreenFile.getText().replace(/\s+/gm, ` `)).toEqual(
+    expect('arrow-function-view/index.tsx').existsAndPrettySame(
       `import React from 'react'
       import { Text, View } from 'react-native'
       import { AppStyle } from '../../styles'
@@ -146,19 +121,14 @@ describe('connect theme tests', () => {
           )
         }
       )
-      `.replace(/\s+/gm, ` `)
+      `
     )
 
-    const arrowFunctionViewScreenPropsFile = project.addExistingSourceFile(
-      'arrow-function-view/props.ts'
-    )
-    expect(
-      arrowFunctionViewScreenPropsFile.getText().replace(/\s+/gm, ` `)
-    ).toEqual(
+    expect('arrow-function-view/props.ts').existsAndPrettySame(
       `import { AppStyleProps } from '../../styles'
 
       export interface ArrowFunctionViewScreenProps extends AppStyleProps {}
-      `.replace(/\s+/gm, ` `)
+      `
     )
   })
 })
