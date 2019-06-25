@@ -2,6 +2,7 @@ import { CliTools } from '../tools/cli'
 import { NpmTools } from '../tools/npm'
 import { ProjectTools } from '../tools/project'
 import { ReactTools } from '../tools/react'
+import { ReduxTools } from '../tools/redux'
 import { SourceTools } from '../tools/source'
 import { ThemeTools } from '../tools/theme'
 import { TsTools } from '../tools/ts'
@@ -57,6 +58,11 @@ export function tools(context: RootContext) {
       (cachedTools.theme ||
         (cachedTools.theme = new (require('../tools/theme')).ThemeTools(
           context
-        ))) as ThemeTools
+        ))) as ThemeTools,
+    redux: () =>
+      (cachedTools.redux ||
+        (cachedTools.redux = new (require('../tools/redux')).ReduxTools(
+          context
+        ))) as ReduxTools
   }
 }

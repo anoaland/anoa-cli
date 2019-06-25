@@ -2,8 +2,6 @@ const tempy = require('tempy')
 const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -76,73 +74,93 @@ describe('create reducer tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
+    process.chdir('src/store')
 
-    const project = new Project({
-      tsConfigFilePath
-    })
+    expect('core.tsx').isExists()
 
-    process.chdir('src/store/reducers/task')
+    expect('index.ts').existsAndPrettySame(
+      `
+      import { ThunkAction } from 'redux-thunk'
+      import { ReduxStore } from './core'
+      import { AppRootActions, AppRootState, reducers } from './reducers'
+      
+      export const AppStore = new ReduxStore<AppRootState, AppRootActions>(reducers)
+      
+      export type AppThunkAction<TResult = void> = ThunkAction<
+        TResult,
+        AppRootState,
+        undefined,
+        AppRootActions
+      >      
+      `
+    )
 
-    // files are exists
-    expect(exists('index.ts')).toBeTruthy()
-    expect(exists('actions.ts')).toBeTruthy()
-    expect(exists('state.ts')).toBeTruthy()
+    expect('reducers/index.ts').existsAndPrettySame(
+      `
+      import { combineReducers } from 'redux'
+      import { TaskReducer } from './task'
+      import { TaskAction } from './task/actions'
+      
+      export const reducers = combineReducers({
+        task: TaskReducer
+      })
+      
+      export type AppRootActions = TaskAction
+      export type AppRootState = ReturnType<typeof reducers>      
+      `
+    )
 
-    const taskReducerFile = project.addExistingSourceFile('index.ts')
-    expect(taskReducerFile.getText()).toEqual(
+    process.chdir('reducers/task')
+
+    expect('index.ts').existsAndPrettySame(
       `import { Reducer } from 'redux'
-import { TaskAction } from './actions'
-import { TaskState } from './state'
+      import { TaskAction } from './actions'
+      import { TaskState } from './state'
 
-export const TaskReducer: Reducer<TaskState, TaskAction> = (
-  state = {
-    state1: '',
-    state2: 0
-  },
-  action
-) => {
-  switch (action.type) {
-    case 'TASK/SET_STATE_1':
-      return { ...state, state1: action.payload }
-    case 'TASK/SET_STATE_2':
-      return { ...state, state2: action.payload }
-    case 'TASK/ANOTHER_ACTION':
-      return { ...state }
-    default:
-      return state
-  }
-}
-`
+      export const TaskReducer: Reducer<TaskState, TaskAction> = (
+        state = {
+          state1: '',
+          state2: 0
+        },
+        action
+      ) => {
+        switch (action.type) {
+          case 'TASK/SET_STATE_1':
+            return { ...state, state1: action.payload }
+          case 'TASK/SET_STATE_2':
+            return { ...state, state2: action.payload }
+          case 'TASK/ANOTHER_ACTION':
+            return { ...state }
+          default:
+            return state
+        }
+      }
+      `
     )
 
-    const taskActionsFile = project.addExistingSourceFile('actions.ts')
-    expect(taskActionsFile.getText()).toEqual(
+    expect('actions.ts').existsAndPrettySame(
       `export type TaskAction =
-  | {
-      type: 'TASK/SET_STATE_1'
-      payload: string
-    }
-  | {
-      type: 'TASK/SET_STATE_2'
-      payload: number
-    }
-  | {
-      type: 'TASK/ANOTHER_ACTION'
-      payload: string
-    }
-`
+        | {
+            type: 'TASK/SET_STATE_1'
+            payload: string
+          }
+        | {
+            type: 'TASK/SET_STATE_2'
+            payload: number
+          }
+        | {
+            type: 'TASK/ANOTHER_ACTION'
+            payload: string
+          }
+      `
     )
 
-    const taskStateFile = project.addExistingSourceFile('state.ts')
-    expect(taskStateFile.getText()).toEqual(
+    expect('state.ts').existsAndPrettySame(
       `export interface TaskState {
-  state1: string
-  state2: number
-}
-`
+        state1: string
+        state2: number
+      }
+      `
     )
   })
 })

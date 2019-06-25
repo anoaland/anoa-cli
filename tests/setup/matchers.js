@@ -31,6 +31,19 @@ expect.extend({
     received = read(received)
 
     return prettySame(received, expected, parser)
+  },
+
+  isExists(received) {
+    const { exists } = filesystem
+    if (!exists(received)) {
+      return {
+        pass: false,
+        message: () => `${received} is not exists`
+      }
+    }
+    return {
+      pass: true
+    }
   }
 })
 

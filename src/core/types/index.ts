@@ -122,3 +122,11 @@ export interface AppProvider {
    */
   prepareStatement?: string
 }
+
+export interface CreateReducerArgs {
+  name: string
+  location: string
+  stateFields: FieldObject[]
+  stateActionTypes: FieldObject[]
+  customActionTypes: FieldObject[]
+}
