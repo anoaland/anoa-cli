@@ -107,3 +107,18 @@ export interface ConnectThemeArgs {
   views: ReactView[]
   viewKind: ViewKindEnum
 }
+
+export interface AppProvider {
+  /**
+   * Provider full name. eg: AppStyle.Provider
+   */
+  name: string
+  /**
+   * Module specifier where this provider imported
+   */
+  moduleSpecifier: string
+  /**
+   * Statement you want to put on App.prepare() method
+   */
+  prepareStatement?: string
+}

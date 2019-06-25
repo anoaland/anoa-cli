@@ -1,4 +1,3 @@
-import { Project, SyntaxKind } from 'ts-morph'
 import { RootContext } from '../../core/types'
 
 export class InitThemeGenerator {
@@ -59,57 +58,23 @@ export class InitThemeGenerator {
 
   private async generateAppMainFile() {
     const {
-      folder,
       print: { spin, colors },
       tools
     } = this.context
 
     const spinner = spin(`Updating ${colors.cyan('App.tsx')}...`)
-
-    const project = new Project()
-    const utils = tools.utils()
     const source = tools.source()
 
-    const appMainFile = project.addExistingSourceFile(folder.src('App.tsx'))
-    if (appMainFile.getImportDeclaration('./views/styles')) {
-      return
-    }
-
-    // add import store statement
-
-    appMainFile.addImportDeclaration({
-      moduleSpecifier: './views/styles',
-      namedImports: ['AppStyle']
+    source.app.addProvider({
+      name: 'AppStyle.Provider',
+      moduleSpecifier: './views/styles'
     })
 
-    const appMainClass = appMainFile.getClass('App')
-    // make up renderMain function
-
-    const renderMainFunction = appMainClass.getMethod('renderMain')
-    const ret = renderMainFunction
-      .getBody()
-      .getFirstDescendantByKind(SyntaxKind.ReturnStatement)
-
-    const jsxStatement = (
-      ret.getFirstDescendantByKind(SyntaxKind.JsxElement) ||
-      ret.getFirstDescendantByKind(SyntaxKind.JsxSelfClosingElement)
-    ).getText()
-
-    renderMainFunction.setBodyText(`
-      return (
-        <AppStyle.Provider>
-          ${jsxStatement}
-        </AppStyle.Provider>
-      )
-      `)
-
-    await source.prettifySoureFile(appMainFile)
-    await project.save()
-
+    source.save()
     spinner.succeed(
       `${colors.cyan('AppStyle.Provider')} applied to ${colors.cyan(
         'App.tsx'
-      )} on ${colors.yellow(utils.relativePath(appMainFile.getFilePath()))}`
+      )} on ${colors.yellow(source.app.relativePath())}`
     )
   }
 }

@@ -36,4 +36,14 @@ export class Lib {
       .source()
       .project.addExistingSourceFile(this.sourceFile.getFilePath())
   }
+
+  hasImportDeclaration(modulePath: string) {
+    return !!this.sourceFile.getImportDeclaration(modulePath)
+  }
+
+  relativePath() {
+    return this.context.tools
+      .utils()
+      .relativePath(this.sourceFile.getFilePath())
+  }
 }

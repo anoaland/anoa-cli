@@ -1,11 +1,13 @@
 import * as path from 'path'
 import { format, resolveConfig } from 'prettier'
 import { Project, SourceFile } from 'ts-morph'
+import { App } from '../libs/app'
 import { RootContext } from '../types'
 
 export class SourceTools {
   context: RootContext
   private globalProject: Project
+  private globalApp: App
 
   constructor(context: RootContext) {
     this.context = context
@@ -17,6 +19,14 @@ export class SourceTools {
     }
 
     return (this.globalProject = new Project())
+  }
+
+  get app() {
+    if (this.globalApp) {
+      return this.globalApp
+    }
+
+    return (this.globalApp = new App(this.context))
   }
 
   async save() {
