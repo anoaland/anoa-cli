@@ -2,7 +2,7 @@ import * as path from 'path'
 import { Project, SyntaxKind } from 'ts-morph'
 import { Reducer } from '../libs/reducer'
 import {
-  ActionTypeList,
+  ActionTypeClause,
   FieldObject,
   KeyValue,
   ReducerInfo,
@@ -26,7 +26,7 @@ export class ReduxTools {
   async askGenerateActionTypesFromState(
     reducerName: string,
     stateFields: FieldObject[]
-  ): Promise<ActionTypeList> {
+  ): Promise<ActionTypeClause[]> {
     if (!stateFields || !stateFields.length) {
       return []
     }
@@ -51,7 +51,7 @@ export class ReduxTools {
     }
 
     const choices = stateFields
-      .map(s => {
+      .map<{ name: string; value: ActionTypeClause }>(s => {
         const name = `${naming
           .store(reducerName)
           .actionTypeName()}/SET_${naming.store(s.name).actionTypeName()}`
@@ -60,14 +60,13 @@ export class ReduxTools {
             'payload'
           )}: ${colors.cyan(s.type)}`,
           value: {
-            name,
-            type: s.type,
-            optional: s.optional,
-            data: s
+            type: name,
+            payload: s.type,
+            state: s
           }
         }
       })
-      .reduce((acc, val) => {
+      .reduce<Partial<ActionTypeClause>>((acc, val) => {
         acc[val.name] = val.value
         return acc
       }, {})
@@ -97,7 +96,7 @@ export class ReduxTools {
   async askActionTypes(
     reducerName: string,
     message?: string
-  ): Promise<FieldObject[]> {
+  ): Promise<ActionTypeClause[]> {
     const {
       prompt,
       print: { colors, fancy },
@@ -108,7 +107,7 @@ export class ReduxTools {
 
     reducerName = naming.store(reducerName).actionTypeName()
     let stop = false
-    const fields: FieldObject[] = []
+    const fields: ActionTypeClause[] = []
     const template = ` type: ${colors.cyan(
       reducerName
     )}/\${type}, payload: \${payload}`
@@ -194,9 +193,8 @@ export class ReduxTools {
         let { type, payload } = field.values
 
         fields.push({
-          name: type,
-          type: payload,
-          optional: false
+          type,
+          payload
         })
       }
     }

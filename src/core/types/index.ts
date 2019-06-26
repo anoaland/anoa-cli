@@ -128,15 +128,11 @@ export interface CreateReducerArgs {
   name: string
   location: string
   stateFields: FieldObject[]
-  stateActionTypes: FieldObject[]
-  customActionTypes: FieldObject[]
+  stateActionTypes: ActionTypeClause[]
+  customActionTypes: ActionTypeClause[]
 }
 
-export type ActionTypeInfo = FieldObject<FieldObject>
-
-export type ActionTypeList = ActionTypeInfo[]
-
-export type ActionTypeClause = {
+export interface ActionTypeClause {
   type: string
   payload?: string
   state?: FieldObject
@@ -145,12 +141,12 @@ export type ActionTypeClause = {
 export interface AddReducerStateArgs {
   reducer: Reducer
   state: FieldObject[]
-  actionTypes: ActionTypeList
+  actionTypes: ActionTypeClause[]
 }
 
 export interface AddActionTypesArgs {
   reducer: Reducer
-  actionTypes: ActionTypeList
+  actionTypes: ActionTypeClause[]
 }
 
 export interface ReducerInfo {

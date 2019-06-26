@@ -3,7 +3,12 @@ import {
   StructureKind,
   SyntaxKind
 } from 'ts-morph'
-import { ActionTypeList, FieldObject, ReducerInfo, RootContext } from '../types'
+import {
+  ActionTypeClause,
+  FieldObject,
+  ReducerInfo,
+  RootContext
+} from '../types'
 import { ActionTypes } from './action-types'
 import { Lib } from './lib'
 import { ReducerState } from './reducer-state'
@@ -63,7 +68,7 @@ export class Reducer extends Lib {
     return (this.actionTypes = new ActionTypes(this))
   }
 
-  addActionTypes(fields: ActionTypeList) {
+  addActionTypes(fields: ActionTypeClause[]) {
     if (!fields || !fields.length) {
       return
     }
@@ -81,8 +86,10 @@ export class Reducer extends Lib {
 
     updatedClauses.push(
       ...fields.map(
-        a => `case '${a.name}':
-          return { ...state${a.data ? `, ${a.data.name}:action.payload` : ''} }
+        a => `case '${a.type}':
+          return { ...state${
+            a.state ? `, ${a.state.name}:action.payload` : ''
+          } }
         `
       )
     )

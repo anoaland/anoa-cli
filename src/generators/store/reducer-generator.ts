@@ -93,8 +93,8 @@ export class ReducerGenerator {
 
     let body = stateActionTypes
       .map(
-        a => `case '${a.name}':
-        return { ...state, ${a.data.name}: action.payload }`
+        a => `case '${a.type}':
+        return { ...state, ${a.state.name}: action.payload }`
       )
       .join('\r\n')
 
@@ -103,7 +103,7 @@ export class ReducerGenerator {
         '\r\n' +
         customActionTypes
           .map(
-            a => `case '${a.name}':
+            a => `case '${a.type}':
       return { ...state }`
           )
           .join('\r\n')
@@ -166,8 +166,8 @@ export class ReducerGenerator {
         .map(
           a => `
         {
-          type: '${a.name}',
-          payload: ${a.type}
+          type: '${a.type}',
+          payload: ${a.payload}
         }
       `
         )

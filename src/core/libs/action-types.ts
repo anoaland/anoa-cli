@@ -1,6 +1,6 @@
 import * as path from 'path'
 import { SyntaxKind, TypeAliasDeclaration } from 'ts-morph'
-import { ActionTypeClause, ActionTypeList } from '../types'
+import { ActionTypeClause } from '../types'
 import { Lib } from './lib'
 import { Reducer } from './reducer'
 
@@ -71,7 +71,7 @@ export class ActionTypes extends Lib {
     return (this.fields = [])
   }
 
-  addFields(fields: ActionTypeList) {
+  addFields(fields: ActionTypeClause[]) {
     if (!fields || !fields.length) {
       return
     }
@@ -87,8 +87,8 @@ export class ActionTypes extends Lib {
     actionTypes += fields
       .map(
         a => `{
-      type: '${a.name}'
-      ${a.type ? ', payload: ' + a.type : ''}
+      type: '${a.type}'
+      ${a.payload ? ', payload: ' + a.payload : ''}
     }`
       )
       .join(' | ')
