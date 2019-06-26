@@ -1,12 +1,12 @@
 import { RootContext } from '../../core/types'
 import { Utils } from '../core'
-import { ReducerActionTypesBuilder } from './builders/actionTypes'
+import { AddActionTypesService } from './action-types'
 import { ReduxConnectBuilder } from './builders/connect'
-import { ReducerStateBuilder } from './builders/state'
 import { ReduxThunkBuilder } from './builders/thunk'
 import { TaskEnum } from './enums'
 import { helps } from './help'
 import { CreateReducerService } from './reducer'
+import { AddReducerStateService } from './state'
 
 export class StoreService {
   context: RootContext
@@ -87,11 +87,11 @@ export class StoreService {
         break
 
       case TaskEnum.addNewReducerState:
-        await new ReducerStateBuilder(this.context).build()
+        await new AddReducerStateService(this.context).run()
         break
 
       case TaskEnum.addNewActionType:
-        await new ReducerActionTypesBuilder(this.context).build()
+        await new AddActionTypesService(this.context).run()
         break
 
       case TaskEnum.addNewThunk:

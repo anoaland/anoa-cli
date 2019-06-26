@@ -1,7 +1,17 @@
-import { FieldObject, RootContext } from '../types'
+import * as path from 'path'
+import { Project, SyntaxKind } from 'ts-morph'
+import { Reducer } from '../libs/reducer'
+import {
+  ActionTypeList,
+  FieldObject,
+  KeyValue,
+  ReducerInfo,
+  RootContext
+} from '../types'
 
 export class ReduxTools {
-  context: RootContext
+  private context: RootContext
+  private reducers: ReducerInfo[]
 
   constructor(context: RootContext) {
     this.context = context
@@ -16,7 +26,7 @@ export class ReduxTools {
   async askGenerateActionTypesFromState(
     reducerName: string,
     stateFields: FieldObject[]
-  ): Promise<FieldObject[]> {
+  ): Promise<ActionTypeList> {
     if (!stateFields || !stateFields.length) {
       return []
     }
@@ -192,5 +202,115 @@ export class ReduxTools {
     }
 
     return fields
+  }
+
+  async selectReducer(
+    validate?: (
+      value: ReducerInfo,
+      values: KeyValue<ReducerInfo>
+    ) => Promise<boolean | string>
+  ): Promise<Reducer> {
+    const {
+      print: { colors },
+      strings: { padEnd },
+      prompt,
+      tools: { utils }
+    } = this.context
+
+    const reducers = this.getReducers()
+
+    if (!reducers.length) {
+      utils().exit(`Can't find any reducer`)
+    }
+
+    const choices = reducers.reduce<KeyValue<ReducerInfo>>((acc, curr) => {
+      if (curr) {
+        const key = `  ${padEnd(curr.name, 25)} ${colors.yellow(
+          `[${utils().relativePath(curr.sourceFile.getFilePath())}]`
+        )}`
+        acc[key] = curr
+      }
+      return acc
+    }, {})
+
+    // @ts-ignore
+    const { selectedReducer } = await prompt.ask([
+      {
+        name: 'selectedReducer',
+        type: 'autocomplete',
+        message: 'Please select reducer',
+        choices: Object.keys(choices).map(f => {
+          return {
+            name: f,
+            indicator: '> '
+          }
+        }),
+        validate: async val => {
+          if (!val) {
+            return 'Please choose a reducer'
+          }
+
+          if (validate) {
+            return await validate(choices[val], choices)
+          }
+
+          return true
+        },
+        format(val) {
+          if (val) {
+            return val.replace(/\s\s/g, '')
+          }
+        }
+      }
+    ])
+
+    return new Reducer(this.context, choices[selectedReducer])
+  }
+
+  getReducers(): ReducerInfo[] {
+    if (this.reducers) {
+      return this.reducers
+    }
+
+    const {
+      folder,
+      tools: { utils }
+    } = this.context
+
+    const project = new Project()
+    const files = project.addExistingSourceFiles(
+      path.join(folder.reducers('*/index.ts'))
+    )
+
+    this.reducers = files
+      .map<ReducerInfo | false>(f => {
+        const variables = f.getVariableStatements().filter(v => {
+          const typeRef = v.getFirstDescendantByKind(SyntaxKind.TypeReference)
+          return (
+            typeRef &&
+            typeRef.getText().startsWith('Reducer<') &&
+            v.isExported()
+          )
+        })
+        if (!variables || !variables.length) {
+          return false
+        }
+        const name = variables[0]
+          .getFirstDescendantByKind(SyntaxKind.Identifier)
+          .getText()
+
+        return {
+          name,
+          sourceFile: f
+        }
+      })
+      .filter(r => r !== false) as ReducerInfo[]
+
+    if (!this.reducers.length) {
+      utils().exit('No reducer found on this project. Action cancelled.')
+      return
+    }
+
+    return this.reducers
   }
 }

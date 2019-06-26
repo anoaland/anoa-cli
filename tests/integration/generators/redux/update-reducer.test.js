@@ -2,8 +2,6 @@ const tempy = require('tempy')
 const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -70,23 +68,9 @@ describe('update reducer tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/reducers/task')
 
-    // files are exists
-    expect(exists('index.ts')).toBeTruthy()
-    expect(exists('actions.ts')).toBeTruthy()
-    expect(exists('state.ts')).toBeTruthy()
-
-    const taskReducerFile = project.addExistingSourceFile('index.ts')
-    expect(taskReducerFile.getText()).toEqual(
+    expect('index.ts').existsAndPrettySame(
       `import { Reducer } from 'redux'
 import { TaskAction } from './actions'
 import { TaskState } from './state'
@@ -108,9 +92,9 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
     case 'TASK/ANOTHER_ACTION':
       return { ...state }
     case 'TASK/SET_STATE_3':
-      return { ...state }
+      return { ...state, state3: action.payload }
     case 'TASK/SET_STATE_4':
-      return { ...state }
+      return { ...state, state4: action.payload }
     default:
       return state
   }
@@ -118,8 +102,7 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 `
     )
 
-    const taskActionsFile = project.addExistingSourceFile('actions.ts')
-    expect(taskActionsFile.getText()).toEqual(
+    expect('actions.ts').existsAndPrettySame(
       `export type TaskAction =
   | {
       type: 'TASK/SET_STATE_1'
@@ -144,8 +127,7 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 `
     )
 
-    const taskStateFile = project.addExistingSourceFile('state.ts')
-    expect(taskStateFile.getText()).toEqual(
+    expect('state.ts').existsAndPrettySame(
       `export interface TaskState {
   state1: string
   state2: number
@@ -180,23 +162,9 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/reducers/task')
 
-    // files are exists
-    expect(exists('index.ts')).toBeTruthy()
-    expect(exists('actions.ts')).toBeTruthy()
-    expect(exists('state.ts')).toBeTruthy()
-
-    const taskReducerFile = project.addExistingSourceFile('index.ts')
-    expect(taskReducerFile.getText()).toEqual(
+    expect('index.ts').existsAndPrettySame(
       `import { Reducer } from 'redux'
 import { TaskAction } from './actions'
 import { TaskState } from './state'
@@ -226,8 +194,7 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 `
     )
 
-    const taskActionsFile = project.addExistingSourceFile('actions.ts')
-    expect(taskActionsFile.getText()).toEqual(
+    expect('actions.ts').existsAndPrettySame(
       `export type TaskAction =
   | {
       type: 'TASK/SET_STATE_1'
@@ -252,8 +219,7 @@ export const TaskReducer: Reducer<TaskState, TaskAction> = (
 `
     )
 
-    const taskStateFile = project.addExistingSourceFile('state.ts')
-    expect(taskStateFile.getText()).toEqual(
+    expect('state.ts').existsAndPrettySame(
       `export interface TaskState {
   state1: string
   state2: number

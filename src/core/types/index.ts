@@ -2,6 +2,7 @@ import { GluegunRunContext } from 'gluegun'
 import { SourceFile } from 'ts-morph'
 import { Extensions } from '../../extensions'
 import { ReactView } from '../libs/react-view'
+import { Reducer } from '../libs/reducer'
 
 export type RootContext = GluegunRunContext &
   { [K in keyof Extensions]: ReturnType<Extensions[K]> }
@@ -129,4 +130,30 @@ export interface CreateReducerArgs {
   stateFields: FieldObject[]
   stateActionTypes: FieldObject[]
   customActionTypes: FieldObject[]
+}
+
+export type ActionTypeInfo = FieldObject<FieldObject>
+
+export type ActionTypeList = ActionTypeInfo[]
+
+export type ActionTypeClause = {
+  type: string
+  payload?: string
+  state?: FieldObject
+}
+
+export interface AddReducerStateArgs {
+  reducer: Reducer
+  state: FieldObject[]
+  actionTypes: ActionTypeList
+}
+
+export interface AddActionTypesArgs {
+  reducer: Reducer
+  actionTypes: ActionTypeList
+}
+
+export interface ReducerInfo {
+  name: string
+  sourceFile: SourceFile
 }
