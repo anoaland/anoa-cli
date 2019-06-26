@@ -153,3 +153,12 @@ export interface ReducerInfo {
   name: string
   sourceFile: SourceFile
 }
+
+export interface CreateReduxThunkServiceArgs {
+  name: string
+  filePath: string
+  actionType?: ActionTypeClause
+  isAsync: boolean
+  returnType: string
+  parameters: FieldObject[]
+}

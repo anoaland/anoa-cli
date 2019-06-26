@@ -2,8 +2,6 @@ const tempy = require('tempy')
 const { run, DOWN, ENTER, TAB } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -60,29 +58,17 @@ describe('thunk tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/actions')
 
-    // files are exists
-    expect(exists('common.ts')).toBeTruthy()
-
-    const thunkFile = project.addExistingSourceFile('common.ts')
-    expect(thunkFile.getText()).toEqual(
+    expect('common.ts').existsAndPrettySame(
       `import { AppThunkAction } from '..'
 
-export function setStateTwoAction(payload: number): AppThunkAction {
-  return dispatch => {
-    dispatch({ type: 'TASK/SET_STATE_2', payload })
-  }
-}
-`
+      export function setStateTwoAction(payload: number): AppThunkAction {
+        return dispatch => {
+          dispatch({ type: 'TASK/SET_STATE_2', payload })
+        }
+      }
+      `
     )
   })
 
@@ -113,31 +99,19 @@ export function setStateTwoAction(payload: number): AppThunkAction {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/actions')
 
-    // files are exists
-    expect(exists('common.ts')).toBeTruthy()
-
-    const thunkFile = project.addExistingSourceFile('common.ts')
-    expect(thunkFile.getText()).toEqual(
+    expect('common.ts').existsAndPrettySame(
       `import { AppThunkAction } from '..'
 
-export function setStateTwoAction(
-  payload: number
-): AppThunkAction<Promise<void>> {
-  return async dispatch => {
-    dispatch({ type: 'TASK/SET_STATE_2', payload })
-  }
-}
-`
+      export function setStateTwoAction(
+        payload: number
+      ): AppThunkAction<Promise<void>> {
+        return async dispatch => {
+          dispatch({ type: 'TASK/SET_STATE_2', payload })
+        }
+      }
+      `
     )
   })
 
@@ -182,21 +156,9 @@ export function setStateTwoAction(
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/actions')
 
-    // files are exists
-    expect(exists('custom.ts')).toBeTruthy()
-
-    const thunkFile = project.addExistingSourceFile('custom.ts')
-    expect(thunkFile.getText()).toEqual(
+    expect('custom.ts').existsAndPrettySame(
       `import { AppThunkAction } from '..'
 
 export function setCustomStateAction(
@@ -252,21 +214,9 @@ export function setCustomStateAction(
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/store/actions')
 
-    // files are exists
-    expect(exists('custom.ts')).toBeTruthy()
-
-    const thunkFile = project.addExistingSourceFile('custom.ts')
-    expect(thunkFile.getText()).toEqual(
+    expect('custom.ts').existsAndPrettySame(
       `import { AppThunkAction } from '..'
 
 export function setCustomStateAction(

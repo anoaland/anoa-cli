@@ -18,6 +18,23 @@ export class ReduxTools {
   }
 
   /**
+   * Determine is redux store initialized or not.
+   * Will exit process if it's not ready.
+   */
+  ensureStoreReady() {
+    const {
+      filesystem: { cwd, exists },
+      folder,
+      tools: { utils }
+    } = this.context
+    if (!exists(path.join(cwd(), folder.store('index.ts')))) {
+      utils().exit(
+        'Aborted - Redux store is not ready. Please create at least one reducer.'
+      )
+    }
+  }
+
+  /**
    * Confirm user to automatically generate action types
    * based on state and prompt to select state to generate.
    * @param reducerName reducer name
@@ -200,6 +217,52 @@ export class ReduxTools {
     }
 
     return fields
+  }
+
+  async selectActionType(reducer: Reducer): Promise<ActionTypeClause> {
+    const fields = reducer.getActionTypes().getClauses()
+    if (!fields || !fields.length) {
+      return undefined
+    }
+
+    const {
+      prompt,
+      print: { colors }
+    } = this.context
+
+    const choices = fields
+      .map(p => {
+        let key = colors.blue('type') + ': ' + colors.yellow(p.type)
+
+        if (p.payload) {
+          key += ', ' + colors.blue('payload') + ': ' + colors.yellow(p.payload)
+        }
+
+        return {
+          key,
+          value: p
+        }
+      })
+      .reduce((acc, curr) => {
+        acc[curr.key] = curr.value
+        return acc
+      }, {})
+
+    const { actionTypeKey } = await prompt.ask({
+      name: 'actionTypeKey',
+      type: 'select',
+      message: 'Select an action type',
+      choices: Object.keys(choices),
+      validate(val) {
+        if (!val) {
+          return 'Please select an action type.'
+        }
+
+        return true
+      }
+    })
+
+    return choices[actionTypeKey]
   }
 
   async selectReducer(
