@@ -18,7 +18,7 @@ const runner = {
   SPACE: '\x20',
   TAB: '\x09',
 
-  run(args, inputs = [], timeout = 2500) {
+  run(args, inputs = [], timeout = 4000) {
     var proc = spawn(ANOA, args, {
       stdio: [null, null, null]
     })
