@@ -77,35 +77,79 @@ export class ReduxConnectGenerator {
     const { folder } = this.context
     view.addNamedImport(folder.store(), 'AppStore')
 
-    if (view.type === ViewTypeEnum.classComponent) {
-      const decorator = view.getDecorator('AppStore.withStoreClass')
-      if (!decorator) {
-        const args: string[] = []
-        const typeArgs: string[] = []
-        const stateArg = stateBuilder.argument()
-        if (stateArg) {
-          args.push(stateArg)
-          typeArgs.push(stateBuilder.propsName())
-        }
-
-        const thunkArg = thunkBuilder.argument()
-        if (thunkArg) {
-          if (!stateArg) {
-            args.push('null')
-            typeArgs.push('null')
-          }
-          args.push(thunkArg)
-          typeArgs.push(thunkBuilder.propsName())
-        }
-
-        view.addDecorator({
-          name: `AppStore.withStoreClass<${typeArgs.join(',')}>`,
-          arguments: args
-        })
-      } else {
-        stateBuilder.mergeDecorator(decorator)
-        thunkBuilder.mergeDecorator(decorator)
-      }
+    switch (view.type) {
+      case ViewTypeEnum.classComponent:
+        this.updateClassComponent(view, stateBuilder, thunkBuilder)
+        break
+      case ViewTypeEnum.functionComponent:
+      case ViewTypeEnum.arrowFunctionComponent:
+        this.updateFunctionalComponent(view, stateBuilder, thunkBuilder)
+        break
     }
+  }
+
+  private updateClassComponent(
+    view: ReactView,
+    stateBuilder: StateBuilder,
+    thunkBuilder: ThunkBuilder
+  ) {
+    const decorator = view.getDecorator('AppStore.withStoreClass')
+    if (!decorator) {
+      const { args, typeArgs } = this.buildNewArgs(stateBuilder, thunkBuilder)
+      view.addDecorator({
+        name: `AppStore.withStoreClass<${typeArgs.join(',')}>`,
+        arguments: args
+      })
+    } else {
+      stateBuilder.mergeExpression(decorator)
+      thunkBuilder.mergeExpression(decorator)
+    }
+  }
+
+  private updateFunctionalComponent(
+    view: ReactView,
+    stateBuilder: StateBuilder,
+    thunkBuilder: ThunkBuilder
+  ) {
+    view.setHoc(
+      'AppStore.withStore',
+      hoc => {
+        if (hoc) {
+          // found existing hoc
+          stateBuilder.mergeExpression(hoc)
+          thunkBuilder.mergeExpression(hoc)
+          return hoc.getText()
+        } else {
+          // create new statement
+          const { args, typeArgs } = this.buildNewArgs(
+            stateBuilder,
+            thunkBuilder
+          )
+          return `AppStore.withStore<${typeArgs.join(',')}>(${args.join(',')})`
+        }
+      },
+      true
+    )
+  }
+
+  private buildNewArgs(stateBuilder: StateBuilder, thunkBuilder: ThunkBuilder) {
+    const args: string[] = []
+    const typeArgs: string[] = []
+    const stateArg = stateBuilder.argument()
+    if (stateArg) {
+      args.push(stateArg)
+      typeArgs.push(stateBuilder.propsName())
+    }
+    const thunkArg = thunkBuilder.argument()
+    if (thunkArg) {
+      if (!stateArg) {
+        args.push('null')
+        typeArgs.push('null')
+      }
+      args.push(thunkArg)
+      typeArgs.push(thunkBuilder.propsName())
+    }
+
+    return { args, typeArgs }
   }
 }

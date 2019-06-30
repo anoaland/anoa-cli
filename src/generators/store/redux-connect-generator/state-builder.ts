@@ -1,4 +1,4 @@
-import { Decorator, SyntaxKind } from 'ts-morph'
+import { CallExpression, Decorator, SyntaxKind } from 'ts-morph'
 import { ReactView } from '../../../core/libs/react-view'
 import { Reducer } from '../../../core/libs/reducer'
 import { FieldObject } from '../../../core/types'
@@ -11,7 +11,8 @@ export class StateBuilder {
       strings: { camelCase, pascalCase }
     } = view.context
     this.args = states.map<FieldObject<string>>(s => ({
-      name: camelCase(s.data.name) + pascalCase(s.name),
+      name:
+        camelCase(s.data.name.replace(/Reducer$/g, '')) + pascalCase(s.name),
       data: `#state.${s.data.getCombinedAlias()}.${s.name}`,
       type: s.type
     }))
@@ -47,7 +48,7 @@ export class StateBuilder {
   }
 
   /**
-   * Build new state decorator argument
+   * Build new state call/decorator argument
    * @param stateVarName 'state' variable name
    */
   argument(stateVarName: string = 'state'): string | undefined {
@@ -62,10 +63,10 @@ export class StateBuilder {
   }
 
   /**
-   * Merge this state with existing decorator
-   * @param decorator existing decorator
+   * Merge this state with existing call/decorator
+   * @param decorator existing call/decorator
    */
-  mergeDecorator(decorator: Decorator) {
+  mergeExpression(decorator: Decorator | CallExpression) {
     if (!this.args.length) {
       return
     }
@@ -84,6 +85,8 @@ export class StateBuilder {
 
       if (obj) {
         // found state assignments
+
+        // resolve 'state' var name
         const identifier = arg.getFirstDescendantByKind(SyntaxKind.Identifier)
 
         ts.mergePropertyAssignments(
@@ -110,12 +113,16 @@ export class StateBuilder {
       decorator.addArgument(this.argument())
     }
 
+    // add type argument if not exists yet
     const existingTypeArgs = decorator.getTypeArguments()
     if (!existingTypeArgs || existingTypeArgs.length <= pos) {
       decorator.addTypeArgument(this.propsName())
     }
   }
 
+  /**
+   * state props name
+   */
   propsName() {
     const { naming } = this.view.context
     return naming.stateProps(this.view.name)

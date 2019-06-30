@@ -72,7 +72,7 @@ export class ConnectThemeGenerator {
   }
 
   private applyThemeHoc(view: ReactView): boolean {
-    return view.setHoc('AppStyle.withTheme', 'AppStyle.withTheme')
+    return view.setHoc('AppStyle.withTheme', () => 'AppStyle.withTheme')
   }
 
   private updateImports(view: ReactView) {

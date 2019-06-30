@@ -2,8 +2,6 @@ const tempy = require('tempy')
 const { run, DOWN, ENTER, SPACE } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
-const { Project } = require('ts-morph')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -54,69 +52,55 @@ describe('store connect tests', () => {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-a')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
-
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
+    expect('index.tsx').existsAndPrettySame(
       `import React from 'react'
-import { Text, View } from 'react-native'
-import { AppStore } from '../../../store'
-import { setStateTwoAction } from '../../../store/actions/common'
-import {
-  ComponentAActionProps,
-  ComponentAProps,
-  ComponentAStateProps
-} from './props'
+      import { Text, View } from 'react-native'
+      import { AppStore } from '../../../store'
+      import { setStateTwoAction } from '../../../store/actions/common'
+      import {
+        ComponentAActionProps,
+        ComponentAProps,
+        ComponentAStateProps
+      } from './props'
 
-@AppStore.withStoreClass<ComponentAStateProps, ComponentAActionProps>(
-  state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
-  dispatch => ({
-    commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
-  })
-)
-export class ComponentA extends React.Component<ComponentAProps> {
-  constructor(props: ComponentAProps) {
-    super(props)
-  }
+      @AppStore.withStoreClass<ComponentAStateProps, ComponentAActionProps>(
+        state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
+        dispatch => ({
+          commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
+        })
+      )
+      export class ComponentA extends React.Component<ComponentAProps> {
+        constructor(props: ComponentAProps) {
+          super(props)
+        }
 
-  render() {
-    return (
-      <View>
-        <Text>ComponentA</Text>
-      </View>
+        render() {
+          return (
+            <View>
+              <Text>ComponentA</Text>
+            </View>
+          )
+        }
+      }
+      `
     )
-  }
-}
-`
-    )
 
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
+    expect('props.ts').existsAndPrettySame(
       `export interface ComponentAProps
-  extends Partial<ComponentAStateProps>,
-    Partial<ComponentAActionProps> {}
+          extends Partial<ComponentAStateProps>,
+            Partial<ComponentAActionProps> {}
 
-export interface ComponentAStateProps {
-  taskState1: string
-  taskState2: number
-}
+        export interface ComponentAStateProps {
+          taskState1: string
+          taskState2: number
+        }
 
-export interface ComponentAActionProps {
-  commonSetStateTwo: (payload: number) => void
-}
-`
+        export interface ComponentAActionProps {
+          commonSetStateTwo: (payload: number) => void
+        }
+        `
     )
   })
 
@@ -142,67 +126,53 @@ export interface ComponentAActionProps {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-b')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
-
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
+    expect('index.tsx').existsAndPrettySame(
       `import React from 'react'
-import { Text, View } from 'react-native'
-import { AppStore } from '../../../store'
-import { setStateTwoAction } from '../../../store/actions/common'
-import {
-  ComponentBActionProps,
-  ComponentBProps,
-  ComponentBStateProps
-} from './props'
+      import { Text, View } from 'react-native'
+      import { AppStore } from '../../../store'
+      import { setStateTwoAction } from '../../../store/actions/common'
+      import {
+        ComponentBActionProps,
+        ComponentBProps,
+        ComponentBStateProps
+      } from './props'
 
-function _ComponentB(props: ComponentBProps) {
-  return (
-    <View>
-      <Text>ComponentB</Text>
-    </View>
-  )
-}
+      function _ComponentB(props: ComponentBProps) {
+        return (
+          <View>
+            <Text>ComponentB</Text>
+          </View>
+        )
+      }
 
-export const ComponentB = AppStore.withStore<
-  ComponentBStateProps,
-  ComponentBActionProps
->(
-  state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
-  dispatch => ({
-    commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
-  })
-)(_ComponentB)
-`
+      export const ComponentB = AppStore.withStore<
+        ComponentBStateProps,
+        ComponentBActionProps
+      >(
+        state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
+        dispatch => ({
+          commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
+        })
+      )(_ComponentB)
+      `
     )
 
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
+    expect('props.ts').existsAndPrettySame(
       `export interface ComponentBProps
-  extends Partial<ComponentBStateProps>,
-    Partial<ComponentBActionProps> {}
+          extends Partial<ComponentBStateProps>,
+            Partial<ComponentBActionProps> {}
 
-export interface ComponentBStateProps {
-  taskState1: string
-  taskState2: number
-}
+        export interface ComponentBStateProps {
+          taskState1: string
+          taskState2: number
+        }
 
-export interface ComponentBActionProps {
-  commonSetStateTwo: (payload: number) => void
-}
-`
+        export interface ComponentBActionProps {
+          commonSetStateTwo: (payload: number) => void
+        }
+        `
     )
   })
 
@@ -229,65 +199,51 @@ export interface ComponentBActionProps {
       ]
     )
 
-    const { exists, cwd } = filesystem
-    const tsConfigFilePath = path.join(cwd(), 'tsconfig.json')
-    expect(exists(tsConfigFilePath)).toBeTruthy()
-
-    const project = new Project({
-      tsConfigFilePath
-    })
-
     process.chdir('src/views/components/component-c')
 
-    // files are exists
-    expect(exists('index.tsx')).toBeTruthy()
-    expect(exists('props.ts')).toBeTruthy()
-
-    const mainViewFile = project.addExistingSourceFile('index.tsx')
-    expect(mainViewFile.getText()).toEqual(
+    expect('index.tsx').existsAndPrettySame(
       `import React from 'react'
-import { Text, View } from 'react-native'
-import { AppStore } from '../../../store'
-import { setStateTwoAction } from '../../../store/actions/common'
-import {
-  ComponentCActionProps,
-  ComponentCProps,
-  ComponentCStateProps
-} from './props'
+      import { Text, View } from 'react-native'
+      import { AppStore } from '../../../store'
+      import { setStateTwoAction } from '../../../store/actions/common'
+      import {
+        ComponentCActionProps,
+        ComponentCProps,
+        ComponentCStateProps
+      } from './props'
 
-export const ComponentC = AppStore.withStore<
-  ComponentCStateProps,
-  ComponentCActionProps
->(
-  state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
-  dispatch => ({
-    commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
-  })
-)((props: ComponentCProps) => {
-  return (
-    <View>
-      <Text>ComponentC</Text>
-    </View>
-  )
-})
-`
+      export const ComponentC = AppStore.withStore<
+        ComponentCStateProps,
+        ComponentCActionProps
+      >(
+        state => ({ taskState1: state.task.state1, taskState2: state.task.state2 }),
+        dispatch => ({
+          commonSetStateTwo: payload => dispatch(setStateTwoAction(payload))
+        })
+      )((props: ComponentCProps) => {
+        return (
+          <View>
+            <Text>ComponentC</Text>
+          </View>
+        )
+      })
+      `
     )
 
-    const propsFile = project.addExistingSourceFile('props.ts')
-    expect(propsFile.getText()).toEqual(
+    expect('props.ts').existsAndPrettySame(
       `export interface ComponentCProps
-  extends Partial<ComponentCStateProps>,
-    Partial<ComponentCActionProps> {}
+        extends Partial<ComponentCStateProps>,
+          Partial<ComponentCActionProps> {}
 
-export interface ComponentCStateProps {
-  taskState1: string
-  taskState2: number
-}
+      export interface ComponentCStateProps {
+        taskState1: string
+        taskState2: number
+      }
 
-export interface ComponentCActionProps {
-  commonSetStateTwo: (payload: number) => void
-}
-`
+      export interface ComponentCActionProps {
+        commonSetStateTwo: (payload: number) => void
+      }
+      `
     )
   })
 })

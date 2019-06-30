@@ -382,7 +382,11 @@ export class ReactView extends Lib {
    * @param statement statement
    * @param force force to replace HOC if found
    */
-  setHoc(key: string, statement: string, force: boolean = false) {
+  setHoc(
+    key: string,
+    statement: (exp?: CallExpression) => string,
+    force: boolean = false
+  ) {
     const react = this.context.tools.react()
     const props = this.getProps()
 
@@ -394,36 +398,39 @@ export class ReactView extends Lib {
       )
     }
 
+    // prepare main component variable to wrap
     const viewVar = react.getOrCreateViewVarOfFunctionView(
       this.sourceFile,
       this.name,
       props.name
     )
 
-    const identifier = viewVar.getFirstChild(
+    // get existing hoc
+    const existingHocNode = viewVar.getFirstChild(
       c =>
         c.getKind() === SyntaxKind.CallExpression && c.getText().startsWith(key)
     )
 
-    let callExp: CallExpression
-    if (identifier) {
-      // if (identifier.getText().startsWith(hoc)) {
-      //   return false
-      // }
-      callExp = identifier.getFirstChildByKind(SyntaxKind.CallExpression)
+    let hoc: CallExpression
+    if (existingHocNode) {
+      hoc = existingHocNode.getFirstChildByKind(SyntaxKind.CallExpression)
     }
 
-    if (!callExp) {
+    if (!hoc) {
+      // get main component function
       const fn = viewVar.getInitializer() as ArrowFunction
       if (fn.getParameters) {
+        // ensure has 'props' parameter
         react.setFunctionPropsParams(fn, props.name)
       }
+      // wrap with hoc
       viewVar.replaceWithText(
-        `${viewVar.getName()} = ${statement}(${fn.getText()})`
+        `${viewVar.getName()} = ${statement()}(${fn.getText()})`
       )
     } else {
       if (force) {
-        callExp.replaceWithText(statement)
+        // replace existing hoc statement
+        hoc.replaceWithText(statement(hoc))
       } else {
         return false
       }

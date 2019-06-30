@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { Decorator, SyntaxKind } from 'ts-morph'
+import { CallExpression, Decorator, SyntaxKind } from 'ts-morph'
 import { ReactView } from '../../../core/libs/react-view'
 import { FieldObject, ThunkInfo } from '../../../core/types'
 
@@ -81,7 +81,7 @@ export class ThunkBuilder {
   }
 
   /**
-   * Build new action decorator argument
+   * Build new action call/decorator argument
    * @param actionVarName 'dispatch' variable name
    */
   argument(actionVarName: string = 'dispatch'): string {
@@ -96,10 +96,10 @@ export class ThunkBuilder {
   }
 
   /**
-   * Merge this state with existing decorator
-   * @param decorator existing decorator
+   * Merge this state with existing call/decorator
+   * @param decorator existing call/decorator
    */
-  mergeDecorator(decorator: Decorator) {
+  mergeExpression(decorator: Decorator | CallExpression) {
     if (!this.args.length) {
       return
     }
@@ -111,15 +111,14 @@ export class ThunkBuilder {
     if (existingArgs.length > pos) {
       const arg = existingArgs[pos]
 
-      const obj = arg.getFirstDescendantByKind(
-        SyntaxKind.ObjectLiteralExpression
-      )
-
-      // WARN: maybe state is null!!
-
+      // resolve 'dispatch' var name
       const identifier = arg
         .getFirstDescendantByKind(SyntaxKind.Identifier)
         .getText()
+
+      const obj = arg.getFirstDescendantByKind(
+        SyntaxKind.ObjectLiteralExpression
+      )
 
       ts.mergePropertyAssignments(
         obj,
@@ -130,22 +129,29 @@ export class ThunkBuilder {
       )
     } else {
       if (!existingArgs.length) {
+        // state arg is null
         decorator.addArgument('null')
       }
 
+      // add this argument
       decorator.addArgument(this.argument())
 
       const typeArgs = decorator.getTypeArguments().map(t => t.getText())
       if (!typeArgs.length) {
+        // state type is null
         decorator.addTypeArgument('null')
       }
 
-      if (typeArgs.length <= 1) {
+      if (typeArgs.length <= pos) {
+        // add this state type
         decorator.addTypeArgument(this.propsName())
       }
     }
   }
 
+  /**
+   * action props name
+   */
   propsName() {
     const { naming } = this.view.context
     return naming.actionProps(this.view.name)
