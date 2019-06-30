@@ -20,8 +20,8 @@ const runner = {
 
   run(args, inputs = [], timeout = 2500) {
     if (process.env.CI) {
-      timeout *= 4
-      console.log('running in CI with timeout ', timeout)
+      // running in CI
+      timeout *= 5
     }
 
     var proc = spawn(ANOA, args, {

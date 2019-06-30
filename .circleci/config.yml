@@ -38,4 +38,8 @@ jobs:
           key: v1-dependencies-{{ checksum "package.json" }}
 
       # run tests!
-      - run: yarn test:all
+      - run: yarn test
+      - run: yarn test:version
+      - run: yarn test:boilerplate:expo
+      - run: yarn test:boilerplate:react-native-init
+      - run: yarn test:generators
