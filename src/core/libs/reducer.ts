@@ -1,4 +1,5 @@
 import {
+  Project,
   PropertyAssignmentStructure,
   StructureKind,
   SyntaxKind
@@ -6,6 +7,7 @@ import {
 import {
   ActionTypeClause,
   FieldObject,
+  KeyValue,
   ReducerInfo,
   RootContext
 } from '../types'
@@ -18,6 +20,7 @@ export class Reducer extends Lib {
 
   private state: ReducerState
   private actionTypes: ActionTypes
+  private cache: KeyValue = {}
 
   constructor(context: RootContext, info: ReducerInfo) {
     super(context)
@@ -99,5 +102,27 @@ export class Reducer extends Lib {
     )
 
     caseBlock.replaceWithText(`{ ${updatedClauses.join('')} }`)
+  }
+
+  /**
+   * get combined reducer property name
+   */
+  getCombinedAlias() {
+    if (this.cache.getCombinedAlias) {
+      return this.cache.getCombinedAlias
+    }
+    
+    const { folder } = this.context
+    const project = new Project()
+    const reducerIndex = project.addExistingSourceFile(
+      folder.reducers('index.ts')
+    )
+
+    return (this.cache.getCombinedAlias = reducerIndex
+      .getVariableDeclaration('reducers')
+      .getInitializer()
+      .getDescendantsOfKind(SyntaxKind.PropertyAssignment)
+      .find(n => n.getInitializer().getText() === this.name)
+      .getName())
   }
 }

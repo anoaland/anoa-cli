@@ -2,6 +2,7 @@ import * as path from 'path'
 import {
   ArrowFunction,
   CallExpression,
+  Decorator,
   DecoratorStructure,
   InterfaceDeclaration,
   OptionalKind,
@@ -44,6 +45,11 @@ export class ReactView extends Lib {
     this.key = this.getKey()
   }
 
+  /**
+   * Import if not exists
+   * @param modulePath module path
+   * @param moduleName module name
+   */
   addNamedImport(modulePath: string, moduleName: string) {
     this.context.tools
       .ts()
@@ -293,34 +299,26 @@ export class ReactView extends Lib {
   }
 
   /**
-   * Set class decorator.
-   * This will looks for decorator started with 'key' statement,
-   * if found and 'force' parameter = true then replace the decortor,
-   * otherwise create a new one.
-   * This will also reference 'props' type as generic parameter for 
-   * React.Component and ensure constructor is proper.
+   * Get class decorator
    * @param key decorator key to find
-   * @param decorator decorator structure
-   * @param force force to replace existing decorator
    */
-  setDecorator(
-    key: string,
-    decorator: OptionalKind<DecoratorStructure>,
-    force: boolean = false
-  ): boolean {
+  getDecorator(key: string) {
     const clazz = this.getClass()
     if (!clazz) {
       throw new Error('Decorator can only applied to class view.')
     }
 
-    const existing = clazz.getDecorator(d => d.getFullName().startsWith(key))
-    if (existing) {
-      if (!force) {
-        return false
-      }
+    return clazz.getDecorator(d => d.getFullName().startsWith(key))
+  }
 
-      // remove existing decorator
-      existing.remove()
+  /**
+   * Add decorator and reference props to class
+   * @param decorator decorator structure
+   */
+  addDecorator(decorator: OptionalKind<DecoratorStructure>) {
+    const clazz = this.getClass()
+    if (!clazz) {
+      throw new Error('Decorator can only applied to class view.')
     }
 
     clazz.addDecorator(decorator)
@@ -338,7 +336,39 @@ export class ReactView extends Lib {
 
     // ensure constructor
     react.getOrCreateClassConstructor(clazz, propsName)
+  }
 
+  /**
+   * Set class decorator.
+   * This will looks for decorator started with 'key' statement,
+   * if found then replace execute onFoundExisting,
+   * otherwise create a new one.
+   * This will also reference 'props' type as generic parameter for
+   * React.Component and ensure constructor is proper.
+   * @param key decorator key to find
+   * @param decorator decorator structure
+   * @param onFoundExisting callback when found existing decorator
+   */
+  setDecorator(
+    key: string,
+    decorator: OptionalKind<DecoratorStructure>,
+    onFoundExisting?: (decorator: Decorator) => void
+  ): boolean {
+    const clazz = this.getClass()
+    if (!clazz) {
+      throw new Error('Decorator can only applied to class view.')
+    }
+
+    const existing = this.getDecorator(key)
+    if (existing) {
+      if (onFoundExisting) {
+        onFoundExisting(existing)
+      } else {
+        return false
+      }
+    }
+
+    this.addDecorator(decorator)
     return true
   }
 

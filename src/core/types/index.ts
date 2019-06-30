@@ -7,10 +7,10 @@ import { Reducer } from '../libs/reducer'
 export type RootContext = GluegunRunContext &
   { [K in keyof Extensions]: ReturnType<Extensions[K]> }
 
-export interface FieldObject<T = any> {
+export interface FieldObject<T = unknown> {
   name: string
   type: string
-  optional: boolean
+  optional?: boolean
   initial?: string
   data?: T
 }
@@ -161,4 +161,17 @@ export interface CreateReduxThunkServiceArgs {
   isAsync: boolean
   returnType: string
   parameters: FieldObject[]
+}
+
+export interface ReduxConnectArgs {
+  states: Array<FieldObject<Reducer>>
+  thunks: ThunkInfo[]
+  views: ReactView[]
+}
+
+export interface ThunkInfo {
+  name: string
+  parameters: FieldObject[]
+  returnType: string
+  path: string
 }

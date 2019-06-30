@@ -131,6 +131,7 @@ export class ReduxUtils {
         sourceFile
       },
       reducer,
+      // @ts-ignore
       stateChoices(): { [key: string]: FieldObject } {
         const fields = ReactUtils.getInterfaceFields(stateInterface)
 

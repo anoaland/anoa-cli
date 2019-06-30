@@ -1,13 +1,13 @@
 import * as path from 'path'
 import {
   InterfaceDeclaration,
+  ObjectLiteralExpression,
   Project,
   PropertySignatureStructure,
   SourceFile,
   StructureKind
 } from 'ts-morph'
-import { RootContext } from '../types'
-import { FieldObject } from '../types'
+import { FieldObject, RootContext } from '../types'
 
 export class TsTools {
   context: RootContext
@@ -40,11 +40,13 @@ export class TsTools {
   /**
    * Set interface properties.
    * @param intrfc Interface Declaration
-   * @param fields Fields
+   * @param fields Fields - add new fields or replace existing fields
+   * @param removeOldFields Remove old fields that not listed in 'fields' parameter
    */
   setInterfaceProperties(
     intrfc: InterfaceDeclaration,
-    fields: FieldObject[]
+    fields: FieldObject[],
+    removeOldFields: boolean = true
   ): InterfaceDeclaration {
     const newProps = fields.map<PropertySignatureStructure>(p => {
       return {
@@ -63,7 +65,9 @@ export class TsTools {
         p.set(newProp)
         newProps.splice(newProps.indexOf(newProp), 1)
       } else {
-        p.remove()
+        if (removeOldFields) {
+          p.remove()
+        }
       }
     }
 
@@ -168,5 +172,44 @@ export class TsTools {
     if (!intrfc.getExtends().find(e => e.getText() === extendsTo)) {
       intrfc.addExtends(extendsTo)
     }
+  }
+
+  /**
+   * Get interface declaration from source file
+   * if not exsits then create new one
+   */
+  getOrAddInterface(
+    sourceFile: SourceFile,
+    interfaceName: string,
+    isExported: boolean = true
+  ) {
+    return (
+      sourceFile.getInterface(interfaceName) ||
+      sourceFile.addInterface({ name: interfaceName, isExported })
+    )
+  }
+
+  mergePropertyAssignments(
+    obj: ObjectLiteralExpression,
+    fields: FieldObject[]
+  ) {
+    const existingFields = obj.getProperties().map<FieldObject>(p => {
+      const stmt = p.getText().split(':')
+      return {
+        name: stmt[0].trim(),
+        type: stmt[1].trim()
+      }
+    })
+
+    const newFields = fields.filter(f => {
+      return !existingFields.some(e => e.name === f.name)
+    })
+
+    obj.addPropertyAssignments(
+      newFields.map(f => ({
+        name: f.name,
+        initializer: f.type
+      }))
+    )
   }
 }

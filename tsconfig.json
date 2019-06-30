@@ -16,7 +16,7 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "sourceMap": false,
-    "inlineSourceMap": true,
+    "inlineSourceMap": false,
     "outDir": "dist",
     "strict": false,
     "target": "es5",

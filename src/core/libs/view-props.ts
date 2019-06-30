@@ -16,14 +16,39 @@ export class ViewProps extends Lib implements PropsInfo {
     this.name = info.name
   }
 
-  extends(moduleName: string, modulePath?: string) {
+  /**
+   * Extends this view to another interface
+   * @param extendTo extend to interface
+   * @param partial is partial? default is true
+   */
+  extends(extendTo: InterfaceDeclaration, partial?: boolean): void
+
+  /**
+   * Extends this view to another interface with specified path
+   * @param extendTo interface name
+   * @param modulePath interface path to import
+   */
+  extends(extendTo: string, modulePath: string): void
+
+  extends(
+    extendTo: string | InterfaceDeclaration,
+    modulePath?: string | boolean
+  ): void {
     const { tools } = this.context
 
     const ts = tools.ts()
 
-    ts.extendsInterface(this.interface(), moduleName)
-    if (modulePath) {
-      ts.addNamedImport(this.sourceFile, modulePath, moduleName)
+    if (typeof extendTo === 'string') {
+      ts.extendsInterface(this.interface(), extendTo)
+      if (modulePath) {
+        ts.addNamedImport(this.sourceFile, modulePath as string, extendTo)
+      }
+    } else {
+      const extTo =
+        modulePath === undefined || modulePath === true
+          ? `Partial<${extendTo.getName()}>`
+          : extendTo.getName()
+      ts.extendsInterface(this.interface(), extTo)
     }
   }
 

@@ -1,12 +1,14 @@
+import * as _ from 'lodash'
 import * as path from 'path'
-import { Project, SyntaxKind } from 'ts-morph'
+import { Project, SourceFile, SyntaxKind } from 'ts-morph'
 import { Reducer } from '../libs/reducer'
 import {
   ActionTypeClause,
   FieldObject,
   KeyValue,
   ReducerInfo,
-  RootContext
+  RootContext,
+  ThunkInfo
 } from '../types'
 
 export class ReduxTools {
@@ -326,6 +328,227 @@ export class ReduxTools {
     ])
 
     return new Reducer(this.context, choices[selectedReducer])
+  }
+
+  /**
+   * Select one or more state from states in all reducers
+   * @param message prompt message
+   */
+  async selectStates(message?: string): Promise<Array<FieldObject<Reducer>>> {
+    const {
+      strings: { camelCase },
+      prompt,
+      print: { colors, checkmark }
+    } = this.context
+    const reducers = this.getReducers().map(r => new Reducer(this.context, r))
+
+    const allStates: KeyValue<KeyValue<FieldObject<Reducer>>> = {}
+    const reducerMapNames: KeyValue<string> = {}
+
+    // build hierarchical state
+    for (const r of reducers) {
+      const key = colors.gray(camelCase(r.name.replace(/Reducer$/, '')))
+      reducerMapNames[key] = r.name
+      const stateFields = r.getState().getFields()
+      allStates[key] = {}
+      for (const f of stateFields) {
+        allStates[key][
+          `${key}.${colors.cyan(f.name)} <${colors.green(f.type)}>`
+        ] = { ...f, data: r }
+      }
+    }
+
+    const choices = Object.keys(allStates).map(rKey => {
+      return {
+        name: colors.yellow(reducerMapNames[rKey]),
+        choices: Object.keys(allStates[rKey]).map(fKey => {
+          return fKey
+        })
+      }
+    })
+
+    // @ts-ignore
+    const { states } = await prompt.ask({
+      name: 'states',
+      type: 'autocomplete',
+      message: message || 'Select state(s)',
+      choices,
+      multiple: true,
+      format(vals) {
+        if (!vals || !vals.map) {
+          return vals
+        }
+
+        const data = vals
+          .filter(c => c.indexOf('.') > 0)
+          .map(c => {
+            const keys = c.split('.')
+            return {
+              r: reducerMapNames[keys[0]],
+              f: keys[1]
+            }
+          })
+
+        if (!data.length) {
+          return colors.magenta('No state were selected.')
+        }
+
+        return (
+          '\r\n' +
+          _(data)
+            .groupBy(x => x.r)
+            .map((value, key) => {
+              return (
+                '  ' +
+                checkmark +
+                ' ' +
+                colors.yellow(key) +
+                ':\r\n' +
+                value.map(v => '    ' + v.f).join('\r\n')
+              )
+            })
+            .value()
+            .join('\r\n')
+        )
+      }
+    })
+
+    return (states as string[])
+      .filter(c => c.indexOf('.') > 0)
+      .map(c => {
+        const keys = c.split('.')
+        return allStates[keys[0]][c]
+      })
+  }
+
+  /**
+   * Select one or more thunks
+   * @param message prompt message
+   */
+  async selectThunks(message?: string): Promise<ThunkInfo[]> {
+    const {
+      filesystem: { cwd },
+      folder,
+      prompt,
+      print: { colors, checkmark }
+    } = this.context
+
+    const project = new Project()
+    const files = project.addExistingSourceFiles(
+      path.join(cwd(), folder.thunks('*.ts'))
+    )
+
+    if (!files.length) {
+      return []
+    }
+
+    const allThunks: KeyValue<KeyValue<ThunkInfo>> = {}
+    const thunkFileMaps: KeyValue<string> = {}
+
+    for (const f of files) {
+      const filename = path.basename(f.getFilePath())
+      const key = colors.gray(filename.replace('.ts', ''))
+
+      thunkFileMaps[key] = filename
+      const thunks = this.getThunks(f)
+      allThunks[key] = {}
+
+      for (const t of thunks) {
+        allThunks[key][
+          `${key}.${colors.cyan(t.name)}(${t.parameters.map(
+            p => `${p.name}: ${colors.green(p.type)}`
+          )}): ${colors.blue(t.returnType)}`
+        ] = t
+      }
+    }
+
+    const choices = Object.keys(allThunks).map(rKey => {
+      return {
+        name: colors.yellow(thunkFileMaps[rKey]),
+        choices: Object.keys(allThunks[rKey]).map(fKey => {
+          return fKey
+        })
+      }
+    })
+
+    // @ts-ignore
+    const { selectedThunks } = await prompt.ask({
+      name: 'selectedThunks',
+      type: 'autocomplete',
+      message: message || 'Select thunk(s)',
+      choices,
+      multiple: true,
+      format(vals) {
+        if (!vals || !vals.map) {
+          return vals
+        }
+
+        const data = vals
+          .filter(c => c.indexOf('.') > 0 && c.indexOf('.ts') < 0)
+          .map(c => {
+            const keys = c.split('.')
+            return {
+              file: thunkFileMaps[keys[0]],
+              thunk: keys[1]
+            }
+          })
+
+        if (!data.length) {
+          return colors.magenta('No state were selected.')
+        }
+
+        return (
+          '\r\n' +
+          _(data)
+            .groupBy(x => x.file)
+            .map((value, key) => {
+              return (
+                '  ' +
+                checkmark +
+                ' ' +
+                colors.yellow(key) +
+                ':\r\n' +
+                value.map(v => '    ' + v.thunk).join('\r\n')
+              )
+            })
+            .value()
+            .join('\r\n')
+        )
+      }
+    })
+
+    return (selectedThunks as string[])
+      .filter(c => c.indexOf('.') > 0 && c.indexOf('.ts') < 0)
+      .map(c => {
+        const keys = c.split('.')
+        return allThunks[keys[0]][c]
+      })
+  }
+
+  getThunks(sourceFile: SourceFile): ThunkInfo[] {
+    const thunks = sourceFile.getFunctions().filter(f => {
+      const rtn = f.getReturnTypeNode()
+      return rtn && rtn.getText().startsWith('AppThunkAction')
+    })
+
+    const filePath = sourceFile.getFilePath()
+    return thunks.map<ThunkInfo>(t => {
+      const rtMatch = /AppThunkAction<(.*?)>$/g.exec(
+        t.getReturnTypeNode().getText()
+      )
+      const returnType = rtMatch && rtMatch.length === 2 ? rtMatch[1] : 'void'
+
+      return {
+        name: t.getName(),
+        parameters: t.getParameters().map<FieldObject>(p => ({
+          name: p.getName(),
+          type: p.getTypeNode().getText(),
+          optional: false
+        })),
+        path: filePath,
+        returnType
+      }
+    })
   }
 
   getReducers(): ReducerInfo[] {
