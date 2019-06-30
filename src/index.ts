@@ -1,4 +1,5 @@
 import { build, print } from 'gluegun'
+import * as PrettyError from 'pretty-error'
 import { RootContext } from './core/types'
 
 async function run(argv) {
@@ -11,14 +12,16 @@ async function run(argv) {
       alias: ['-h'],
       description: 'Show list of commands',
       dashed: true,
-      run: ({ meta, strings: { padEnd } }: RootContext) => {
-        print.newline()
+      run: ({
+        print: { newline, info },
+        meta,
+        strings: { padEnd }
+      }: RootContext) => {
+        newline()
         const commands = meta.commandInfo()
-        commands
-          .filter(c => c[0].trim() !== 'anoa')
-          .forEach(c => {
-            print.info(padEnd(c[0], 25) + c[1])
-          })
+        commands.forEach(c => {
+          info(padEnd('  ' + c[0], 18) + c[1])
+        })
       }
     })
     .version({
@@ -26,19 +29,8 @@ async function run(argv) {
       alias: ['-v'],
       description: 'Show version',
       dashed: true,
-      run: (ctx: RootContext) => {
-        print.info(ctx.meta.version())
-      }
-    })
-    .defaultCommand({
-      run: (ctx: RootContext) => {
-        // fallback '-v' command
-        if (ctx.parameters.options.v) {
-          ctx.runtime.run('version')
-          return
-        }
-
-        ctx.runtime.run('anoa')
+      run: ({ print: { info }, meta }: RootContext) => {
+        info(meta.version())
       }
     })
     .create()
@@ -48,7 +40,7 @@ async function run(argv) {
   } catch (error) {
     print.info(`${print.xmark} Aborted.`)
     if (error) {
-      print.error(error)
+      new PrettyError().render(error)
     }
   }
 }
