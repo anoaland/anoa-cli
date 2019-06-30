@@ -1,5 +1,5 @@
 const tempy = require('tempy')
-const { run } = require('../../../runner')
+const { run, ENTER } = require('../../../runner')
 const path = require('path')
 const fs = require('fs-extra')
 
@@ -36,7 +36,7 @@ describe('base theme tests', () => {
       ['t', 'n'],
       [
         // install anoa-react-native-theme package and generate base theme
-        'y'
+        ENTER
       ]
     )
 

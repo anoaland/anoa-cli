@@ -18,7 +18,7 @@ const runner = {
   SPACE: '\x20',
   TAB: '\x09',
 
-  run(args, inputs = [], timeout = 4000) {
+  run(args, inputs = [], timeout = 2500) {
     var proc = spawn(ANOA, args, {
       stdio: [null, null, null]
     })
@@ -43,9 +43,9 @@ const runner = {
     //   console.log('spawn error data', data.toString())
     // })
 
-    // proc.stderr.on('error', data => {
-    //   console.log('spawn error', data.toString())
-    // })
+    proc.stderr.on('error', data => {
+      console.log('spawn error', data.toString())
+    })
 
     loop(inputs)
 
