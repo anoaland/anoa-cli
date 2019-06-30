@@ -1,7 +1,7 @@
 import { RootContext } from '../types'
 
 export function promptCommands(context: RootContext) {
-  return async () => {
+  return async (message?: string) => {
     const {
       commandName,
       command,
@@ -49,7 +49,7 @@ export function promptCommands(context: RootContext) {
     const choices = Object.keys(cmds)
     const { task } = await prompt.ask({
       name: 'task',
-      message: `What would you like to do with ${commandName}?`,
+      message: message || `What would you like to do with ${commandName}?`,
       type: 'select',
       choices,
       initial: choices[0]
