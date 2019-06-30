@@ -10,7 +10,7 @@ export class CreateReducerServiceQA {
   async run(): Promise<CreateReducerArgs> {
     const {
       filesystem: { exists },
-      parameters: { second },
+      parameters: { first },
       strings: { isBlank, kebabCase },
       folder,
       prompt,
@@ -19,7 +19,7 @@ export class CreateReducerServiceQA {
     } = this.context
 
     // resolve name
-    let name = second
+    let name = first
     if (!name) {
       ;({ name } = await prompt.ask({
         type: 'input',
