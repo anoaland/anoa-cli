@@ -1,19 +1,16 @@
 import { RootContext } from '../../../core/types'
 import { ReactNativeInitBoilerplateGenerator } from '../../../generators/boilerplates/react-native-init'
 import { ReactNativeBoilerplateArgs } from '../../../generators/boilerplates/react-native-init/types'
-import { Utils } from '../../core'
 import { ReactNativeInitBoilerplateServiceQA } from './qa'
 
 export class ReactNativeInitBoilerplateService {
   context: RootContext
-  utils: Utils
   info: ReactNativeBoilerplateArgs
   generator: ReactNativeInitBoilerplateGenerator
   qa: ReactNativeInitBoilerplateServiceQA
 
   constructor(context: RootContext) {
     this.context = context
-    this.utils = new Utils(context)
     this.generator = new ReactNativeInitBoilerplateGenerator(context)
     this.qa = new ReactNativeInitBoilerplateServiceQA(context)
   }
