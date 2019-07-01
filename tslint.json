@@ -9,7 +9,6 @@
     "jsx-boolean-value": false,
     "interface-over-type-literal": false,
     "variable-name": false,
-    "no-angle-bracket-type-assertion": false,
-    "no-unused-variable": true
+    "no-angle-bracket-type-assertion": false
   }
 }
