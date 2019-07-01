@@ -43,7 +43,7 @@ export class ReducerState extends Lib {
     if (!fields || !fields.length) {
       return
     }
-    
+
     this.getInterface().addProperties(
       fields.map<PropertySignatureStructure>(f => ({
         name: f.name,

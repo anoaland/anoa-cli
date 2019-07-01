@@ -1,5 +1,5 @@
-import { ReactView } from '../../../core/libs/react-view';
-import { ConnectThemeArgs, RootContext } from '../../../core/types';
+import { ReactView } from '../../../core/libs/react-view'
+import { ConnectThemeArgs, RootContext } from '../../../core/types'
 
 export class ConnectThemeServiceQA {
   context: RootContext

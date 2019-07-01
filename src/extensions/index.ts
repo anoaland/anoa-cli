@@ -1,4 +1,4 @@
-import * as extensions from '../core/extensions';
+import * as extensions from '../core/extensions'
 
 export type Extensions = typeof extensions
 

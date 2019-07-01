@@ -111,7 +111,7 @@ export class Reducer extends Lib {
     if (this.cache.getCombinedAlias) {
       return this.cache.getCombinedAlias
     }
-    
+
     const { folder } = this.context
     const project = new Project()
     const reducerIndex = project.addExistingSourceFile(

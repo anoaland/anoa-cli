@@ -1,6 +1,6 @@
-import * as path from 'path';
-import { Project } from 'ts-morph';
-import { RootContext, ThemeInfo } from '../types';
+import * as path from 'path'
+import { Project } from 'ts-morph'
+import { RootContext, ThemeInfo } from '../types'
 
 export class ThemeTools {
   context: RootContext
