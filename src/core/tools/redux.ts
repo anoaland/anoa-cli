@@ -95,8 +95,9 @@ export class ReduxTools {
       message: `Select action type(s) you would like to include:`,
       type: 'select',
       choices: Object.keys(choices),
+      // @ts-ignore
       multiple: true,
-      format(e) {
+      format(e: any) {
         if (!e || !e.length) {
           return ''
         }
@@ -139,7 +140,7 @@ export class ReduxTools {
           message: colors.yellow('+') + ' new action',
           // @ts-ignore
           template,
-          format(val) {
+          format(val: any) {
             if (stop) {
               return fields.length ? '[DONE]' : '[SKIPPED]'
             }
@@ -373,8 +374,9 @@ export class ReduxTools {
       type: 'autocomplete',
       message: message || 'Select state(s)',
       choices,
+      // @ts-ignore
       multiple: true,
-      format(vals) {
+      format(vals: any) {
         if (!vals || !vals.map) {
           return vals
         }
@@ -477,8 +479,9 @@ export class ReduxTools {
       type: 'autocomplete',
       message: message || 'Select thunk(s)',
       choices,
+      // @ts-ignore
       multiple: true,
-      format(vals) {
+      format(vals: any) {
         if (!vals || !vals.map) {
           return vals
         }
