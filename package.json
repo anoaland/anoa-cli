@@ -19,6 +19,7 @@
     "anoa": "bin/anoa"
   },
   "scripts": {
+    "lint": "tslint -p tsconfig.json",
     "test": "jest tests/functional",
     "test:boilerplate": "jest tests/integration/boilerplate",
     "test:boilerplate:expo": "jest tests/integration/boilerplate/expo",
@@ -38,7 +39,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "gluegun": "^3.2.0",
+    "gluegun": "^3.3.1",
     "lodash": "^4.17.11",
     "prettier": "^1.16.4",
     "pretty-error": "^2.1.1",

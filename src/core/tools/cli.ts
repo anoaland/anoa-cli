@@ -43,7 +43,7 @@ export class CliTools {
           message: colors.yellow('+') + ' new field',
           // @ts-ignore
           template,
-          format(val) {
+          format(val: any) {
             if (stop) {
               return fields.length ? '[DONE]' : '[SKIPPED]'
             }
@@ -240,6 +240,7 @@ export class CliTools {
 
           return { name: f.key }
         }),
+        // @ts-ignore
         multiple,
         validate(val) {
           if (!val || (multiple && !val.length)) {
@@ -248,7 +249,7 @@ export class CliTools {
 
           return true
         },
-        format(val) {
+        format(val: any) {
           if (!val) {
             return val
           }
@@ -354,21 +355,8 @@ export class CliTools {
     message: string,
     defaultAnswer: 'Y' | 'N' = 'Y'
   ): Promise<boolean> {
-    const {
-      print: { colors },
-      prompt
-    } = this.context
+    const { prompt } = this.context
 
-    const { confirm } = await prompt.ask({
-      type: 'confirm',
-      name: 'confirm',
-      message:
-        message + colors.gray(defaultAnswer === 'Y' ? ' (Y/n)' : '(y/N)'),
-      default: defaultAnswer,
-      initial: 'true',
-      format: (res: boolean) => (res ? 'Yes' : 'No')
-    })
-
-    return confirm as any
+    return await prompt.confirm(message, defaultAnswer === 'Y')
   }
 }
