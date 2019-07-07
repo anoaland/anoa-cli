@@ -1,0 +1,20 @@
+{
+  "name": "anoa-cli-types",
+  "version": "1.0.0-beta1",
+  "description": "React Native Typescript Boilerplate & Code Generator CLI",
+  "private": false,
+  "author": "Budi Adiono <budiadiono@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anoaland/anoa-cli.git"
+  },
+  "keywords": [
+    "cli",
+    "react-native",
+    "typescript",
+    "boilerplate",
+    "scaffolder"
+  ],
+  "main": "",
+  "types": "index"
+}

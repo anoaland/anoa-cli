@@ -29,7 +29,8 @@
     "test:all": "yarn test && yarn test:version && yarn test:boilerplate && yarn test:generators",
     "jest": "jest",
     "format": "prettier --write **/*.{js,ts,tsx,json}",
-    "build": "yarn format && rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets"
+    "build": "yarn format && rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets",
+    "typings": "tsc -p ./ --declaration --emitDeclarationOnly --outdir ./typings && cp ./scripts/package.types.json ./typings/package.json && cp -r ./scripts/index ./typings/index.d.ts"
   },
   "files": [
     "LICENSE",
