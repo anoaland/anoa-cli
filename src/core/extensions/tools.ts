@@ -4,7 +4,6 @@ import { ProjectTools } from '../tools/project'
 import { ReactTools } from '../tools/react'
 import { ReduxTools } from '../tools/redux'
 import { SourceTools } from '../tools/source'
-import { ThemeTools } from '../tools/theme'
 import { TsTools } from '../tools/ts'
 import { Utils } from '../tools/utils'
 import { ValidateTools } from '../tools/validate'
@@ -54,11 +53,6 @@ export function tools(context: RootContext) {
         (cachedTools.validate = new (require('../tools/validate')).ValidateTools(
           context
         ))) as ValidateTools,
-    theme: () =>
-      (cachedTools.theme ||
-        (cachedTools.theme = new (require('../tools/theme')).ThemeTools(
-          context
-        ))) as ThemeTools,
     redux: () =>
       (cachedTools.redux ||
         (cachedTools.redux = new (require('../tools/redux')).ReduxTools(

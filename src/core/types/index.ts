@@ -93,22 +93,6 @@ export interface RouteViewInfo {
   routeName: string
 }
 
-export interface CreateThemeArgs {
-  name: string
-  filePath: string
-  base: ThemeInfo
-}
-
-export interface ThemeInfo {
-  name: string
-  path: string
-}
-
-export interface ConnectThemeArgs {
-  views: ReactView[]
-  viewKind: ViewKindEnum
-}
-
 export interface AppProvider {
   /**
    * Provider full name. eg: AppStyle.Provider
