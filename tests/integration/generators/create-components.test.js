@@ -1,20 +1,12 @@
 const tempy = require('tempy')
-const { run, DOWN, ENTER, TAB } = require('../../../runner')
+const { run, DOWN, ENTER, TAB } = require('../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
 
 jest.setTimeout(10 * 60 * 1000)
 
 describe('create components with props, state and hooks tests', () => {
-  const FIXTURE = path.join(
-    process.cwd(),
-    'tests',
-    'integration',
-    'generators',
-    'fixtures',
-    'empty-project'
-  )
+  const FIXTURE = path.join(process.cwd(), 'tests', 'fixtures', 'empty-project')
 
   const originalDir = process.cwd()
   let tempDir

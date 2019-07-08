@@ -1,8 +1,7 @@
 const tempy = require('tempy')
-const { run, DOWN, ENTER, SPACE, TAB } = require('../../../runner')
+const { run, DOWN, ENTER, TAB } = require('../../runner')
 const path = require('path')
 const fs = require('fs-extra')
-const { filesystem } = require('gluegun')
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -10,8 +9,6 @@ describe('update views tests', () => {
   const FIXTURE = path.join(
     process.cwd(),
     'tests',
-    'integration',
-    'generators',
     'fixtures',
     'has-component-project'
   )
