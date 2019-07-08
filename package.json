@@ -30,7 +30,7 @@
     "jest": "jest",
     "format": "prettier --write **/*.{js,ts,tsx,json}",
     "build": "yarn format && rm -rf dist && tsc && cp -R ./src/templates ./dist/templates && cp -R ./src/assets ./dist/assets && yarn typings",
-    "typings": "tsc -p ./ --declaration --emitDeclarationOnly --outdir ./typings && cp ./scripts/package.types.json ./typings/package.json && cp -r ./scripts/index ./typings/index.d.ts && cp ./dist/core/types/index.js ./typings"
+    "typings": "tsc -p ./ --declaration --emitDeclarationOnly --outdir ./typings && cp ./scripts/package.types.json ./typings/package.json && cp -r ./scripts/index ./typings/index.d.ts && cp ./dist/core/types/index.js ./typings && cp ./dist/core/libs/lib.js ./typings/core/libs"
   },
   "files": [
     "LICENSE",

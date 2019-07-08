@@ -2,7 +2,6 @@ import { CliTools } from '../tools/cli'
 import { NpmTools } from '../tools/npm'
 import { ProjectTools } from '../tools/project'
 import { ReactTools } from '../tools/react'
-import { ReduxTools } from '../tools/redux'
 import { SourceTools } from '../tools/source'
 import { TsTools } from '../tools/ts'
 import { Utils } from '../tools/utils'
@@ -52,11 +51,6 @@ export function tools(context: RootContext) {
       (cachedTools.validate ||
         (cachedTools.validate = new (require('../tools/validate')).ValidateTools(
           context
-        ))) as ValidateTools,
-    redux: () =>
-      (cachedTools.redux ||
-        (cachedTools.redux = new (require('../tools/redux')).ReduxTools(
-          context
-        ))) as ReduxTools
+        ))) as ValidateTools
   }
 }

@@ -2,7 +2,6 @@ import { GluegunRunContext } from 'gluegun'
 import { SourceFile } from 'ts-morph'
 import { Extensions } from '../../extensions'
 import { ReactView } from '../libs/react-view'
-import { Reducer } from '../libs/reducer'
 
 export type RootContext = GluegunRunContext &
   { [K in keyof Extensions]: ReturnType<Extensions[K]> }
@@ -84,56 +83,4 @@ export interface AppProvider {
    * Statement you want to put on App.prepare() method
    */
   prepareStatement?: string
-}
-
-export interface CreateReducerArgs {
-  name: string
-  location: string
-  stateFields: FieldObject[]
-  stateActionTypes: ActionTypeClause[]
-  customActionTypes: ActionTypeClause[]
-}
-
-export interface ActionTypeClause {
-  type: string
-  payload?: string
-  state?: FieldObject
-}
-
-export interface AddReducerStateArgs {
-  reducer: Reducer
-  state: FieldObject[]
-  actionTypes: ActionTypeClause[]
-}
-
-export interface AddActionTypesArgs {
-  reducer: Reducer
-  actionTypes: ActionTypeClause[]
-}
-
-export interface ReducerInfo {
-  name: string
-  sourceFile: SourceFile
-}
-
-export interface CreateReduxThunkServiceArgs {
-  name: string
-  filePath: string
-  actionType?: ActionTypeClause
-  isAsync: boolean
-  returnType: string
-  parameters: FieldObject[]
-}
-
-export interface ReduxConnectArgs {
-  states: Array<FieldObject<Reducer>>
-  thunks: ThunkInfo[]
-  views: ReactView[]
-}
-
-export interface ThunkInfo {
-  name: string
-  parameters: FieldObject[]
-  returnType: string
-  path: string
 }
